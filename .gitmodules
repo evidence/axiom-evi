@@ -1,0 +1,3 @@
+[submodule "axiom-docs"]
+	path = axiom-docs
+	url = s.garzarella@privatevm:/home/git/axiom-docs
