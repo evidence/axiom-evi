@@ -10,3 +10,6 @@
 [submodule "axiom-nic"]
 	path = axiom-nic
 	url = s.garzarella@privatevm:/home/git/axiom-nic
+[submodule "axiom-buildroot"]
+	path = axiom-buildroot
+	url = s.garzarella@privatevm:/home/git/axiom-buildroot
