@@ -4,3 +4,6 @@
 [submodule "axiom-discovery"]
 	path = axiom-discovery
 	url = s.garzarella@privatevm:/home/git/axiom-discovery
+[submodule "axiom-qemu"]
+	path = axiom-qemu
+	url = s.garzarella@privatevm:/home/git/axiom-qemu
