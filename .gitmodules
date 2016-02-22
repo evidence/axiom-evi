@@ -7,3 +7,6 @@
 [submodule "axiom-qemu"]
 	path = axiom-qemu
 	url = s.garzarella@privatevm:/home/git/axiom-qemu
+[submodule "axiom-nic"]
+	path = axiom-nic
+	url = s.garzarella@privatevm:/home/git/axiom-nic
