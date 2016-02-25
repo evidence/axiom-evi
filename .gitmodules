@@ -18,3 +18,7 @@
 	path = axiom-buildroot
 	url = privatevm:/home/git/axiom-buildroot
 	branch = master
+[submodule "axiom-linux"]
+	path = axiom-linux
+	url = privatevm:/home/git/axiom-linux
+	branch = master
