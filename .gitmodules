@@ -1,15 +1,20 @@
 [submodule "axiom-docs"]
 	path = axiom-docs
 	url = privatevm:/home/git/axiom-docs
+	branch = master
 [submodule "axiom-discovery"]
 	path = axiom-discovery
 	url = privatevm:/home/git/axiom-discovery
+	branch = master
 [submodule "axiom-qemu"]
 	path = axiom-qemu
 	url = privatevm:/home/git/axiom-qemu
+	branch = master
 [submodule "axiom-nic"]
 	path = axiom-nic
 	url = privatevm:/home/git/axiom-nic
+	branch = master
 [submodule "axiom-buildroot"]
 	path = axiom-buildroot
 	url = privatevm:/home/git/axiom-buildroot
+	branch = master
