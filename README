@@ -1,0 +1,36 @@
+-------- Compilation --------
+
+common_target = $HOME/usr/axiom
+
+
+*** QEMU ***
+cd axiom-qemu
+./myconfigure.sh (./configure --prefix=${HOME}/usr/axiom/ --enable-axiom)
+make -j5
+make install
+
+
+*** BUILDROOT ***
+cd axiom-buildroot
+
+make evi_zc706_defconfig
+make uboot-patch
+make menuconfig
+make busybox-menuconfig
+make linux-menuconfig
+make -j5
+
+NOTES:
+If uboot fails with error like this:
+        bin/sh: 1: dtc: not found
+        make[2]: *** [arch/arm/dts/zynq-zc702.dtb] Error 127
+You need to install the device tree compiler:
+        sudo apt-get install device-tree-compiler
+
+
+
+*** AXIOM DRIVER ***
+cd axiom-nic/axiom_netdev_driver/
+make
+make install
+(after that rebuild buildroot)
