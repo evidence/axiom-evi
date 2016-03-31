@@ -2,10 +2,6 @@
 	path = axiom-docs
 	url = privatevm:/home/git/axiom-docs
 	branch = master
-[submodule "axiom-discovery"]
-	path = axiom-discovery
-	url = privatevm:/home/git/axiom-discovery
-	branch = master
 [submodule "axiom-qemu"]
 	path = axiom-qemu
 	url = privatevm:/home/git/axiom-qemu
