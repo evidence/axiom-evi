@@ -22,3 +22,7 @@
 	path = axiom-linux
 	url = privatevm:/home/git/axiom-linux
 	branch = master
+[submodule "axiom-evi-apps"]
+	path = axiom-evi-apps
+	url = privatevm:/home/git/axiom-evi-apps
+	branch = master
