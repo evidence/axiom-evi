@@ -1,0 +1,24 @@
+VMS := 1
+
+IMAGES := ./images
+QEMU := ./qemu-system-aarch64
+SWITCH := ./axiom_switch
+PWD := $(shell pwd)
+
+IDS := $(shell seq 0 $$(( $(VMS) - 1 )))
+RUNS := $(addprefix run,$(IDS))
+
+.PHONY: $(RUNS) run switch stop
+
+run: stop switch $(RUNS)
+	echo "ids=$(IDS)"
+
+$(RUNS): run%:
+	./start_qemu.sh --id $* &
+
+stop:
+	-killall $(QEMU)
+	-killall $(SWITCH)
+
+switch:
+	$(SWITCH) $(VMS) &
