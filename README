@@ -1,24 +1,30 @@
+---------- Clone ------------
+git clone ....
+cd axiom-evi
+./submodules_update.sh
+
+
 -------- Compilation --------
 
-common_target = $HOME/usr/axiom
 
 
 *** QEMU ***
-cd axiom-qemu
-./myconfigure.sh (./configure --prefix=${HOME}/usr/axiom/ --enable-axiom)
+cd axiom-evi-qemu
+./axiom_configure.sh (./configure --enable-axiom)
 make -j5
-make install
 
 
 *** BUILDROOT ***
-cd axiom-buildroot
+cd axiom-evi-buildroot
 
 make evi_zc706_defconfig
-make uboot-patch
-make menuconfig
+
 make busybox-menuconfig
 make linux-menuconfig
-make -j5
+make menuconfig
+
+make uboot-patch
+make
 
 NOTES:
 If uboot fails with error like this:
@@ -30,7 +36,7 @@ You need to install the device tree compiler:
 
 
 *** AXIOM DRIVER ***
-cd axiom-nic/axiom_netdev_driver/
+cd axiom-evi-nic/axiom_netdev_driver/
 make
 make install
 (after that rebuild buildroot)
