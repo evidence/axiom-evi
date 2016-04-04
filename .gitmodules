@@ -1,22 +1,22 @@
-[submodule "axiom-docs"]
-	path = axiom-docs
-	url = privatevm:/home/git/axiom-docs
+[submodule "axiom-evi-docs"]
+	path = axiom-evi-docs
+	url = privatevm:/home/git/axiom-evi-docs
 	branch = master
-[submodule "axiom-qemu"]
-	path = axiom-qemu
-	url = privatevm:/home/git/axiom-qemu
+[submodule "axiom-evi-qemu"]
+	path = axiom-evi-qemu
+	url = privatevm:/home/git/axiom-evi-qemu
 	branch = axiom
-[submodule "axiom-nic"]
-	path = axiom-nic
-	url = privatevm:/home/git/axiom-nic
+[submodule "axiom-evi-nic"]
+	path = axiom-evi-nic
+	url = privatevm:/home/git/axiom-evi-nic
 	branch = master
-[submodule "axiom-buildroot"]
-	path = axiom-buildroot
-	url = privatevm:/home/git/axiom-buildroot
+[submodule "axiom-evi-buildroot"]
+	path = axiom-evi-buildroot
+	url = privatevm:/home/git/axiom-evi-buildroot
 	branch = axiom
-[submodule "axiom-linux"]
-	path = axiom-linux
-	url = privatevm:/home/git/axiom-linux
+[submodule "axiom-evi-linux"]
+	path = axiom-evi-linux
+	url = privatevm:/home/git/axiom-evi-linux
 	branch = axiom
 [submodule "axiom-evi-apps"]
 	path = axiom-evi-apps
