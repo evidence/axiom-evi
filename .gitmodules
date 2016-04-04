@@ -1,7 +1,3 @@
-[submodule "axiom-evi-docs"]
-	path = axiom-evi-docs
-	url = privatevm:/home/git/axiom-evi-docs
-	branch = master
 [submodule "axiom-evi-qemu"]
 	path = axiom-evi-qemu
 	url = privatevm:/home/git/axiom-evi-qemu
