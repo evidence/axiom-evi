@@ -5,7 +5,7 @@
 [submodule "axiom-qemu"]
 	path = axiom-qemu
 	url = privatevm:/home/git/axiom-qemu
-	branch = master
+	branch = axiom
 [submodule "axiom-nic"]
 	path = axiom-nic
 	url = privatevm:/home/git/axiom-nic
@@ -13,11 +13,11 @@
 [submodule "axiom-buildroot"]
 	path = axiom-buildroot
 	url = privatevm:/home/git/axiom-buildroot
-	branch = master
+	branch = axiom
 [submodule "axiom-linux"]
 	path = axiom-linux
 	url = privatevm:/home/git/axiom-linux
-	branch = master
+	branch = axiom
 [submodule "axiom-evi-apps"]
 	path = axiom-evi-apps
 	url = privatevm:/home/git/axiom-evi-apps
