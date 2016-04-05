@@ -1,4 +1,4 @@
-VMS := 1
+VMS := 2
 
 IMAGES := ./images
 QEMU := ./qemu-system-aarch64
@@ -11,7 +11,8 @@ RUNS := $(addprefix run,$(IDS))
 .PHONY: $(RUNS) run switch stop
 
 run: stop switch $(RUNS)
-	echo "ids=$(IDS)"
+
+run_noswitch: stop $(RUNS)
 
 $(RUNS): run%:
 	./start_qemu.sh --id $* &
@@ -21,4 +22,4 @@ stop:
 	-killall $(SWITCH)
 
 switch:
-	$(SWITCH) $(VMS) &
+	$(SWITCH) -t 1 -n $(VMS) &

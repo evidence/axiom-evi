@@ -1,42 +1,146 @@
----------- Clone ------------
-git clone ....
+                            AXIOM NIC simulation
+===============================================================================
+
+This repository contains the following git submodules:
+- axiom-evi-apps
+- axiom-evi-buildroot
+- axiom-evi-linux
+- axiom-evi-nic
+- axiom-evi-qemu
+
+
+
+-----------------------
+1. Clone the repository
+-----------------------
+# clone the repository
+git clone https://git.axiom-project.eu/axiom-evi
 cd axiom-evi
+
+# init the submodule (may take awhile)
 ./submodules_update.sh
 
 
--------- Compilation --------
 
+------------------------
+2. Submodule Compilation
+------------------------
 
+2.1 QEMU hypervisor
+*******************
+Qemu modified to emulate the AXIOM network card
 
-*** QEMU ***
 cd axiom-evi-qemu
-./axiom_configure.sh (./configure --enable-axiom)
+./axiom_configure.sh
 make -j5
 
 
-*** BUILDROOT ***
+2.2 BUILDROOT
+*************
 cd axiom-evi-buildroot
 
+# load evi buildroot default configution
 make evi_zc706_defconfig
 
+# customize busybox, linux or buildroot (optional)
 make busybox-menuconfig
 make linux-menuconfig
 make menuconfig
 
+# patch uboot
 make uboot-patch
+
+# compile kernel and file system
 make
+
 
 NOTES:
 If uboot fails with error like this:
         bin/sh: 1: dtc: not found
         make[2]: *** [arch/arm/dts/zynq-zc702.dtb] Error 127
 You need to install the device tree compiler:
-        sudo apt-get install device-tree-compiler
+        eg. sudo apt-get install device-tree-compiler
 
 
+2.3 AXIOM SWITCH
+****************
+Used to emulate the topology between multiple VMs
 
-*** AXIOM DRIVER ***
-cd axiom-evi-nic/axiom_netdev_driver/
+cd axiom-evi-nic/axiom_switch/
 make
+
+
+2.4 AXIOM NIC DRIVER
+********************
+Device driver for the AXIOM Network Card
+
+cd axiom-evi-nic/axiom_netdev_driver/
+
+# compile and install in the buildroot target image
 make install
-(after that rebuild buildroot)
+# (after that, you must rebuild buildroot: cd ../axiom-buildroot; make)
+
+
+2.5 AXIOM APPLICATION
+*********************
+Axiom user space application
+(eg. axiom-init, axiom-whoami, axiom-send-small, axiom-recv-small)
+
+
+cd axiom-evi-apps
+
+# compile and install in the buildroot target image
+make install
+# (after that, you must rebuild buildroot: cd ../axiom-buildroot; make)
+
+
+
+-----------------
+3. Run simulation
+-----------------
+In the "scripts" folder there is a Makefile to run a simulator.
+
+cd scripts
+make run VMS=<number of nodes>
+
+Example:
+# run 4 nodes with default axiom-switch (ring topology)
+make run VMS=4
+# shutdown the vms
+make stop
+
+
+
+-----------------------------------
+4. Run application inside the nodes
+-----------------------------------
+After the boot, all nodes prompt the login.
+    user: root
+    password: <empty>
+
+During the 2.5 step the following application are compiled and installed in
+the nodes filesystem:
+    - axiom-init
+        runs the discovery algorithm and sets the routing table
+
+        example:
+        in n-1 nodes:           axiom-init -n slave
+        in 1 randomly node:     axiom-init -n master
+
+    - axiom-whoami
+        prints the nodeid set after the discovery phase
+
+    - axiom-[send|recv]-small
+        send Axiom RAW SMALL data to a specified node
+
+        examples:
+        # receive RAW SMALL message
+        axiom-recv-small
+
+        # send RAW SMALL data to node (node_id=4) with a specified payload
+        axiom-send-small -d 4 --payload 987654
+
+        # send RAW SMALL data to a neighbour directly connected on a local
+        # interface (if_id=)1 with a specified payload
+        axiom-send-small -d 1 --neighbour --payload 987654
+
