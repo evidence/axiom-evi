@@ -114,12 +114,17 @@ make stop
 -----------------------------------
 4. Run application inside the nodes
 -----------------------------------
+During the 2.4 and 2.5 steps the AXIOM NIC device driver and the user-space
+applications are compiled and installed in the nodes filesystem.
+
 After the boot, all nodes prompt the login.
     user: root
     password: <empty>
 
-During the 2.5 step the following application are compiled and installed in
-the nodes filesystem:
+# load device driver
+modprobe axiom-netdev
+
+# run applications:
     - axiom-init
         runs the discovery algorithm and sets the routing table
 
