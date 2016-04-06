@@ -37,7 +37,7 @@ stop:
 
 switch:
 	@echo "starting switch: $(SWITCH) $(SWITCH_PARAM)" | tee $(LOG_FILE)
-	$(SWITCH_RUN)
+	@$(SWITCH_RUN)
 
 archive: clean
 	mkdir -p $(OUTPUT_DIR)/images

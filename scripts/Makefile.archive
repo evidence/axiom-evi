@@ -32,7 +32,7 @@ stop:
 
 switch:
 	@echo "starting switch: $(SWITCH) $(SWITCH_PARAM)" | tee $(LOG_FILE)
-	$(SWITCH_RUN)
+	@$(SWITCH_RUN)
 
 log:
 	@tail -f -n +1 $(LOG_FILE)
