@@ -63,6 +63,6 @@ modprobe axiom-netdev
         axiom-send-small -d 4 --payload 987654
 
         # send RAW SMALL data to a neighbour directly connected on a local
-        # interface (if_id=)1 with a specified payload
+        # interface (if_id=1) with a specified payload
         axiom-send-small -d 1 --neighbour --payload 987654
 
