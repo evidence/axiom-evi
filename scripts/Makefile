@@ -7,7 +7,8 @@ SWITCH := ../axiom-evi-nic/axiom_switch/axiom_switch
 PWD := $(shell pwd)
 OUTPUT_DIR := output
 DATE := $(shell date +%Y%m%d_%H%M%S)-
-OUTPUT_TGZ := $(DATE)axiom-nic-evisim
+GIT_DESC := $(shell git describe --tags)
+OUTPUT_TGZ := $(DATE)axiom-nic-evisim-$(GIT_DESC)
 
 IDS := $(shell seq 0 $$(( $(VMS) - 1 )))
 RUNS := $(addprefix run,$(IDS))
