@@ -105,9 +105,14 @@ make run VMS=<number of nodes>
 
 Example:
 # run 4 nodes with default axiom-switch (ring topology)
-make run VMS=4
-# shutdown the vms
+make VMS=4 run
+# shutdown the vms and the switch
 make stop
+
+# run 4 nodes and show log
+make VMS=4 run log
+(CTRL-C) to shutdown the vms and the switch
+
 
 
 
