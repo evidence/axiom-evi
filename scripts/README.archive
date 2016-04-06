@@ -14,7 +14,7 @@ This archive contains the following files:
 -----------------
 In this archive there is a Makefile to run a simulator.
 
-make run VMS=<number of nodes>
+make VMS=<number of nodes> run
 
 Example:
 # run 4 nodes with default axiom-switch (ring topology)

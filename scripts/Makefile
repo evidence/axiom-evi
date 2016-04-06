@@ -9,6 +9,7 @@ QEMU := ../axiom-evi-qemu/aarch64-softmmu/qemu-system-aarch64
 SWITCH := ../axiom-evi-nic/axiom_switch/axiom_switch
 SWITCH_PARAM := -t 1 -n $(VMS) -v
 OUTPUT_DIR := output
+ARCHIVE_DIR := archive
 LOG_FILE := make.log
 
 ifdef SWITCH
@@ -51,6 +52,7 @@ archive: clean
 	cp Makefile.archive $(OUTPUT_DIR)/Makefile
 	cp start_qemu.sh.archive $(OUTPUT_DIR)/start_qemu.sh
 	tar -zcvf $(OUTPUT_TGZ).tgz $(OUTPUT_DIR) --transform s/$(OUTPUT_DIR)/$(OUTPUT_TGZ)/
+	mv $(OUTPUT_TGZ).tgz $(ARCHIVE_DIR)
 
 log:
 	@tail -f -n +1 $(LOG_FILE)
