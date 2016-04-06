@@ -1,0 +1,45 @@
+                            AXIOM NIC simulation
+===============================================================================
+To try the AXIOM NIC simulator you can clone the git repository or download
+the VDI image.
+
+
+-----------------------
+1. Clone the repository
+-----------------------
+# clone the repository
+git clone https://git.axiom-project.eu/axiom-evi
+cd axiom-evi
+
+# init the submodule (may take awhile)
+./submodules_update.sh
+
+# read the README with the instructions to compile and run the simulator
+
+
+
+-------------------------
+2. Downlaod the VDI image
+-------------------------
+The VDI image contains Ubuntu 14.04.3 LTS for x86_64 architecture.
+You can download the VDI image from this link:
+XXXXXXX
+
+You can run the VDI image with VirtualBox:
+    Recommended settings:
+        CPUs:           2 (x86_64)
+        RAM:            2 GB
+        HW Virt:        enabled
+
+Guest info
+**********
+user: axiom
+password: axiom
+
+Guest Directories
+*****************
+- ~/axiom-git
+    contains the axiom-evi repository already cloned with all submodules (1)
+
+- ~/axiom-archive
+    contains archives with all components precompiled

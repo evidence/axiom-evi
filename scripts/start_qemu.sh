@@ -1,9 +1,8 @@
 #!/bin/bash
 
-BUILDROOT=${BUILDROOT:-../axiom-buildroot}
+BUILDROOT=${BUILDROOT:-../axiom-evi-buildroot}
 IMAGES=${IMAGES:-$BUILDROOT/output/images}
-PREFIX=${PREFIX:-$HOME/usr/axiom}
-QEMU=${QEMU:-$PREFIX/bin/qemu-system-aarch64}
+QEMU=${QEMU:-../axiom-evi-qemu/aarch64-softmmu/qemu-system-aarch64}
 ID=${ID:-0}
 
 SERIAL_VIDEO="-serial chardev:char1"
