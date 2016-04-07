@@ -52,7 +52,7 @@ $(EVI_APPS_DIR)*:
 	cd $(EVI_APPS_DIR) && make install
 
 
-archive:
+archive: clean-output
 	mkdir -p $(OUTPUT_DIR)/images
 	cp $(QEMU) $(OUTPUT_DIR)/
 	cp $(SWITCH) $(OUTPUT_DIR)/
@@ -92,5 +92,8 @@ clean-evi:
 	cd $(EVI_NIC_DIR) && make clean
 	cd $(EVI_APPS_DIR) && make clean
 
-clean: clean-log clean-evi
+clean-output:
 	rm -rf $(OUTPUT_DIR)
+
+
+clean: clean-log clean-evi clean-output
