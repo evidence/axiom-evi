@@ -35,7 +35,9 @@ RUNS := $(addprefix run,$(IDS))
 
 all: $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(BUILDROOT_DIR) $(QEMU_DIR)
 
-
+configure:
+	cd $(BUILDROOT_DIR) && make evi_zc706_defconfig && make uboot-patch
+	cd $(QEMU_DIR) && ./axiom-configure.sh
 
 $(QEMU_DIR)*:
 	cd $(QEMU_DIR) && make -j5
