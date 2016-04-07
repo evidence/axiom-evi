@@ -10,6 +10,8 @@ QEMU_DIR := ../axiom-evi-qemu
 BUILDROOT_DIR := ../axiom-evi-buildroot
 EVI_NIC_DIR := ../axiom-evi-nic
 EVI_APPS_DIR := ../axiom-evi-apps
+DFLAGS :=
+#DFLAGS := -g -PDEBUG
 
 IMAGES := $(BUILDROOT_DIR)/output/images
 QEMU := $(QEMU_DIR)/aarch64-softmmu/qemu-system-aarch64
@@ -46,10 +48,10 @@ $(BUILDROOT_DIR):
 	cd $(BUILDROOT_DIR) && make
 
 $(EVI_NIC_DIR)*:
-	cd $(EVI_NIC_DIR) && make install
+	cd $(EVI_NIC_DIR) && make DFLAGS="$(DFLAGS)" install
 
 $(EVI_APPS_DIR)*:
-	cd $(EVI_APPS_DIR) && make install
+	cd $(EVI_APPS_DIR) && make DFLAGS="$(DFLAGS)" install
 
 
 archive: clean-output
