@@ -1,45 +1,47 @@
                             AXIOM NIC simulation
 ===============================================================================
-To try the AXIOM NIC simulator you can clone the git repository or download
-the VDI image.
+== Intro ==
 
+To try the AXIOM NIC simulator you can '''download the VDI image''' or
+'''download the tarball''' or '''clone the repository'''.
 
------------------------
-1. Clone the repository
------------------------
-# clone the repository
-git clone https://git.axiom-project.eu/axiom-evi
-cd axiom-evi
+== Download the VDI image ==
 
-# init the submodule (may take awhile)
-./submodules_update.sh
+The VDI image contains Ubuntu 14.04.3 LTS for x86_64 architecture with source
+and precompiled version of the AXIOM NIC simulator<br>
+You can download the VDI image from this link: XXXXXXX
 
-# read the README with the instructions to compile and run the simulator
+You can run the VDI image with VirtualBox:<br>
+Recommended settings:<br>
+:CPUs:           2 (x86_64)<br>
+:RAM:            2 GB<br>
+:HW Virt:        enabled<br>
 
+Guest login:
+:user: axiom
+:password: axiom
 
+Guest directories:
 
--------------------------
-2. Downlaod the VDI image
--------------------------
-The VDI image contains Ubuntu 14.04.3 LTS for x86_64 architecture.
-You can download the VDI image from this link:
-XXXXXXX
+#~/axiom-git <br> contains the axiom-evi repository already cloned with all submodules (README inside)
+#~/axiom-archive <br> contains tarball archives with all components precompiled (README in each archive)
 
-You can run the VDI image with VirtualBox:
-    Recommended settings:
-        CPUs:           2 (x86_64)
-        RAM:            2 GB
-        HW Virt:        enabled
+== Download the tarball ==
 
-Guest info
-**********
-user: axiom
-password: axiom
+The tarball contains the precompiled version of the AXIOM NIC simulator with
+QEMU (+ Axiom NIC emulation) and the buildroot filesystem with the
+Axiom user-space application. <br>
+The README explains how to run the simulation.<br>
+You can download the latest tarball from this link: XXXXX
 
-Guest Directories
-*****************
-- ~/axiom-git
-    contains the axiom-evi repository already cloned with all submodules (1)
+== Clone the repository ==
 
-- ~/axiom-archive
-    contains archives with all components precompiled
+ # clone the repository
+ git clone https://git.axiom-project.eu/axiom-evi
+ cd axiom-evi
+ 
+ # init the submodule (may take awhile)
+ ./submodules_update.sh
+ 
+ # read the README with the instructions to compile and run the simulator
+
