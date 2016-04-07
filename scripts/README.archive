@@ -1,68 +1,83 @@
                             AXIOM NIC simulation
 ===============================================================================
 
-This archive contains the following files:
-- Makefile
-- axiom_switch
-- qemu-system-aarch64
-- start-qemu.sh
-- images
+This archive contains the following files and folders:
+
+ * Makefile
+ * axiom_switch
+ * qemu-system-aarch64
+ * start-qemu.sh
+ * images
 
 
------------------
-1. Run simulation
------------------
+## 1. Run simulation
+
 In this archive there is a Makefile to run a simulator.
-
+```
+cd scripts
 make VMS=<number of nodes> run
-
+```
 Example:
+```
 # run 4 nodes with default axiom-switch (ring topology)
 make VMS=4 run
+# show the log file
+make log
 # shutdown the vms and the switch
 make stop
 
 # run 4 nodes and show log
 make VMS=4 run log
-(CTRL-C) to shutdown the vms and the switch
+# (CTRL-C) to shutdown the vms and the switch
+```
 
 
 
------------------------------------
-2. Run application inside the nodes
------------------------------------
+## 2. Run application inside the nodes
+
 The AXIOM NIC device driver and the user-space
 applications are compiled and installed in the nodes filesystem.
 
 After the boot, all nodes prompt the login.
-    user: root
-    password: <empty>
 
+ * user: root
+ * password: *empty*
+
+After the login, you must load the AXIOM NIC device driver
+
+```
 # load device driver
 modprobe axiom-netdev
+```
 
-# run applications:
-    - axiom-init
-        runs the discovery algorithm and sets the routing table
+#### run applications in the guests:
 
+ * axiom-init
+    + runs the discovery algorithm and sets the routing table
+```
         example:
         in n-1 nodes:           axiom-init -n slave
         in 1 randomly node:     axiom-init -n master
-
-    - axiom-whoami
-        prints the nodeid set after the discovery phase
-
-    - axiom-[send|recv]-small
-        send Axiom RAW SMALL data to a specified node
-
+```
+ * axiom-whoami
+     + prints the nodeid set after the discovery phase
+```
+        example:
+        axiom-whoami
+```
+ * axiom-[send|recv]-small
+     + sends/receives Axiom RAW SMALL data to/from a node
+```
         examples:
         # receive RAW SMALL message
         axiom-recv-small
-
+```
+```
         # send RAW SMALL data to node (node_id=4) with a specified payload
         axiom-send-small -d 4 --payload 987654
-
+```
+```
         # send RAW SMALL data to a neighbour directly connected on a local
         # interface (if_id=1) with a specified payload
         axiom-send-small -d 1 --neighbour --payload 987654
-
+```
