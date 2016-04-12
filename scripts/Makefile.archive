@@ -3,7 +3,7 @@ VMS := 2
 IMAGES := ./images
 QEMU := ./qemu-system-aarch64
 SWITCH := ./axiom_switch
-SWITCH_PARAM := -t 1 -n $(VMS) -v
+SWITCH_PARAM := -r -n $(VMS) -v
 LOG_FILE := make.log
 
 ifdef SWITCH
