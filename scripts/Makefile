@@ -11,7 +11,7 @@ BUILDROOT_DIR := ../axiom-evi-buildroot
 EVI_NIC_DIR := ../axiom-evi-nic
 EVI_APPS_DIR := ../axiom-evi-apps
 DFLAGS :=
-#DFLAGS := -g -PDEBUG
+debug: DFLAGS := -g -DPDEBUG
 
 IMAGES := $(BUILDROOT_DIR)/output/images
 QEMU := $(QEMU_DIR)/aarch64-softmmu/qemu-system-aarch64
@@ -32,10 +32,12 @@ IDS := $(shell seq 0 $$(( $(VMS) - 1 )))
 RUNS := $(addprefix run,$(IDS))
 
 
-.PHONY: $(RUNS) run switch stop archive clean clean-log clean-evi install $(QEMU_DIR) $(BUILDROOT_DIR) $(EVI_NIC_DIR) $(EVI_APPS_DIR)
+.PHONY: $(RUNS) run switch stop archive clean clean-log clean-evi install debug $(QEMU_DIR) $(BUILDROOT_DIR) $(EVI_NIC_DIR) $(EVI_APPS_DIR)
 
 
 all: $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(BUILDROOT_DIR) $(QEMU_DIR)
+
+debug: all
 
 configure:
 	cd $(BUILDROOT_DIR) && make evi_zc706_defconfig && make uboot-patch
