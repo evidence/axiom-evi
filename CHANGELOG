@@ -1,0 +1,40 @@
+                            AXIOM NIC Changelog
+==============================================================================
+
+The following is the list of the main tags of the repository:
+
+## axiom-v0.3.1
+* small fixes
+* first public release to the AXIOM partners
+
+## axiom-v0.3
+* QEMU
+    + support for the register specification in the frontend
+    + support for backend connection with the axiom-switch with sockets
+* axiom-nic
+    + revised register specification following discussions with FORTH
+    + support limited to small raw/neighbor messages
+    + no support for bind and port forwarding
+    + functionalities exported using ioctl
+* axiom switch
+    + used to simulate the topology outside QEMU (see the video of v0.3 for more info)
+    + limit to 2 connectors per board
+    + topology available is currently only ring
+    +* some additional topologies (experimental) not available from command line
+* user space applications
+    + axiom-init working, with discovery, routing calculation and delivery
+    + axiom-whoami
+    + axiom-send-small
+    + axiom-recv-small
+* '''not recommended for usage''' (use the 0.3.1)
+
+## v0.2
+* revised specification with first implementation of the driver
+* non-working stub in QEMU
+* '''not recommended for usage'''
+
+## v0.1
+* first version started from FORTH specifications v5
+* available only in the axiom-evi-nic repo, only specs without implementation
+* '''not recommended for usage'''
+
