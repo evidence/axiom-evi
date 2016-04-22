@@ -35,7 +35,7 @@ RUNS := $(addprefix run,$(IDS))
 .PHONY: $(RUNS) run switch stop archive clean clean-log clean-evi install debug $(QEMU_DIR) $(BUILDROOT_DIR) $(EVI_NIC_DIR) $(EVI_APPS_DIR)
 
 
-all: $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(BUILDROOT_DIR) $(QEMU_DIR)
+all: stop $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(BUILDROOT_DIR) $(QEMU_DIR)
 
 debug: all
 
@@ -74,7 +74,7 @@ archive: clean-output
 run: clean-log stop switch $(RUNS)
 
 $(RUNS): run%:
-	@echo "starting qemu[$*]: $(QEMU)" | tee $(LOG_FILE)
+	@echo "starting qemu[$*]: $(QEMU)" | tee -a $(LOG_FILE)
 	@./start_qemu.sh --id $* --qemu ${QEMU} >> $(LOG_FILE) 2>&1 &
 
 stop:
@@ -82,7 +82,7 @@ stop:
 	-@killall $(SWITCH) 2> /dev/null
 
 switch:
-	@echo "starting switch: $(SWITCH) $(SWITCH_PARAM)" | tee $(LOG_FILE)
+	@echo "starting switch: $(SWITCH) $(SWITCH_PARAM)" | tee -a $(LOG_FILE)
 	@$(SWITCH_RUN)
 
 log:
