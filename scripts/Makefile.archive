@@ -1,3 +1,4 @@
+# number of Virtual Machines to run
 VMS := 2
 
 IMAGES := ./images
@@ -23,7 +24,7 @@ RUNS := $(addprefix run,$(IDS))
 run: clean-log stop switch $(RUNS)
 
 $(RUNS): run%:
-	@echo "starting qemu[$*]: $(QEMU)" | tee $(LOG_FILE)
+	@echo "starting qemu[$*]: $(QEMU)" | tee -a $(LOG_FILE)
 	@./start_qemu.sh --id $* --qemu ${QEMU} >> $(LOG_FILE) 2>&1 &
 
 stop:
@@ -31,7 +32,7 @@ stop:
 	-@killall $(SWITCH) 2> /dev/null
 
 switch:
-	@echo "starting switch: $(SWITCH) $(SWITCH_PARAM)" | tee $(LOG_FILE)
+	@echo "starting switch: $(SWITCH) $(SWITCH_PARAM)" | tee -a $(LOG_FILE)
 	@$(SWITCH_RUN)
 
 log:
