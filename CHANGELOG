@@ -3,6 +3,24 @@
 
 The following is the list of the main tags of the repository:
 
+## axiom-v0.4
+* user space applications
+    + axiom-init deamon to respond to ping/netperf/traceroute messages
+    + axiom-info
+    + axiom-ping
+    + axiom-traceroute
+    + axiom-netperf
+* axiom-nic
+    + support for bind and port forwarding
+* axiom_switch
+    + mesh-2D topology auto-generation
+    + additional topology support from file
+    + communicate to QEMU the connected interface
+* QEMU
+    + fixed socket backend to avoid packet loss
+    + support of control packet from the axiom_switch
+* other small fixes
+
 ## axiom-v0.3.1
 * small fixes
 * first public release to the AXIOM partners
@@ -20,7 +38,7 @@ The following is the list of the main tags of the repository:
     + used to simulate the topology outside QEMU (see the video of v0.3 for more info)
     + limit to 2 connectors per board
     + topology available is currently only ring
-    +* some additional topologies (experimental) not available from command line
+    + some additional topologies (experimental) not available from command line
 * user space applications
     + axiom-init working, with discovery, routing calculation and delivery
     + axiom-whoami
