@@ -1,4 +1,6 @@
 DATE := $(shell date +%Y%m%d_%H%M%S)-
+MKFILE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
 
 # number of Virtual Machines to run
 VMS := 2
@@ -6,15 +8,20 @@ VMS := 2
 GIT_DESC := $(shell git describe --tags)
 OUTPUT_TGZ := $(DATE)axiom-nic-evisim-$(GIT_DESC)
 
-QEMU_DIR := ../axiom-evi-qemu
-BUILDROOT_DIR := ../axiom-evi-buildroot
-EVI_NIC_DIR := ../axiom-evi-nic
-EVI_APPS_DIR := ../axiom-evi-apps
+QEMU_DIR := $(MKFILE_DIR)/../axiom-evi-qemu
+BUILDROOT_DIR := $(MKFILE_DIR)/../axiom-evi-buildroot
+ARM_FIRMWARE_DIR := $(MKFILE_DIR)/../arm-trusted-firmware
+QEMU_DTS_DIR := $(MKFILE_DIR)/./buildroot/qemu-dts
+EVI_NIC_DIR := $(MKFILE_DIR)/../axiom-evi-nic
+EVI_APPS_DIR := $(MKFILE_DIR)/../axiom-evi-apps
 DFLAGS :=
 debug: DFLAGS := -g -DPDEBUG
 
+#CCARCH := arm
+CCARCH := aarch64
 IMAGES := $(BUILDROOT_DIR)/output/images
 QEMU := $(QEMU_DIR)/aarch64-softmmu/qemu-system-aarch64
+CCPREFIX := ${BUILDROOT_DIR}/output/host/usr/bin/$(CCARCH)-linux-
 SWITCH :=$(EVI_NIC_DIR)/axiom_switch/axiom_switch
 SWITCH_PARAM := -r -n $(VMS) -v
 OUTPUT_DIR := output
@@ -32,10 +39,10 @@ IDS := $(shell seq 0 $$(( $(VMS) - 1 )))
 RUNS := $(addprefix run,$(IDS))
 
 
-.PHONY: $(RUNS) run switch stop archive clean clean-log clean-evi install debug $(QEMU_DIR) $(BUILDROOT_DIR) $(EVI_NIC_DIR) $(EVI_APPS_DIR)
+.PHONY: $(RUNS) run switch stop archive clean clean-log clean-evi install debug $(QEMU_DIR) $(BUILDROOT_DIR) $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR)
 
 
-all: stop $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(BUILDROOT_DIR) $(QEMU_DIR)
+all: stop $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(BUILDROOT_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR) $(QEMU_DIR)
 
 debug: all
 
@@ -48,6 +55,12 @@ $(QEMU_DIR)*:
 
 $(BUILDROOT_DIR):
 	cd $(BUILDROOT_DIR) && make
+
+$(ARM_FIRMWARE_DIR):
+	cd $(ARM_FIRMWARE_DIR) && make CROSS_COMPILE=$(CCPREFIX) RESET_TO_BL31=1 PLAT=zynqmp all fip
+
+$(QEMU_DTS_DIR):
+	cd $(QEMU_DTS_DIR) && make DTC=$(BUILDROOT_DIR)/output/host/usr/bin/linux-dtc
 
 $(EVI_NIC_DIR)*:
 	cd $(EVI_NIC_DIR) && make DFLAGS="$(DFLAGS)" install
@@ -95,6 +108,7 @@ clean-log:
 clean-evi:
 	cd $(EVI_NIC_DIR) && make clean
 	cd $(EVI_APPS_DIR) && make clean
+	cd $(QEMU_DTS_DIR) && make clean
 
 clean-output:
 	rm -rf $(OUTPUT_DIR)
