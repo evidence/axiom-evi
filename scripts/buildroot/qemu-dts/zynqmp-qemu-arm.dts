@@ -520,7 +520,7 @@
 			linux,phandle = <0x26>;
 			phandle = <0x26>;
 		};
-
+/* Diplay port removed: we use the serial port
 		xlnx_dp: dp@0xFD4A0000 {
 			compatible = "xlnx,v-dp-4.1";
 			reg = <0x0 0xfd4a0000 0x1000>;
@@ -540,6 +540,7 @@
 			linux,phandle = <0x27>;
 			phandle = <0x27>;
 		};
+*/
 
 		xilinx_drm {
 			compatible = "xlnx,drm";
