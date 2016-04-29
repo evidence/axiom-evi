@@ -18,3 +18,10 @@
 	path = axiom-evi-apps
 	url = privatevm:/home/git/axiom-evi-apps
 	branch = master
+[submodule "axiom-evi-u-boot"]
+	path = axiom-evi-u-boot
+	url = privatevm:/home/git/axiom-evi-u-boot
+	branch = axiom
+[submodule "arm-trusted-firmware"]
+	path = arm-trusted-firmware
+	url = https://github.com/Xilinx/arm-trusted-firmware.git
