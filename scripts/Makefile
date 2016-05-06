@@ -5,8 +5,9 @@ MKFILE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 # number of Virtual Machines to run
 VMS := 2
 
-GIT_DESC := $(shell git describe --tags)
+GIT_DESC := $(shell git describe --tags | sed s/axiom-//g)
 OUTPUT_TGZ := $(DATE)axiom-nic-evisim-$(GIT_DESC)
+release: OUTPUT_TGZ := axiom-nic-evisim-$(GIT_DESC)
 
 QEMU_DIR := $(MKFILE_DIR)/../axiom-evi-qemu
 BUILDROOT_DIR := $(MKFILE_DIR)/../axiom-evi-buildroot
@@ -39,7 +40,7 @@ IDS := $(shell seq 0 $$(( $(VMS) - 1 )))
 RUNS := $(addprefix run,$(IDS))
 
 
-.PHONY: $(RUNS) run switch stop archive clean clean-log clean-evi install debug $(QEMU_DIR) $(BUILDROOT_DIR) $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR)
+.PHONY: $(RUNS) run switch stop archive release clean clean-log clean-evi install debug $(QEMU_DIR) $(BUILDROOT_DIR) $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR)
 
 
 all: stop $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(BUILDROOT_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR) $(QEMU_DIR)
@@ -47,7 +48,7 @@ all: stop $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(BUILDROOT_DIR) $(ARM_FIRMWARE_DIR) $(
 debug: all
 
 configure:
-	cd $(BUILDROOT_DIR) && make evi_zc706_defconfig && make uboot-patch
+	cd $(BUILDROOT_DIR) && make evi_ultrascale_defconfig
 	cd $(QEMU_DIR) && ./axiom-configure.sh
 
 $(QEMU_DIR)*:
@@ -74,15 +75,17 @@ archive: clean-output
 	cp $(QEMU) $(OUTPUT_DIR)/
 	cp $(SWITCH) $(OUTPUT_DIR)/
 	cp $(IMAGES)/*dtb $(OUTPUT_DIR)/images/
-	cp $(IMAGES)/*img $(OUTPUT_DIR)/images/
-	cp $(IMAGES)/uImage $(OUTPUT_DIR)/images/
-	cp $(IMAGES)/*uboot $(OUTPUT_DIR)/images/
+	cp $(IMAGES)/*elf $(OUTPUT_DIR)/images/
+	cp $(IMAGES)/*Image $(OUTPUT_DIR)/images/
+	cp $(QEMU_DTS_DIR)/zynqmp-qemu-arm.dtb $(OUTPUT_DIR)/images/
+	cp $(ARM_FIRMWARE_DIR)/build/zynqmp/release/bl31/bl31.elf $(OUTPUT_DIR)/images/
 	cp README.archive $(OUTPUT_DIR)/README
 	cp Makefile.archive $(OUTPUT_DIR)/Makefile
 	cp start_qemu.sh.archive $(OUTPUT_DIR)/start_qemu.sh
 	tar -zcvf $(OUTPUT_TGZ).tgz $(OUTPUT_DIR) --transform s/$(OUTPUT_DIR)/$(OUTPUT_TGZ)/
 	mv $(OUTPUT_TGZ).tgz $(ARCHIVE_DIR)
 
+release: clean all archive
 
 run: clean-log stop switch $(RUNS)
 

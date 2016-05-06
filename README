@@ -8,6 +8,8 @@ This repository contains the following git submodules:
  * axiom-evi-linux
  * axiom-evi-nic
  * axiom-evi-qemu
+ * axiom-evi-u-boot
+ * arm-trusted-firmware
 
 
 
@@ -19,7 +21,7 @@ git clone https://git.axiom-project.eu/axiom-evi
 cd axiom-evi
 
 # init the submodules (may take awhile)
-./submodules_update.sh
+./scripts/submodules_update.sh
 ```
 
 
@@ -27,6 +29,14 @@ cd axiom-evi
 ## 2. Submodule Compilation
 
 This section explains how to configure and compile the submodules.
+
+**Requirements:**
+
+ * QEMU required packages:  
+   <http://wiki.qemu.org/Hosts/Linux#Required_additional_packages>
+
+ * Buildroot required packages:  
+   <https://buildroot.org/downloads/manual/manual.html#requirement>
 
 To simplify this phase, we provided a makefile to automatize the compilation:
 ```
@@ -47,6 +57,9 @@ to section 3.
 
 Qemu modified to emulate the AXIOM network card
 
+**QEMU required packages:**  
+<http://wiki.qemu.org/Hosts/Linux#Required_additional_packages>
+
 ```
 cd axiom-evi-qemu
 ./axiom_configure.sh
@@ -58,19 +71,19 @@ make -j5
 
 Bulldroot modified to support the AXIOM board
 
+**Buildroot required packages:**  
+<https://buildroot.org/downloads/manual/manual.html#requirement>
+
 ```
 cd axiom-evi-buildroot
 
 # load evi buildroot default configution
-make evi_zc706_defconfig
+make evi_ultrascale_defconfig
 
 # customize busybox, linux or buildroot (optional)
 make busybox-menuconfig
 make linux-menuconfig
 make menuconfig
-
-# patch uboot
-make uboot-patch
 
 # compile kernel and file system
 make
@@ -110,7 +123,7 @@ make install
 ### 2.5 AXIOM applications
 
 Axiom user space application
-(eg. axiom-init, axiom-whoami, axiom-send-small, axiom-recv-small)
+(eg. axiom-init, axiom-whoami, axiom-send-small, axiom-recv-small, etc.)
 
 ```
 cd axiom-evi-apps
@@ -175,7 +188,7 @@ axiom-init &                             axiom-init -m &
 #### run applications in the nodes:
 
  * axiom-info
-    + prints informations (node-id, interfaces, routing, etc.) about AXIOM NIC
+    + print informations (node-id, interfaces, routing, etc.) about AXIOM NIC
 ```
         example:
         # print all information
@@ -190,7 +203,7 @@ axiom-init &                             axiom-init -m &
         axiom-info -r
 ```
  * axiom-whoami
-     + prints the node-id set after the discovery phase
+     + print the node-id set after the discovery phase
 ```
         example:
         axiom-whoami
@@ -218,14 +231,14 @@ axiom-init &                             axiom-init -m &
         axiom-netperf -d 3 -l 2M
 ```
  * axiom-traceroute
-    + prints the hops needed to reach a specified target node
+    + print the hops needed to reach a specified target node
 ```
         example:
         # Print the hops needed to reach the node 1
         axiom-traceroute -d 1
 ```
  * axiom-[send|recv]-small
-     + sends/receives Axiom RAW SMALL data to/from a node
+     + send/receive Axiom RAW SMALL data to/from a node
 ```
         examples:
         # receive RAW SMALL message

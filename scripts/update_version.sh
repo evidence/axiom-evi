@@ -41,27 +41,27 @@ VERSION_DOXY_SUBS=" \* \\\version     ${VERSION}"
 
 APPS_RE=$VERSION_DOXY_RE
 APPS_SUBS=$VERSION_DOXY_SUBS
-APPS_PATH="axiom-evi-apps/*"
+APPS_PATH="../axiom-evi-apps/*"
 APPS_INCLUDE="--include *.c --include *.h"
 
 NIC_RE=$VERSION_DOXY_RE
 NIC_SUBS=$VERSION_DOXY_SUBS
-NIC_PATH="axiom-evi-nic/*"
+NIC_PATH="../axiom-evi-nic/*"
 NIC_INCLUDE="--include *.c --include *.h"
 
 DRIVER_RE="MODULE_VERSION(.*"
 DRIVER_SUBS="MODULE_VERSION(\"${VERSION}\");"
-DRIVER_PATH="axiom-evi-nic/axiom_netdev_driver/*"
+DRIVER_PATH="../axiom-evi-nic/axiom_netdev_driver/*"
 DRIVER_INCLUDE="--include *.c"
 
 DATASHEET_RE=".*\\\newcommand{\\\versionapi}.*"
 DATASHEET_SUBS="\\\newcommand{\\\versionapi}{${VERSION}}"
-DATASHEET_PATH="axiom-evi-nic/axiom_docs/datasheet/*"
+DATASHEET_PATH="../axiom-evi-nic/axiom_docs/datasheet/*"
 DATASHEET_INCLUDE="--include *.tex"
 
 DOXYGEN_RE="PROJECT_NUMBER.*=.*"
 DOXYGEN_SUBS="PROJECT_NUMBER         = ${VERSION}"
-DOXYGEN_PATH="axiom-evi-nic/axiom_docs/doxygen"
+DOXYGEN_PATH="../axiom-evi-nic/axiom_docs/doxygen"
 DOXYGEN_INCLUDE="--include *.doxyfile"
 
 if [ "$SET" = "1" ]; then
