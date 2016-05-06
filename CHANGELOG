@@ -3,6 +3,14 @@
 
 The following is the list of the main tags of the repository:
 
+## axiom-v0.5
+* 64 bit support
+    + Ultrascale+ emulation in QEMU
+    + Axiom-NIC for 64 bit architecture
+    + User-Space application for 64 bit architecture
+* Doxygen documentation
+    + axiom-evi-nic and axiom-evi-apps doxygen documentation
+
 ## axiom-v0.4
 * user space applications
     + axiom-init deamon to respond to ping/netperf/traceroute messages
