@@ -48,8 +48,8 @@ all: stop $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(BUILDROOT_DIR) $(ARM_FIRMWARE_DIR) $(
 debug: all
 
 configure:
-	cd $(BUILDROOT_DIR) && make evi_ultrascale_defconfig
-	cd $(QEMU_DIR) && ./axiom-configure.sh
+	cd $(QEMU_DIR) && ./axiom_configure.sh
+	cd $(BUILDROOT_DIR) && make evi_ultrascale_defconfig && make
 
 $(QEMU_DIR)*:
 	cd $(QEMU_DIR) && make -j5
