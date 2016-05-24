@@ -94,6 +94,7 @@ $(RUNS): run%:
 	@./start_qemu.sh --id $* --qemu ${QEMU} >> $(LOG_FILE) 2>&1 &
 
 stop:
+	@echo "stopping qemu and axiom_switch" | tee -a $(LOG_FILE)
 	-@killall $(QEMU) 2> /dev/null
 	-@killall $(SWITCH) 2> /dev/null
 
@@ -108,7 +109,7 @@ log:
 clean-log:
 	-@rm $(LOG_FILE)
 
-clean-evi:
+clean-evi: stop
 	cd $(EVI_NIC_DIR) && make clean
 	cd $(EVI_APPS_DIR) && make clean
 	cd $(QEMU_DTS_DIR) && make clean
