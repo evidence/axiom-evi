@@ -3,6 +3,37 @@
 
 The following is the list of the main tags of the repository:
 
+## axiom-v0.6
+* axiom-nic / QEMU
+    + new registers layout provided by FORTH:
+        - only one descriptor per queue memory mapped to the CPU
+        - queues handled internally in HW
+        - change some registers name and offset
+    + RAW payload extended to 128 byte
+* User space library
+    + change name in libaxiom_user_api.a
+    + add no-blocking I/O support
+    + use IOCTL to send/recv messages
+    + add new APIs:
+        - axiom_get_num_nodes()
+        - axiom_send_raw_avail() / axiom_recv_raw_avail()
+        - axiom_flush_raw()
+    + small bug fixes
+* User space applications
+    + axiom-netperf
+        - add more statistics
+        - use new payload size to increase the performance
+    + axiom-info
+        - print more information
+    + axiom-send-raw / axiom-recv-raw
+        - add support to non-blocking I/O
+        - more useful parameters
+        - payload specified as a list of bytes
+    + axiom-init
+        - fix routing table overwrite
+    + axiom-ping
+        - improve code using separated thread to send messages
+
 ## axiom-v0.5
 * 64 bit support
     + Ultrascale+ emulation in QEMU
