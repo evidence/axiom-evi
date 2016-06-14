@@ -24,7 +24,7 @@ IMAGES := $(BUILDROOT_DIR)/output/images
 QEMU := $(QEMU_DIR)/aarch64-softmmu/qemu-system-aarch64
 CCPREFIX := ${BUILDROOT_DIR}/output/host/usr/bin/$(CCARCH)-linux-
 SWITCH :=$(EVI_NIC_DIR)/axiom_switch/axiom_switch
-SWITCH_PARAM := -r -n $(VMS) -v
+SWITCH_PARAM := -r -n $(VMS)
 OUTPUT_DIR := output
 ARCHIVE_DIR := archive
 LOG_FILE := make.log
@@ -80,6 +80,7 @@ archive: clean-output
 	cp $(QEMU_DTS_DIR)/zynqmp-qemu-arm.dtb $(OUTPUT_DIR)/images/
 	cp $(ARM_FIRMWARE_DIR)/build/zynqmp/release/bl31/bl31.elf $(OUTPUT_DIR)/images/
 	cp README.archive $(OUTPUT_DIR)/README
+	cp ../CHANGELOG $(OUTPUT_DIR)/CHANGELOG
 	cp Makefile.archive $(OUTPUT_DIR)/Makefile
 	cp start_qemu.sh.archive $(OUTPUT_DIR)/start_qemu.sh
 	tar -zcvf $(OUTPUT_TGZ).tgz $(OUTPUT_DIR) --transform s/$(OUTPUT_DIR)/$(OUTPUT_TGZ)/
