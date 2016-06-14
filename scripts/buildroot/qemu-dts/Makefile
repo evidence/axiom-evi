@@ -11,4 +11,4 @@ all: $(DTB)
 	$(DTC) -q -I dts -O dtb $< -o $@
 
 clean:
-	rm $(CLEANFILES)
+	-rm $(CLEANFILES)
