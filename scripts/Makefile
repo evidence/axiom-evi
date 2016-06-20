@@ -15,6 +15,7 @@ ARM_FIRMWARE_DIR := $(MKFILE_DIR)/../arm-trusted-firmware
 QEMU_DTS_DIR := $(MKFILE_DIR)/./buildroot/qemu-dts
 EVI_NIC_DIR := $(MKFILE_DIR)/../axiom-evi-nic
 EVI_APPS_DIR := $(MKFILE_DIR)/../axiom-evi-apps
+AXIOM_DTB := axiom-board.dtb
 DFLAGS :=
 debug: DFLAGS := -g -DPDEBUG
 
@@ -77,7 +78,7 @@ archive: clean-output
 	cp $(IMAGES)/*dtb $(OUTPUT_DIR)/images/
 	cp $(IMAGES)/*elf $(OUTPUT_DIR)/images/
 	cp $(IMAGES)/*Image $(OUTPUT_DIR)/images/
-	cp $(QEMU_DTS_DIR)/zynqmp-qemu-arm.dtb $(OUTPUT_DIR)/images/
+	cp $(QEMU_DTS_DIR)/$(AXIOM_DTB) $(OUTPUT_DIR)/images/
 	cp $(ARM_FIRMWARE_DIR)/build/zynqmp/release/bl31/bl31.elf $(OUTPUT_DIR)/images/
 	cp README.archive $(OUTPUT_DIR)/README
 	cp ../CHANGELOG $(OUTPUT_DIR)/CHANGELOG

@@ -7,6 +7,7 @@ ID=${ID:-0}
 BOARD="zynqmp"
 ARM_FIRMWARE="../arm-trusted-firmware/build/zynqmp/release/bl31"
 QEMU_DTS="./buildroot/qemu-dts"
+AXIOM_DTB="axiom-board.dtb"
 
 SERIAL_VIDEO="-serial chardev:char1"
 SERIAL_CONSOLE="-serial mon:stdio -display none"
@@ -80,7 +81,7 @@ elif [ "$BOARD" = "zynqmp" ]; then
     -device loader,file=${IMAGES}/Image,addr=0x00080000                 \
     -device loader,file=${IMAGES}/zynqmp-zcu102.dtb,addr=0x04080000     \
     -device loader,file=${IMAGES}/u-boot.elf                            \
-    -hw-dtb ${QEMU_DTS}/zynqmp-qemu-arm.dtb                             \
+    -hw-dtb ${QEMU_DTS}/${AXIOM_DTB}                                    \
     -net nic,vlan=1 -net none,vlan=1 -net nic,vlan=1 -net none,vlan=1   \
     -net nic,vlan=1 -net none,vlan=1                                    \
     -net nic,vlan=0 -net user,hostfwd=tcp::2220${ID}-:22,vlan=0         \
