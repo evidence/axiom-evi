@@ -665,6 +665,7 @@
 			phandle = <0x36>;
 		};
 
+/* XXX: Display port removed: we want only the serial port (QEMU)
 		xlnx_dp: dp@0xFD4A0000 {
 			compatible = "xlnx,v-dp-4.1";
 			reg = <0x0 0xfd4a0000 0x1000>;
@@ -684,6 +685,7 @@
 			linux,phandle = <0x37>;
 			phandle = <0x37>;
 		};
+*/
 
 		xilinx_drm {
 			compatible = "xlnx,drm";
