@@ -822,6 +822,7 @@
 
 		axiom: axiom@ff180000 {
 			compatible = "evi,axiom-netdev";
+			dma = <0x1d>;
 			reg = <0x0 0xff180000 0x2000>;
 			interrupts = <0x87>;
 			#address-cells = <1>;
