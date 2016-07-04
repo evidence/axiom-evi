@@ -801,6 +801,7 @@
 			reg = <0x0 0xff0d0000 0x1000>;
 			num-priority-queues = <0x2>;
 			revision = <0x40070106>;
+			mdio = <0x3d>;
 		};
 
 		gem3: ethernet@0xFF0E0000 {
@@ -1732,6 +1733,7 @@
 		serial0 = "/amba@0/serial@0xFF000000";
 		serial1 = "/amba@0/serial@0xFF010000";
 		ethernet0 = "/amba@0/ethernet@0xFF0E0000";
+		ethernet1 = "/amba@0/ethernet@0xFF0D0000";
 
 		main_bus_for_apu {
 			compatible = "qemu:memory-region";
