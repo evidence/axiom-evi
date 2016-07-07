@@ -41,7 +41,7 @@ IDS := $(shell seq 0 $$(( $(VMS) - 1 )))
 RUNS := $(addprefix run,$(IDS))
 
 
-.PHONY: $(RUNS) run switch stop archive release clean clean-log clean-evi install debug $(QEMU_DIR) $(BUILDROOT_DIR) $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR)
+.PHONY: $(RUNS) run help switch stop archive release clean clean-log clean-evi install netup netdown setupnet debug $(QEMU_DIR) $(BUILDROOT_DIR) $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR)
 
 
 all: stop $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(BUILDROOT_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR) $(QEMU_DIR)
@@ -89,7 +89,25 @@ archive: clean-output
 
 release: clean all archive
 
+help:
+	@echo "Makefile targets:"
+	@echo "run\t\t Start nodes and axiom switch"
+	@echo "stop\t\t Stop nodes and axio switch"
+	@echo "netup\t\t Setup network on host"
+	@echo "netdown\t\t Clean network on host"
+	@echo "NETWORK=1 run\t Start nodes with network enabled"
+	@echo "setupnet\t Setup networks and axiom-init on nodes (nodes must be running)"
+
 run: clean-log stop switch $(RUNS)
+
+netup:
+	@./setup_network_on_host.sh up
+
+netdown:
+	@./setup_network_on_host.sh down
+
+setupnet:
+	@./setup_network_on_nodes.sh
 
 $(RUNS): run%:
 	@echo "starting qemu[$*]: $(QEMU)" | tee -a $(LOG_FILE)
