@@ -96,7 +96,7 @@ if [ "$BOARD" = "zynq" ]; then
     -net nic,vlan=0 -net user,hostfwd=tcp::2220${ID}-:22,vlan=0         \
     -net nic,vlan=1 -net none,vlan=1                                    \
     -net nic,vlan=2 -net socket,vlan=2,connect=localhost:3330${ID}      \
-    -append "mem=256M" -chardev vc,id=char1
+    -append "mem=256M" -chardev vc,id=char1 -redir tcp:1234{ID}::1234
 elif [ "$BOARD" = "zynqmp" ]; then
     if [ $NETWORK -eq 0 ]; then
 	${QEMU} -M arm-generic-fdt -m 256M ${SERIAL} -serial /dev/null      \
@@ -111,7 +111,7 @@ elif [ "$BOARD" = "zynqmp" ]; then
 		-net nic,vlan=0 -net user,hostfwd=tcp::2220${ID}-:22,vlan=0         \
 		$NETLINE \
 		-net nic,vlan=2 -net socket,vlan=2,connect=localhost:3330${ID}      \
-		-chardev vc,id=char1
+		-chardev vc,id=char1 -redir tcp:1234${ID}::1234
     else
 	${QEMU} -M arm-generic-fdt -m 256M ${SERIAL} -serial /dev/null      \
 		-device loader,addr=0xfd1a0104,data=0x8000000e,data-len=4           \
@@ -125,7 +125,7 @@ elif [ "$BOARD" = "zynqmp" ]; then
 		-net nic,vlan=0 -net user,hostfwd=tcp::2220${ID}-:22,vlan=0         \
 		$NETLINE 42<>$(if2dev $TAPNAME$ID) \
 		-net nic,vlan=2 -net socket,vlan=2,connect=localhost:3330${ID}      \
-		-chardev vc,id=char1 
+		-chardev vc,id=char1 -redir tcp:1234${ID}::1234
     fi
 else
     echo "Board $BOARD not supported"
