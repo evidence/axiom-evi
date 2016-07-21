@@ -3,6 +3,36 @@
 
 The following is the list of the main tags of the repository:
 
+## axiom-v0.7
+* axiom-nic
+    + add RDMA driver support (RDMA zone currently handled internally, to be
+    changed in future releases)
+    + add kernel threads in the driver to dequeue packets
+    + add multiple waitqueue (one per port)
+    + add unique message ID in each packets (RAW and RDMA)
+* QEMU
+    + add RDMA emulation support
+    + fix qemu backend reordering issue (patch sent to qemu-devel mailing list)
+* User space library
+    + add RDMA APIs:
+        - axiom_rdma_write()
+        - axiom_rdma_read()
+        - axiom_rdma_mmap() / axiom_rdma_unmmap()
+        - axiom_set_flags() / axiom_unset_flags()
+    + add AXIOM_PORT_ANY to bind a random port available
+    + add new flags: AXIOM_FLAGS_NOBLOCK and AXIOM_FLAG_NOFLUSH
+    + small bug fixes
+* User space applications
+    + axiom-rdma
+        - new application to use RDMA features of Axiom NIC
+    + axiom-netpef
+        - add new test with RDMA messages
+* axiom_switch
+    + add RDMA forwarding support
+* Documentation
+    + update datasheet and documentation following latest specification agreed
+      with FORTH
+
 ## axiom-v0.6
 * axiom-nic / QEMU
     + new registers layout provided by FORTH:

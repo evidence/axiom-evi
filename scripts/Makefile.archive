@@ -28,6 +28,7 @@ $(RUNS): run%:
 	@./start_qemu.sh --id $* --qemu ${QEMU} >> $(LOG_FILE) 2>&1 &
 
 stop:
+	@echo "stopping qemu and axiom_switch" | tee -a $(LOG_FILE)
 	-@killall $(QEMU) 2> /dev/null
 	-@killall $(SWITCH) 2> /dev/null
 
