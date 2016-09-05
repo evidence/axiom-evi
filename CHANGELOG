@@ -16,6 +16,8 @@ The following is the list of the main tags of the repository:
         - axiom_send_long() / axiom_send_long_avail()
         - axiom_recv_long() / axiom_recv_long_avail()
         - axiom_flush_long()
+    + add axiom-init library
+    + add axiom-run library
     + small bug fix
 * User space applications
     + add axiom-init spawn service
