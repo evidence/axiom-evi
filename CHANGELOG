@@ -3,6 +3,29 @@
 
 The following is the list of the main tags of the repository:
 
+## axiom-v0.8
+* axiom-nic
+    + add LONG message driver support
+    + add error flag in the packet header
+* QEMU
+    + add LONG message emulation
+    + fix QEMU reordering bug (will be included in QEMU 2.8)
+    + fix RDMA bugs
+* User space library
+    + add LONG APIs:
+        - axiom_send_long() / axiom_send_long_avail()
+        - axiom_recv_long() / axiom_recv_long_avail()
+        - axiom_flush_long()
+    + small bug fix
+* User space applications
+    + add axiom-init spawn service
+    + add common utilities library
+    + add axiom-run:
+        - spawner of applications on multiple nodes
+    + add axiom-send/axiom-recv:
+        - send/receive raw and long messages
+    + small bug fix
+
 ## axiom-v0.7
 * axiom-nic
     + add RDMA driver support (RDMA zone currently handled internally, to be
