@@ -16,8 +16,8 @@ QEMU_DTS_DIR := $(MKFILE_DIR)/./buildroot/qemu-dts
 EVI_NIC_DIR := $(MKFILE_DIR)/../axiom-evi-nic
 EVI_APPS_DIR := $(MKFILE_DIR)/../axiom-evi-apps
 AXIOM_DTB := axiom-board.dtb
-DFLAGS :=
-debug: DFLAGS := -g -DPDEBUG
+DFLAGS := -g
+debug: DFLAGS := -g DPDEBUG
 
 #CCARCH := arm
 CCARCH := aarch64
