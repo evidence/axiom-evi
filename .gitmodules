@@ -25,3 +25,7 @@
 [submodule "arm-trusted-firmware"]
 	path = arm-trusted-firmware
 	url = https://github.com/Xilinx/arm-trusted-firmware.git
+[submodule "axiom-evi-gasnet"]
+	path = axiom-evi-gasnet
+	url = privatevm:/home/git/axiom-evi-gasnet
+	branch = axiom
