@@ -15,6 +15,8 @@ ARM_FIRMWARE_DIR := $(MKFILE_DIR)/../arm-trusted-firmware
 QEMU_DTS_DIR := $(MKFILE_DIR)/./buildroot/qemu-dts
 EVI_NIC_DIR := $(MKFILE_DIR)/../axiom-evi-nic
 EVI_APPS_DIR := $(MKFILE_DIR)/../axiom-evi-apps
+GASNET_DIR := $(MKFILE_DIR)/../axiom-evi-gasnet
+GASNET_BUILD_DIR := $(MKFILE_DIR)/../axiom-evi-gasnet/build
 AXIOM_DTB := axiom-board.dtb
 DFLAGS := -g
 debug: DFLAGS := -g DPDEBUG
@@ -41,7 +43,7 @@ IDS := $(shell seq 0 $$(( $(VMS) - 1 )))
 RUNS := $(addprefix run,$(IDS))
 
 
-.PHONY: $(RUNS) run help switch stop archive release clean clean-log clean-evi install netup netdown setupnet debug $(QEMU_DIR) $(BUILDROOT_DIR) $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR)
+.PHONY: $(RUNS) run help switch stop archive release clean clean-log clean-evi install netup netdown setupnet debug $(QEMU_DIR) $(BUILDROOT_DIR) $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR) gasnet
 
 
 all: stop $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(BUILDROOT_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR) $(QEMU_DIR)
@@ -70,6 +72,15 @@ $(EVI_NIC_DIR)*:
 $(EVI_APPS_DIR)*:
 	cd $(EVI_APPS_DIR) && make DFLAGS="$(DFLAGS)" install
 
+gasnet:
+	@if [ ! -r $(GASNET_DIR)/configure ]; then \
+		cd $(GASNET_DIR);\
+		./Bootstrap;\
+	fi
+	mkdir -p $(GASNET_BUILD_DIR)
+	@cd $(GASNET_BUILD_DIR); ../cross-configure-axiom --disable-debug
+	@make -C $(GASNET_BUILD_DIR)
+	@make -C $(GASNET_BUILD_DIR)/axiom-conduit tests-par
 
 archive: clean-output
 	mkdir -p $(OUTPUT_DIR)/images
@@ -97,6 +108,7 @@ help:
 	@echo "netdown\t\t Clean network on host"
 	@echo "NETWORK=1 run\t Start nodes with network enabled"
 	@echo "setupnet\t Setup networks and axiom-init on nodes (nodes must be running)"
+	@echo "gasnet\t\t Configure and build GASNet library (including tests)"
 
 run: clean-log stop switch $(RUNS)
 
