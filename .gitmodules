@@ -25,3 +25,7 @@
 [submodule "arm-trusted-firmware"]
 	path = arm-trusted-firmware
 	url = https://github.com/Xilinx/arm-trusted-firmware.git
+[submodule "axiom-allocator"]
+	path = axiom-allocator
+	url = privatevm:/home/git/axiom-allocator
+	branch = master
