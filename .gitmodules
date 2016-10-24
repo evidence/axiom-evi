@@ -29,3 +29,9 @@
 	path = axiom-allocator
 	url = privatevm:/home/git/axiom-allocator
 	branch = master
+[submodule "axiom-evi-allocator-lib"]
+	path = axiom-evi-allocator-lib
+	url = privatevm:/home/git/axiom-evi-allocator-lib
+[submodule "axiom-evi-allocator-drv"]
+	path = axiom-evi-allocator-drv
+	url = privatevm:/home/git/axiom-evi-allocator-drv
