@@ -17,7 +17,7 @@ EVI_NIC_DIR := $(MKFILE_DIR)/../axiom-evi-nic
 EVI_APPS_DIR := $(MKFILE_DIR)/../axiom-evi-apps
 AXIOM_DTB := axiom-board.dtb
 DFLAGS := -g
-debug: DFLAGS := -g DPDEBUG
+debug: DFLAGS := -g -DPDEBUG
 
 #CCARCH := arm
 CCARCH := aarch64
