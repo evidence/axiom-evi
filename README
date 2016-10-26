@@ -42,7 +42,7 @@ To simplify this phase, we provided a makefile to automatize the compilation:
 ```
 cd scripts/
 
-# configure QEMU and Buildroot
+# configure QEMU, Buildroot and the AXIOM allocator
 make configure
 
 # make all submodules and install the applications and
@@ -142,7 +142,7 @@ make install
 In the "scripts" folder there is a Makefile to run a simulator.
 ```
 cd scripts
-make VMS=<number of nodes> run
+make VMS=<number of nodes> run log
 ```
 Example:
 ```

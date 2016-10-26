@@ -15,6 +15,11 @@ ARM_FIRMWARE_DIR := $(MKFILE_DIR)/../arm-trusted-firmware
 QEMU_DTS_DIR := $(MKFILE_DIR)/./buildroot/qemu-dts
 EVI_NIC_DIR := $(MKFILE_DIR)/../axiom-evi-nic
 EVI_APPS_DIR := $(MKFILE_DIR)/../axiom-evi-apps
+EVI_ALLOC_DRV := $(MKFILE_DIR)/../axiom-evi-allocator-drv
+EVI_ALLOC_LIB := $(MKFILE_DIR)/../axiom-evi-allocator-lib
+ALLOCATOR := $(MKFILE_DIR)/../axiom-allocator
+OVERLAY := $(MKFILE_DIR)/buildroot/overlay
+
 AXIOM_DTB := axiom-board.dtb
 DFLAGS := -g
 debug: DFLAGS := -g -DPDEBUG
@@ -41,16 +46,22 @@ IDS := $(shell seq 0 $$(( $(VMS) - 1 )))
 RUNS := $(addprefix run,$(IDS))
 
 
-.PHONY: $(RUNS) run help switch stop archive release clean clean-log clean-evi install netup netdown setupnet debug $(QEMU_DIR) $(BUILDROOT_DIR) $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR)
+.PHONY: $(RUNS) run help switch stop archive release clean clean-log clean-evi install netup netdown setupnet debug libs allocator $(QEMU_DIR) $(BUILDROOT_DIR) $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR)
 
+export PATH := $(BUILDROOT_DIR)/output/host/usr/bin/:$(PATH)
 
-all: stop $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(BUILDROOT_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR) $(QEMU_DIR)
+all: stop libs allocator $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(BUILDROOT_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR) $(QEMU_DIR)
 
 debug: all
 
-configure:
+configure: config-alloc
 	cd $(BUILDROOT_DIR) && make evi_ultrascale_defconfig && make
 	cd $(QEMU_DIR) && ./axiom_configure.sh
+
+config-alloc:
+	cd $(EVI_ALLOC_LIB) && autoreconf -fi && ./configure --host=aarch64-buildroot-linux-gnu --prefix=$(OVERLAY)/usr --with-axiom-mem-dev=$(EVI_ALLOC_DRV) --disable-debug --enable-extld
+	cd $(ALLOCATOR) && autoreconf -fi && ./configure --host=aarch64-buildroot-linux-gnu --prefix=$(OVERLAY)/usr --with-evi-allocator=$(OVERLAY)/usr
+
 
 $(QEMU_DIR)*:
 	cd $(QEMU_DIR) && make -j5
@@ -70,6 +81,14 @@ $(EVI_NIC_DIR)*:
 $(EVI_APPS_DIR)*:
 	cd $(EVI_APPS_DIR) && make DFLAGS="$(DFLAGS)" install
 
+libs:
+	cd $(EVI_NIC_DIR) && make DFLAGS="$(DFLAGS)" libs
+	cd $(EVI_APPS_DIR) && make DFLAGS="$(DFLAGS)" libs
+
+allocator: libs
+	cd $(EVI_ALLOC_DRV) && make CCARCH="$(CCARCH)" install
+	cd $(EVI_ALLOC_LIB) && make install
+	cd $(ALLOCATOR) && make install
 
 archive: clean-output
 	mkdir -p $(OUTPUT_DIR)/images
@@ -133,6 +152,9 @@ clean-evi: stop
 	cd $(EVI_NIC_DIR) && make clean
 	cd $(EVI_APPS_DIR) && make clean
 	cd $(QEMU_DTS_DIR) && make clean
+	cd $(EVI_ALLOC_DRV) && make CCARCH=$(CCARCH) clean
+	cd $(EVI_ALLOC_LIB) && make clean
+	cd $(ALLOCATOR) && make clean
 
 clean-output:
 	rm -rf $(OUTPUT_DIR)
