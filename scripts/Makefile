@@ -59,8 +59,8 @@ configure: config-alloc
 	cd $(QEMU_DIR) && ./axiom_configure.sh
 
 config-alloc:
-	cd $(EVI_ALLOC_LIB) && autoreconf -fi && ./configure --host=aarch64-buildroot-linux-gnu --prefix=$(OVERLAY)/usr --with-axiom-mem-dev=$(EVI_ALLOC_DRV) --disable-debug --enable-extld
-	cd $(ALLOCATOR) && autoreconf -fi && ./configure --host=aarch64-buildroot-linux-gnu --prefix=$(OVERLAY)/usr --with-evi-allocator=$(OVERLAY)/usr
+	cd $(EVI_ALLOC_LIB) && autoreconf -fi && ./configure --host=aarch64-buildroot-linux-gnu --prefix=$(OVERLAY)/usr --disable-debug --enable-extld
+	cd $(ALLOCATOR) && autoreconf -fi && ./configure --host=aarch64-buildroot-linux-gnu --prefix=$(OVERLAY)/usr --with-evi-allocator=$(OVERLAY)/usr --with-axiom-mem-dev=$(EVI_ALLOC_DRV)
 
 
 $(QEMU_DIR)*:
