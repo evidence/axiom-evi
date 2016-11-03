@@ -49,6 +49,11 @@ NIC_SUBS=$VERSION_DOXY_SUBS
 NIC_PATH="../axiom-evi-nic/*"
 NIC_INCLUDE="--include *.c --include *.h"
 
+ALLOC_RE=$VERSION_DOXY_RE
+ALLOC_SUBS=$VERSION_DOXY_SUBS
+ALLOC_PATH="../axiom-allocator/*"
+ALLOC_INCLUDE="--include *.c --include *.h"
+
 DRIVER_RE="MODULE_VERSION(.*"
 DRIVER_SUBS="MODULE_VERSION(\"${VERSION}\");"
 DRIVER_PATH="../axiom-evi-nic/axiom_netdev_driver/*"
@@ -73,6 +78,8 @@ if [ "$SET" = "1" ]; then
         xargs sed -i -e "s/${DRIVER_RE}/${DRIVER_SUBS}/"
     grep -rIl "$NIC_RE" $NIC_PATH $NIC_INCLUDE | \
         xargs sed -i -e "s/${NIC_RE}/${NIC_SUBS}/"
+    grep -rIl "$ALLOC_RE" $ALLOC_PATH $ALLOC_INCLUDE | \
+        xargs sed -i -e "s/${ALLOC_RE}/${ALLOC_SUBS}/"
     grep -rIl "$DATASHEET_RE" $DATASHEET_PATH $DATASHEET_INCLUDE | \
         xargs sed -i -e "s/${DATASHEET_RE}/${DATASHEET_SUBS}/"
     grep -rIl "$DOXYGEN_RE" $DOXYGEN_PATH $DOXYGEN_INCLUDE | \
