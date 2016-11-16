@@ -1,2 +1,5 @@
 *.dtb
 .gdb_history
+ompss
+nbproject
+output
