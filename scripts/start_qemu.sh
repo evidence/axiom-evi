@@ -99,6 +99,7 @@ if [ "$BOARD" = "zynq" ]; then
     -append "mem=256M" -chardev vc,id=char1 -redir tcp:1234{ID}::1234
 elif [ "$BOARD" = "zynqmp" ]; then
     eval ${QEMU} -M arm-generic-fdt -m 256M ${SERIAL} -serial /dev/null \
+    -rtc base=utc,clock=host -semihosting \
     -device loader,addr=0xfd1a0104,data=0x8000000e,data-len=4           \
     -device loader,file=${ARM_FIRMWARE}/bl31.elf,cpu=0                  \
     -device loader,file=${IMAGES}/Image,addr=0x00080000                 \
