@@ -9,11 +9,11 @@ MAC=1a:46:0b:ca:bc
 # ip address is "echo $IP | sed 's/XXX/$ID/'"
 IP=172.16.XXX.1
 
-NNODES=4
 
 [ $(whoami) != 'root' ] && echo "You must be root!" >/dev/stderr && exit 255
 
 UP=1
+NNODES=4
 case $1 in
     up)
 	UP=1
@@ -22,10 +22,18 @@ case $1 in
 	UP=0
     ;;
     *)
-	echo "usage: network.sh [up|down]" >/dev/stderr
+	echo "usage: network.sh (up|down) [num_nodes]" >/dev/stderr
 	exit 255
     ;;
 esac
+
+if [ -n "$2" ]; then
+    NNODES=$2
+elif [ -n "$VMS" ]; then
+    NNODES=$VMS
+else
+    NNODES=4
+fi
 
 SYSNET=/sys/devices/virtual/net
 
