@@ -3,6 +3,50 @@
 
 The following is the list of the main tags of the repository:
 
+## axiom-v0.9
+* axiom-nic
+    + add multiple chrdev to handle poll/select
+    + add iovec support on send/recv functions
+    + add support of new axiom-allocator
+    + add debug IOCTLs
+    + fix RDMA kthread worker
+    + fix NOBLOCK support on RDMA operations
+    + fix LONG implementation
+* QEMU
+    + new registers layout discussed with FORTH:
+        - removed ACKIRQ register
+        - change size of RAW and RDMA DESC registers
+        - add new AVLIRQ register to set IRQ threshold
+    + fix handling of packet loss
+    + add 2 internal queues to handle RAW and RDMA packets
+* User space library
+    + add new APIs
+        - axiom_recv()/axiom_send() to send/recv RAW or LONG depending on the
+          size
+        - axiom_get_fds() to be used on poll/select
+        - IOV API to send/recv RAW or LONG
+    + small change in the RDMA API
+    + small bug fix
+* User space applications
+    + axiom-init
+        - change master ID to 1 (configurable at compile time)
+        - add L1 allocator support
+    + axiom-netperf
+        - add LONG message support
+    + axiom-run
+        - add RPC API to talk with axiom-run master
+        - add L2 allocator support
+        - add allocator service
+    + use of generic axiom_recv()/axiom_send() on several applications
+    + use of IOV send/recv API on several applications
+    + small bug fix
+* Memory allocator
+    + add initially implementation of 3 level axiom-allocator
+        - L1 and L2 protocol
+        - L3 support of multiple implementation (HW or SW)
+        - L3 SW implementation (based on LMM)
+
+* axiom-nic
 ## axiom-v0.8
 * axiom-nic
     + add LONG message driver support
