@@ -83,6 +83,7 @@ $(QEMU_DIR)*:
 
 $(BUILDROOT_DIR):
 	cd $(BUILDROOT_DIR) && make
+	mkdir -p $(HOST_DIR)/bin
 	@for F in ${BUILDROOT_DIR}/output/host/usr/bin/aarch64-buildroot-linux-gnu-*; do \
 		ln -s -f $$F $(HOST_DIR)/bin/ ;\
 		done
@@ -99,6 +100,15 @@ $(EVI_NIC_DIR)*:
 $(EVI_APPS_DIR)*:
 	cd $(EVI_APPS_DIR) && make DFLAGS="$(DFLAGS)" install installhost
 
+installhost:
+	cd $(EVI_NIC_DIR) && make DFLAGS="$(DFLAGS)" installhost
+	cd $(EVI_APPS_DIR) && make DFLAGS="$(DFLAGS)" installhost
+	make -C $(GASNET_BUILD_DIR_DEBUG) install
+	make -C $(GASNET_BUILD_DIR_PERF) install
+	make -C $(NANOX_BUILD_DIR_DEBUG) install
+	make -C $(NANOX_BUILD_DIR_PERF) install
+	make -C $(MCXX_BUILD_DIR) install
+
 gasnet:
 	@if [ ! -r $(GASNET_DIR)/configure ]; then \
 		cd $(GASNET_DIR);\
@@ -113,7 +123,7 @@ gasnet:
 		--enable-udp \
 		--enable-debug
 	@make -C $(GASNET_BUILD_DIR_DEBUG)
-#	@make -C $(GASNET_BUILD_DIR_DEBUG) tests-par
+	@make -C $(GASNET_BUILD_DIR_DEBUG) tests-par
 	@make -C $(GASNET_BUILD_DIR_DEBUG) install
 	mkdir -p $(GASNET_BUILD_DIR_PERF)
 	@cd $(GASNET_BUILD_DIR_PERF); ../cross-configure-axiom \
@@ -124,7 +134,7 @@ gasnet:
 		--enable-udp \
 		--disable-debug
 	@make -C $(GASNET_BUILD_DIR_PERF)
-#	@make -C $(GASNET_BUILD_DIR_PERF) tests-par
+	@make -C $(GASNET_BUILD_DIR_PERF) tests-par
 	@make -C $(GASNET_BUILD_DIR_PERF) install
 
 clean-gasnet:
