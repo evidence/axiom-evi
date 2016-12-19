@@ -739,6 +739,7 @@
 			interrupts = <0x87>;
 			#address-cells = <1>;
 			#size-cells = <0>;
+			rdma-enqueue = <1>;
 		};
 
 		sata: ahci@0xFD0C0000 {

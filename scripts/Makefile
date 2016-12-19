@@ -10,6 +10,7 @@ OUTPUT_TGZ := $(DATE)axiom-nic-evisim-$(GIT_DESC)
 release: OUTPUT_TGZ := axiom-nic-evisim-$(GIT_DESC)
 
 QEMU_DIR := $(MKFILE_DIR)/../axiom-evi-qemu
+QEMU_PARAM := ""
 BUILDROOT_DIR := $(MKFILE_DIR)/../axiom-evi-buildroot
 ARM_FIRMWARE_DIR := $(MKFILE_DIR)/../arm-trusted-firmware
 QEMU_DTS_DIR := $(MKFILE_DIR)/./buildroot/qemu-dts
@@ -60,6 +61,9 @@ endif
 IDS := $(shell seq 0 $$(( $(VMS) - 1 )))
 RUNS := $(addprefix run,$(IDS))
 
+ifeq ($(LONG_ENQUEUE), 1)
+QEMU_PARAM = "-l"
+endif
 
 .PHONY: $(RUNS) run help switch stop archive release clean clean-log clean-evi install netup netdown setupnet debug libs allocator $(QEMU_DIR) $(BUILDROOT_DIR) $(EVI_NIC_DIR) $(EVI_APPS_DIR) $(ARM_FIRMWARE_DIR) $(QEMU_DTS_DIR) gasnet ompss nanox mcxx clean-gasnet clean-ompss clean-nanox clean-mcxx
 
@@ -231,8 +235,8 @@ setupnet:
 	@./setup_network_on_nodes.sh
 
 $(RUNS): run%:
-	@echo "starting qemu[$*]: $(QEMU)" | tee -a $(LOG_FILE)
-	@./start_qemu.sh --id $* --qemu ${QEMU} >> $(LOG_FILE) 2>&1 &
+	@echo "starting qemu[$*]: $(QEMU) param: $(QEMU_PARAM)" | tee -a $(LOG_FILE)
+	@./start_qemu.sh --id $* --qemu ${QEMU} $(QEMU_PARAM) >> $(LOG_FILE) 2>&1 &
 
 stop:
 	@echo "stopping qemu and axiom_switch" | tee -a $(LOG_FILE)

@@ -13,6 +13,7 @@ SERIAL_VIDEO="-serial chardev:char1"
 SERIAL_CONSOLE="-serial mon:stdio -display none"
 
 CONSOLE=0
+LONG_ENQUEUE=0
 NETWORK=${NETWORK:-0}
 
 TAPNAME=tapax
@@ -35,6 +36,7 @@ function usage
     echo -e " -i, --images    img_dir     dir that contains kernel,initrd and dtb"
     echo -e " -c, --console               use stdio console"
     echo -e " -n, --network               create a tap network interface for guest comunication"
+    echo -e " -l, --longenq               enqueue long message when there is no space left"
     echo -e " -h, --help                  print this help"
 }
 
@@ -62,6 +64,9 @@ while [ "$1" != "" ]; do
             shift
             IMAGES=$1
             ;;
+        -l | --longenq )
+            LONG_ENQUEUE=1
+            ;;
         -h | --help )
             usage
             exit
@@ -77,6 +82,10 @@ if [ "$CONSOLE" = "1" ]; then
     SERIAL=$SERIAL_CONSOLE
 else
     SERIAL=$SERIAL_VIDEO
+fi
+
+if [ "$LONG_ENQUEUE" = "1" ]; then
+    AXIOM_DTB="axiom-board-long-enqueue.dtb"
 fi
 
 NETLINE="-net nic,vlan=1 -net none,vlan=1"
