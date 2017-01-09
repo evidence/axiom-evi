@@ -17,5 +17,6 @@ $(AXIOM-DTB): zcu102-arm.dtb
 
 $(AXIOM-DTB-LONG): zcu102-arm-long-enqueue.dtb
 	cp $< $@
-clean:
+
+clean distclean:
 	-rm $(CLEANFILES)
