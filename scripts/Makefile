@@ -509,7 +509,7 @@ clean: clean-log clean-evi clean-archive-output
 distclean: clean-log distclean-evi clean-archive-output
 #	[ -d "$(TARGET_DIR)" -a -n "$(TARGET_DIR)" ] && rm -rf $(TARGET_DIR) || true
 
-clean-toolschain: dist-clean
+clean-toolschain: distclean
 	[ -d "$(OUTPUT_DIR)" -a -n "$(OUTPUT_DIR)" ] && rm -rf $(OUTPUT_DIR) || true
 
 help::
