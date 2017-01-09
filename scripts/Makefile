@@ -168,10 +168,10 @@ allocator: allocator-driver allocator-lib
 		       $${LIB} ;\
 	done
 
-axiom-nic: allocator
+axiom-nic: libs allocator
 	$(MAKE) -C $(EVI_NIC_DIR) install
 
-axiom-apps: libs
+axiom-apps: libs allocator
 	$(MAKE) -C $(EVI_APPS_DIR) install
 
 _buildroot:
