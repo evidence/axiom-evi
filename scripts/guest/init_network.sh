@@ -36,8 +36,13 @@ IP=172.16.XXX.1/16
 # mac address is $MAC:$ID
 MAC=1a:46:0b:ca:bc
 
+echo 1 > /proc/sys/vm/overcommit_memory
+echo 0 > /proc/sys/kernel/randomize_va_space
+
 killall axiom-init || true
 rmmod axiom_netdev || true
+rmmod axiom_mem_dev || true
+rmmod axiom_mem_manager || true
 modprobe axiom_netdev 
 axiom-init "$ARGS" &
 
@@ -45,15 +50,18 @@ axiom-init "$ARGS" &
 if [ $MASTER -eq 0 ]; then
     while [ $(axiom-info -q -n) -eq 0 ]; do
 	sleep 0.15
-    done    
+    done
+    # my node id
+    ID=$(axiom-info -q -n)
+else
+    # my node id
+    ID=1    
 fi
 
-# my node id
-ID=$(axiom-info -q -n)
 # compute my node IP
 MYIP=$(echo $IP | sed "s/XXX/$ID/")
 # compute my node mac if not set
-[ -z "$MYMAC" ] && MYMAC=$MAC:$ID
+[ -z "$MYMAC" ] && MYMAC=$MAC:$((ID-1))
 
 # MYMAC=$(ip link show eth1 | grep "link/ether" | awk '{print $2}')
 
