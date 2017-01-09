@@ -475,7 +475,7 @@ help::
 	@echo "    VMS=?             number of node to run (default: $(VMS))"
 	@echo "    NETWORK=1         enable TCP/IP network between nodes"
 	@echo "    LONG_ENQUEUE=1    ensure a strict FIFO policy on axiom queue"
-	@echo "  stop             Stop nodes and axio switch"
+	@echo "  stop             Stop nodes and axiom_switch"
 	@echo "  netup            Setup network on host (must run by root prior to run vms)"
 	@echo "  netdown          Clean network on host (can be run by root after shutdown vms)"
 	@echo "  setupnet         Setup networks and axiom-init on nodes (nodes must be running)"

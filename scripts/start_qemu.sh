@@ -1,7 +1,7 @@
 #!/bin/bash
 
 BUILDROOT=${BUILDROOT:-../axiom-evi-buildroot}
-IMAGES=${IMAGES:-$BUILDROOT/output/images}
+IMAGES=${IMAGES:-../output/images}
 QEMU=${QEMU:-../axiom-evi-qemu/aarch64-softmmu/qemu-system-aarch64}
 ID=${ID:-0}
 BOARD="zynqmp"
