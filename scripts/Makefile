@@ -528,15 +528,29 @@ help::
 # TEST
 #
 
-.PHONY: tests tests-gasnet
+.PHONY: tests tests-all tests-gasnet
 
-tests:
+tests: axiom-nic axiom-apps
 	@$(MAKE) -C $(EVI_APPS_DIR)/tests install
 
 tests-gasnet: gasnet
-	@$(MAKE) -C $(GASNET_BUILD_DIR_DEBUG) tests-par
-#	@$(MAKE) -C $(GASNET_BUILD_DIR_PERF) tests-par
+	@$(MAKE) -j$(BUILDCPUS) -C $(GASNET_BUILD_DIR_DEBUG) tests-par
+	@$(MAKE) -j$(BUILDCPUS) -C $(GASNET_BUILD_DIR_PERF) tests-par
 	for DESTDIR in $(TARGET_DIR); do \
-		mkdir -p $${DESTDIR}/root/tests_gasnet ;\
-		cp $(GASNET_BUILD_DIR_DEBUG)/axiom-conduit/test* $${DESTDIR}/root/tests_gasnet ;\
+		mkdir -p $${DESTDIR}/root/tests_gasnet_dbg ;\
+		cp $(GASNET_BUILD_DIR_DEBUG)/axiom-conduit/test* \
+			$${DESTDIR}/root/tests_gasnet_dbg ;\
+		mkdir -p $${DESTDIR}/root/tests_gasnet_per ;\
+		cp $(GASNET_BUILD_DIR_PERF)/axiom-conduit/test* \
+			$${DESTDIR}/root/tests_gasnet_per ;\
 	done
+
+tests-all: tests tests-gasnet
+
+help::
+	@echo "TEST"
+	@echo "  tests         Build (and install) axiom API tests"
+	@echo "  tests-gasnet  Build (and install) GASNET tests"
+	@echo " "
+	@echo "  tests-all     Build all tests"
+	@echo " "
