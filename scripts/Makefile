@@ -6,8 +6,10 @@ MKFILE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 VMS := 2
 
 GIT_DESC := $(shell git describe --tags | sed s/axiom-//g)
-OUTPUT_TGZ := $(DATE)axiom-nic-evisim-$(GIT_DESC)
-release: OUTPUT_TGZ := axiom-nic-evisim-$(GIT_DESC)
+ARCHIVE_VMS_TGZ := $(DATE)axiom-nic-evisim-$(GIT_DESC)
+release: ARCHIVE_VMS_TGZ := axiom-nic-evisim-$(GIT_DESC)
+ARCHIVE_TOOLCHAIN_TGZ := $(DATE)axiom-evi-toolchain-$(GIT_DESC)
+release: ARCHIVE_TOOLCHAIN_TGZ := axiom-evi-toolchain-$(GIT_DESC)
 
 #
 # directories
@@ -32,7 +34,7 @@ EVI_ALLOC_DRV_DIR := $(MKFILE_DIR)/../axiom-evi-allocator-drv
 EVI_ALLOC_LIB_DIR := $(MKFILE_DIR)/../axiom-evi-allocator-lib
 ALLOCATOR_DIR := $(MKFILE_DIR)/../axiom-allocator
 OVERLAY_DIR := $(MKFILE_DIR)/buildroot/overlay
-OUTPUT_DIR = $(MKFILE_DIR)/../output
+OUTPUT_DIR = $(realpath $(MKFILE_DIR)/../output)
 #HOST_DIR=$(OUTPUT_DIR)/host
 #TARGET_DIR=$(OUTPUT_DIR)/target
 TARGET_DIR := $(realpath ${OUTPUT_DIR}/target)
@@ -52,7 +54,9 @@ QEMU := $(QEMU_DIR)/aarch64-softmmu/qemu-system-aarch64
 CCPREFIX := ${OUTPUT_DIR}/host/usr/bin/$(CCARCH)-linux-
 SWITCH :=$(EVI_NIC_DIR)/axiom_switch/axiom_switch
 SWITCH_PARAM := -r -n $(VMS)
-ARCHIVE_OUTPUT_DIR := archive_output
+ARCHIVE_VMS_DIR := archive_vms
+ARCHIVE_TOOLCHAIN_DIR := archive_toolchain
+TESTS_DIR := $(MKFILE_DIR)/../tests/
 ARCHIVE_DIR := archive
 LOG_FILE := make.log
 
@@ -395,31 +399,45 @@ help::
 # ARCHIVE
 #
 
-.PHONY: archive release
+.PHONY: archive release archive-toolchain
 
-archive: clean-archive-output
-	mkdir -p $(ARCHIVE_OUTPUT_DIR)/images
-	cp $(QEMU) $(ARCHIVE_OUTPUT_DIR)/
-	cp $(SWITCH) $(ARCHIVE_OUTPUT_DIR)/
-	cp $(IMAGES)/*dtb $(ARCHIVE_OUTPUT_DIR)/images/
-	cp $(IMAGES)/*elf $(ARCHIVE_OUTPUT_DIR)/images/
-	cp $(IMAGES)/*Image $(ARCHIVE_OUTPUT_DIR)/images/
-	cp $(QEMU_DTS_DIR)/$(AXIOM_DTB) $(ARCHIVE_OUTPUT_DIR)/images/
-	cp $(ARM_FIRMWARE_DIR)/build/zynqmp/release/bl31/bl31.elf $(ARCHIVE_OUTPUT_DIR)/images/
-	cp README.archive $(ARCHIVE_OUTPUT_DIR)/README
-	cp ../CHANGELOG $(ARCHIVE_OUTPUT_DIR)/CHANGELOG
-	cp Makefile.archive $(ARCHIVE_OUTPUT_DIR)/Makefile
-	cp start_qemu.sh.archive $(ARCHIVE_OUTPUT_DIR)/start_qemu.sh
-	tar -zcvf $(OUTPUT_TGZ).tgz $(ARCHIVE_OUTPUT_DIR) --transform s/$(ARCHIVE_OUTPUT_DIR)/$(OUTPUT_TGZ)/
+archive: clean-archive-vms
+	mkdir -p $(ARCHIVE_VMS_DIR)/images
+	cp $(QEMU) $(ARCHIVE_VMS_DIR)/
+	cp $(SWITCH) $(ARCHIVE_VMS_DIR)/
+	cp $(IMAGES)/*dtb $(ARCHIVE_VMS_DIR)/images/
+	cp $(IMAGES)/*elf $(ARCHIVE_VMS_DIR)/images/
+	cp $(IMAGES)/*Image $(ARCHIVE_VMS_DIR)/images/
+	cp $(QEMU_DTS_DIR)/$(AXIOM_DTB) $(ARCHIVE_VMS_DIR)/images/
+	cp $(ARM_FIRMWARE_DIR)/build/zynqmp/release/bl31/bl31.elf $(ARCHIVE_VMS_DIR)/images/
+	cp $(MKFILE_DIR)/../CHANGELOG $(ARCHIVE_VMS_DIR)/CHANGELOG
+	cp -r $(MKFILE_DIR)/vms.archive/* $(ARCHIVE_VMS_DIR)/
+	tar -zcvf $(ARCHIVE_VMS_TGZ).tgz $(ARCHIVE_VMS_DIR) --transform s/$(ARCHIVE_VMS_DIR)/$(ARCHIVE_VMS_TGZ)/
 	mkdir -p $(ARCHIVE_DIR)
-	mv $(OUTPUT_TGZ).tgz $(ARCHIVE_DIR)
+	mv $(ARCHIVE_VMS_TGZ).tgz $(ARCHIVE_DIR)
 
-release: clean all archive
+
+archive-toolchain: clean-archive-toolchain
+	mkdir -p $(ARCHIVE_TOOLCHAIN_DIR)/toolchain
+	mkdir -p $(ARCHIVE_TOOLCHAIN_DIR)/examples
+	cp -r $(MKFILE_DIR)/toolchain.archive/* $(ARCHIVE_TOOLCHAIN_DIR)/
+	cp -r $(TESTS_DIR)/utils $(ARCHIVE_TOOLCHAIN_DIR)/examples
+	cp -r $(TESTS_DIR)/ompss/src $(ARCHIVE_TOOLCHAIN_DIR)/examples
+	cp -r $(OUTPUT_DIR)/host $(ARCHIVE_TOOLCHAIN_DIR)/toolchain/host
+	cd $(ARCHIVE_TOOLCHAIN_DIR)/toolchain && ln -s host/usr/aarch64-buildroot-linux-gnu/sysroot sysroot
+	cd $(ARCHIVE_TOOLCHAIN_DIR)/toolchain/host/usr/share/mcxx/config.d && \
+		sed -i s,$(OUTPUT_DIR)/host,\__AXIOM_TOOLCHAIN__,g *
+	tar -zcf $(ARCHIVE_TOOLCHAIN_TGZ).tgz $(ARCHIVE_TOOLCHAIN_DIR) --transform s/$(ARCHIVE_TOOLCHAIN_DIR)/$(ARCHIVE_TOOLCHAIN_TGZ)/
+	mkdir -p $(ARCHIVE_DIR)
+	mv $(ARCHIVE_TOOLCHAIN_TGZ).tgz $(ARCHIVE_DIR)
+
+release: clean all archive archive-toolchain
 
 help::
 	@echo "ARCHIVING"
-	@echo "  archive    Build an archive containing all needed runtime"
-	@echo "  release    As 'archive' for a point release"
+	@echo "  archive            Build an archive containing all needed runtime"
+	@echo "  archive-toolchain  Build an archive containing the toolchain"
+	@echo "  release            As 'archive' for a point release"
 	@echo " "
 
 #
@@ -490,7 +508,7 @@ help::
 # CLEAN
 #
 
-.PHONY: clean-log clean-evi clean-archive-output clean distclean-evi distclean
+.PHONY: clean-log clean-evi clean-archive-vms clean-archive-toolchain clean distclean-evi distclean
 
 clean-log:
 	-@rm $(LOG_FILE)
@@ -501,12 +519,15 @@ clean-evi distclean-evi:
 	done
 	$(MAKE) -C $(EVI_ALLOC_DRV_DIR) CCARCH=$(CCARCH) $(subst -evi,,$@) || true
 
-clean-archive-output:
-	-@rm -rf $(ARCHIVE_OUTPUT_DIR)
+clean-archive-vms:
+	-@rm -rf $(ARCHIVE_VMS_DIR)
 
-clean: clean-log clean-evi clean-archive-output
+clean-archive-toolchain:
+	-@rm -rf $(ARCHIVE_TOOLCHAIN_DIR)
 
-distclean: clean-log distclean-evi clean-archive-output
+clean: clean-log clean-evi clean-archive-vms clean-archive-toolchain
+
+distclean: clean-log distclean-evi clean-archive-vms clean-archive-toolchain
 #	[ -d "$(TARGET_DIR)" -a -n "$(TARGET_DIR)" ] && rm -rf $(TARGET_DIR) || true
 
 clean-toolschain: distclean
@@ -514,14 +535,15 @@ clean-toolschain: distclean
 
 help::
 	@echo "CLEANING"
-	@echo "  clean                 Clean subprojects"
-	@echo "  distclean             Clean subprojects including configuration AND PARTIAL TARGET ROOT FILESYSTEM"
-	@echo "  clean-toolschain      As 'distclean' including BUILDROOT TOOLSCHAIN"
+	@echo "  clean                    Clean subprojects"
+	@echo "  distclean                Clean subprojects including configuration AND PARTIAL TARGET ROOT FILESYSTEM"
+	@echo "  clean-toolschain         As 'distclean' including BUILDROOT TOOLSCHAIN"
 	@echo " "
-	@echo "  clean-log             Clean qemu log file"
-	@echo "  clean-evi             Clean subproject (libs,nic,apps,allocator)"
-	@echo "  distclean-evi         As 'clean-evi', including configuration"
-	@echo "  clean-archive-output  Clean archive output directory"
+	@echo "  clean-log                Clean qemu log file"
+	@echo "  clean-evi                Clean subproject (libs,nic,apps,allocator)"
+	@echo "  distclean-evi            As 'clean-evi', including configuration"
+	@echo "  clean-archive-vms        Clean archive VMs directory"
+	@echo "  clean-archive-toolchain  Clean archive toolchain directory"
 	@echo " "
 
 #

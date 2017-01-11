@@ -1,5 +1,6 @@
 
 *.log
-output/*
 archive/*
+archive_vms/*
+archive_toolchain/*
 buildroot/overlay/usr/*
