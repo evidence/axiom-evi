@@ -1,0 +1,26 @@
+                            AXIOM tests
+===============================================================================
+
+This directory contains the following tests:
+
+ * ompss	
+   To cross-compile ompss tests do the following commands:
+```
+   cd ompss
+   make
+   ../utils/host/copy_to_guest.sh -n $NODES -o ./output
+```
+   The binaries are generated in the ```output``` dir and you can copy them to
+   the guests through ```copy_to_guests.sh``` utility:
+```
+   ../utils/host/copy_to_guest.sh -n $NODES -o ./output
+```
+	* ompss_evimm	
+	  This example implements Matrix Multiplication on top of Ompss		
+	  How to run:	
+```
+	  export NX_ARGS="--cluster --cluster-network=axiom"
+	  export NX_CLUSTER_NODE_MEMORY=16777216
+	  export NX_GASNET_SEGMENT_SIZE=67108864
+	  axiom-run -P ompss ./ompss_evimm $BLOCK_SIZE $MATRIX_SIZE
+```
