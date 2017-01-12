@@ -1,0 +1,23 @@
+                            GASNET tests
+===============================================================================
+
+GASNET regression tests are in the gasnet distribution.
+To cross-compile all the test for axiom and install into the target file-system:
+```
+  make tests-gasnet
+  make target
+```
+(from the scripts/ directory)
+
+## Tests
+
+The descriptions of all the regression tests is beyond the scope of this readme.
+Some information about these tests can be found on axion-evi-gasnet/tests/README.
+
+## How to run
+
+A test can be run inside the guest using:
+```
+   ./run_test_GASNET.sh test??? [parameters]
+```
+The parameters are specific of every test and, usually, can be show using the --help command line options.
