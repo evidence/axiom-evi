@@ -1,26 +1,18 @@
                             AXIOM tests
 ===============================================================================
 
-This directory contains the following tests:
-
+Each subdirectories contain a README that examplains the tests:
  * ompss	
-   To cross-compile ompss tests do the following commands:
-```
-   cd ompss
-   make
-   ../utils/host/copy_to_guest.sh -n $NODES -o ./output
-```
-   The binaries are generated in the ```output``` dir and you can copy them to
-   the guests through ```copy_to_guests.sh``` utility:
-```
-   ../utils/host/copy_to_guest.sh -n $NODES -o ./output
-```
-	* ompss_evimm	
-	  This example implements Matrix Multiplication on top of Ompss		
-	  How to run:	
-```
-	  export NX_ARGS="--cluster --cluster-network=axiom"
-	  export NX_CLUSTER_NODE_MEMORY=16777216
-	  export NX_GASNET_SEGMENT_SIZE=67108864
-	  axiom-run -P ompss ./ompss_evimm $BLOCK_SIZE $MATRIX_SIZE
-```
+   Tests written for OmpSS programming model
+ * gasnet	
+   Regression tests for GASNet
+ * axiom	
+   Tests writter for Axiom API
+
+ * utils
+   Contains some utilities for the host and guests:
+	* host	
+	  contains a script to copy tests in the guest at runtime
+
+	* guest	
+	  contains some scripts to launch the tests through axiom-run
