@@ -221,7 +221,7 @@ gasnet-bootstrap:
 		./Bootstrap;\
 	fi
 
-gasnet-debug-configure: gasnet-bootstrap libs
+gasnet-config-debug: gasnet-bootstrap libs
 	mkdir -p $(GASNET_BUILD_DIR_DEBUG)
 	@if [ ! -r "$(GASNET_BUILD_DIR_DEBUG)/config.status" ]; then \
 		cd $(GASNET_BUILD_DIR_DEBUG); ../cross-configure-axiom \
@@ -234,11 +234,11 @@ gasnet-debug-configure: gasnet-bootstrap libs
 		--enable-debug ;\
 	fi
 
-gasnet-debug: gasnet-debug-configure
+gasnet-debug: gasnet-config-debug
 	@$(MAKE) -C $(GASNET_BUILD_DIR_DEBUG)
 	@$(MAKE) -C $(GASNET_BUILD_DIR_DEBUG) DESTDIR=$(SYSROOT_DIR) install
 
-gasnet-perf-configure: gasnet-bootstrap libs
+gasnet-config-perf: gasnet-bootstrap libs
 	mkdir -p $(GASNET_BUILD_DIR_PERF)
 	if [ ! -r "$(GASNET_BUILD_DIR_PERF)/config.status" ]; then \
 		cd $(GASNET_BUILD_DIR_PERF); ../cross-configure-axiom \
@@ -251,7 +251,7 @@ gasnet-perf-configure: gasnet-bootstrap libs
 		--disable-debug ;\
 	fi
 
-gasnet-perf: gasnet-perf-configure
+gasnet-perf: gasnet-config-perf
 	@$(MAKE) -C $(GASNET_BUILD_DIR_PERF)
 	@$(MAKE) -C $(GASNET_BUILD_DIR_PERF) DESTDIR=$(SYSROOT_DIR) install
 
@@ -277,7 +277,7 @@ help::
 	@echo "  "
 	@echo "  gasnet-boostrap      Gasnet configure bootstrap"
 	@echo "  gasnet-config-debug  Configuration for debug libraries"
-	@echo "  gasnet-config-per    Configuration for performance libraries"
+	@echo "  gasnet-config-perf   Configuration for performance libraries"
 	@echo "  gasnet-debug         Build debug library"
 	@echo "  gasnet-perf          Build performace library"
 	@echo " "
@@ -294,22 +294,22 @@ nanox-bootstrap:
 		./bootstrap;\
 	fi
 
-nanox-debug-config: nanox-bootstrap gasnet-debug
+nanox-config-debug: nanox-bootstrap
 	@mkdir -p $(NANOX_BUILD_DIR_DEBUG)
 	@cd $(NANOX_BUILD_DIR_DEBUG); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr \
 		../scripts/cross-configure-axiom_debug.sh
 
-nanox-debug: nanox-debug-config
+nanox-debug: nanox-config-debug
 	@$(MAKE) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_DEBUG)
 	@$(MAKE) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=$(SYSROOT_DIR) install
 	@$(MAKE) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=$(TARGET_DIR) install
 
-nanox-perf-config: nanox-bootstrap gasnet-perf
+nanox-config-perf: nanox-bootstrap 
 	@mkdir -p $(NANOX_BUILD_DIR_PERF)
 	@cd $(NANOX_BUILD_DIR_PERF); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr \
 		../scripts/cross-configure-axiom_performance.sh
 
-nanox-perf: nanox-perf-config
+nanox-perf: nanox-config-perf
 	@$(MAKE) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_PERF)
 	@$(MAKE) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=$(SYSROOT_DIR) install
 	@$(MAKE) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=$(TARGET_DIR) install
@@ -331,8 +331,8 @@ help::
 	@echo "  distclean-nanox     Clean Nanos++ libraries including configuration"
 	@echo " "
 	@echo "  nanox-bootstrap     Configuration bootsrap"
-	@echo "  nanox-debug-config  Configure debug library"
-	@echo "  nanox-perf-config   Configure performace library"
+	@echo "  nanox-config-debug  Configure debug library"
+	@echo "  nanox-config-perf   Configure performace library"
 	@echo "  nanox-debug         Build debug library"
 	@echo "  nanox-perf          Build performance library"
 	@echo " "
