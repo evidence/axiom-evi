@@ -3,6 +3,25 @@
 
 The following is the list of the main tags of the repository:
 
+## axiom-v0.10
+* axiom-nic
+    + add support to no-blocking RDMA operation
+    + some code cleanup
+    + fix RDMA code
+    + fix API docs
+* QEMU
+    + add parameter to enqueue overflow LONG messages
+* User space library
+    + add support to no-blocking RDMA operation
+    + compiled as Shared Library
+    + fix headers dependency and Makefiles
+* Memory allocator
+    + fix headers dependency and Makefiles
+* GASNet
+    + add initially implementation of axiom-conduit
+* OmpSS
+    + add support to axiom-conduit
+
 ## axiom-v0.9
 * axiom-nic
     + add multiple chrdev to handle poll/select
@@ -46,7 +65,6 @@ The following is the list of the main tags of the repository:
         - L3 support of multiple implementation (HW or SW)
         - L3 SW implementation (based on LMM)
 
-* axiom-nic
 ## axiom-v0.8
 * axiom-nic
     + add LONG message driver support
