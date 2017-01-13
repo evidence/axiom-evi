@@ -305,7 +305,7 @@ nanox-debug: nanox-config-debug
 	@$(MAKE) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=$(SYSROOT_DIR) install
 	@$(MAKE) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=$(TARGET_DIR) install
 
-nanox-config-perf: nanox-bootstrap 
+nanox-config-perf: nanox-bootstrap
 	@mkdir -p $(NANOX_BUILD_DIR_PERF)
 	@cd $(NANOX_BUILD_DIR_PERF); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr \
 		../scripts/cross-configure-axiom_performance.sh
