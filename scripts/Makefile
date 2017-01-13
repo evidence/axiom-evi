@@ -57,6 +57,7 @@ SWITCH_PARAM := -r -n $(VMS)
 ARCHIVE_VMS_DIR := archive_vms
 ARCHIVE_TOOLCHAIN_DIR := archive_toolchain
 TESTS_DIR := $(MKFILE_DIR)/../tests/
+OMPSS_TESTS_DIR := $(TESTS_DIR)/ompss
 ARCHIVE_DIR := archive
 LOG_FILE := make.log
 
@@ -422,7 +423,7 @@ archive-toolchain: clean-archive-toolchain
 	mkdir -p $(ARCHIVE_TOOLCHAIN_DIR)/examples
 	cp -r $(MKFILE_DIR)/toolchain.archive/* $(ARCHIVE_TOOLCHAIN_DIR)/
 	cp -r $(TESTS_DIR)/utils $(ARCHIVE_TOOLCHAIN_DIR)/examples
-	cp -r $(TESTS_DIR)/ompss/src $(ARCHIVE_TOOLCHAIN_DIR)/examples
+	cp -r $(OMPSS_TESTS_DIR)/src $(ARCHIVE_TOOLCHAIN_DIR)/examples
 	cp -r $(OUTPUT_DIR)/host $(ARCHIVE_TOOLCHAIN_DIR)/toolchain/host
 	cd $(ARCHIVE_TOOLCHAIN_DIR)/toolchain && ln -s host/usr/aarch64-buildroot-linux-gnu/sysroot sysroot
 	cd $(ARCHIVE_TOOLCHAIN_DIR)/toolchain/host/usr/share/mcxx/config.d && \
@@ -550,10 +551,13 @@ help::
 # TEST
 #
 
-.PHONY: tests tests-all tests-gasnet
+.PHONY: tests-axiom tests-all tests-gasnet tests-ompss
 
-tests: axiom-nic axiom-apps
+tests-axiom: axiom-nic axiom-apps
 	@$(MAKE) -C $(EVI_APPS_DIR)/tests install
+
+tests-ompss:
+	@$(MAKE) -C $(OMPSS_TESTS_DIR) install
 
 tests-gasnet: gasnet
 	@$(MAKE) -j$(BUILDCPUS) -C $(GASNET_BUILD_DIR_DEBUG) tests-par
@@ -567,12 +571,13 @@ tests-gasnet: gasnet
 			$${DESTDIR}/root/tests_gasnet_per ;\
 	done
 
-tests-all: tests tests-gasnet
+tests-all: tests-axiom tests-gasnet tests-ompss
 
 help::
 	@echo "TEST"
-	@echo "  tests         Build (and install) axiom API tests"
-	@echo "  tests-gasnet  Build (and install) GASNET tests"
+	@echo "  tests-axiom   Build (and install) AXIOM API tests"
+	@echo "  tests-gasnet  Build (and install) GASNet tests"
+	@echo "  tests-ompss   Build (and install) OmpSS tests"
 	@echo " "
 	@echo "  tests-all     Build all tests"
 	@echo " "

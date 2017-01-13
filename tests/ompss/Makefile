@@ -39,7 +39,8 @@ SOURCES=$(wildcard src/ompss_*.c)
 OBJS=$(SOURCES:.c=.o)
 EXECS=$(OBJS:.o=)
 
-DESTDIR=$(MKFILE_DIR)/../output
+DESTDIR=$(MKFILE_DIR)/../../output/target/root/tests_ompss
+LAUNCHER=$(MKFILE_DIR)/../utils/guest/run_tests_OMPSS.sh
 
 %: %.o
 	$(MCC) $(MCCFLAGS) $(OMPSS_LDFLAGS) -o $@ $? $(OMPSS_LDLIBS)
@@ -50,9 +51,9 @@ DESTDIR=$(MKFILE_DIR)/../output
 install: build
 	mkdir -p $(DESTDIR)
 	-cp $(EXECS) $(DESTDIR)
+	-cp $(LAUNCHER) $(DESTDIR)
 
 build: $(OBJS) $(EXECS)
 
 clean:
 	rm -f $(OBJS) $(EXECS)
-	rm -rf $(DESTDIR)
