@@ -1,0 +1,5 @@
+*.d
+*.o
+ompss/src/ompss_evimm
+gasnet/src/gasnet_evimm_axiom_dbg
+gasnet/src/gasnet_evimm_axiom_per

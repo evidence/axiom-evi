@@ -1,6 +1,8 @@
                             GASNET tests
 ===============================================================================
 
+# Regression tests
+
 GASNET regression tests are in the gasnet distribution.
 To cross-compile all the test for axiom and install into the target file-system:
 ```
@@ -21,3 +23,15 @@ A test can be run inside the guest using:
    ./run_test_GASNET.sh test??? [parameters]
 ```
 The parameters are specific of every test and, usually, can be show using the --help command line options.
+
+# Own tests
+
+## Tests
+
+* gasnet_evimm	
+  This example implements Matrix Multiplication on top of Ompss		
+
+## How to run
+
+```
+   ./run_test_GASNET.sh gasnet??? [parameters]
