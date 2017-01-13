@@ -58,6 +58,7 @@ ARCHIVE_VMS_DIR := archive_vms
 ARCHIVE_TOOLCHAIN_DIR := archive_toolchain
 TESTS_DIR := $(MKFILE_DIR)/../tests/
 OMPSS_TESTS_DIR := $(TESTS_DIR)/ompss
+GASNET_TESTS_DIR := $(TESTS_DIR)/gasnet
 ARCHIVE_DIR := archive
 LOG_FILE := make.log
 
@@ -90,7 +91,7 @@ BUILDCPUS:=$(shell getconf _NPROCESSORS_ONLN)
 
 .PHONY: all debug target help
 
-all: buildroot arm-firmware qemu
+all: buildroot arm-firmware qemu gasnet ompss tests target
 
 debug: all
 
@@ -400,9 +401,9 @@ help::
 # ARCHIVE
 #
 
-.PHONY: archive release archive-toolchain
+.PHONY: archive-vms archive-toolchain archive release
 
-archive: clean-archive-vms
+archive-vms: clean-archive-vms
 	mkdir -p $(ARCHIVE_VMS_DIR)/images
 	cp $(QEMU) $(ARCHIVE_VMS_DIR)/
 	cp $(SWITCH) $(ARCHIVE_VMS_DIR)/
@@ -413,6 +414,9 @@ archive: clean-archive-vms
 	cp $(ARM_FIRMWARE_DIR)/build/zynqmp/release/bl31/bl31.elf $(ARCHIVE_VMS_DIR)/images/
 	cp $(MKFILE_DIR)/../CHANGELOG $(ARCHIVE_VMS_DIR)/CHANGELOG
 	cp -r $(MKFILE_DIR)/vms.archive/* $(ARCHIVE_VMS_DIR)/
+	cp $(OMPSS_TESTS_DIR)/README $(ARCHIVE_VMS_DIR)/README.tests.ompss
+	cp $(EVI_APPS_DIR)/tests/README $(ARCHIVE_VMS_DIR)/README.tests.axiom
+	cp $(GASNET_TESTS_DIR)/README $(ARCHIVE_VMS_DIR)/README.tests.gasnet
 	tar -zcvf $(ARCHIVE_VMS_TGZ).tgz $(ARCHIVE_VMS_DIR) --transform s/$(ARCHIVE_VMS_DIR)/$(ARCHIVE_VMS_TGZ)/
 	mkdir -p $(ARCHIVE_DIR)
 	mv $(ARCHIVE_VMS_TGZ).tgz $(ARCHIVE_DIR)
@@ -432,12 +436,15 @@ archive-toolchain: clean-archive-toolchain
 	mkdir -p $(ARCHIVE_DIR)
 	mv $(ARCHIVE_TOOLCHAIN_TGZ).tgz $(ARCHIVE_DIR)
 
-release: clean all archive archive-toolchain
+archive: archive-vms archive-toolchain
+
+release: clean all archive
 
 help::
 	@echo "ARCHIVING"
-	@echo "  archive            Build an archive containing all needed runtime"
+	@echo "  archive-vms        Build an archive containing VMS"
 	@echo "  archive-toolchain  Build an archive containing the toolchain"
+	@echo "  archive            Build an archive containing VMS and toolchain"
 	@echo "  release            As 'archive' for a point release"
 	@echo " "
 
@@ -551,7 +558,7 @@ help::
 # TEST
 #
 
-.PHONY: tests-axiom tests-all tests-gasnet tests-ompss
+.PHONY: tests-axiom tests tests-gasnet tests-ompss
 
 tests-axiom: axiom-nic axiom-apps
 	@$(MAKE) -C $(EVI_APPS_DIR)/tests install
@@ -570,8 +577,9 @@ tests-gasnet: gasnet
 		cp $(GASNET_BUILD_DIR_PERF)/axiom-conduit/test* \
 			$${DESTDIR}/root/tests_gasnet_per ;\
 	done
+	@$(MAKE) -C $(GASNET_TESTS_DIR) install
 
-tests-all: tests-axiom tests-gasnet tests-ompss
+tests: tests-axiom tests-gasnet tests-ompss
 
 help::
 	@echo "TEST"
@@ -579,5 +587,5 @@ help::
 	@echo "  tests-gasnet  Build (and install) GASNet tests"
 	@echo "  tests-ompss   Build (and install) OmpSS tests"
 	@echo " "
-	@echo "  tests-all     Build all tests"
+	@echo "  tests         Build all tests"
 	@echo " "

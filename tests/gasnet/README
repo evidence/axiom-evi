@@ -18,9 +18,10 @@ Some information about these tests can be found on axion-evi-gasnet/tests/README
 
 ## How to run
 
-A test can be run inside the guest using:
+To run in the guests, choose one guest and do the following:
 ```
-   ./run_test_GASNET.sh test??? [parameters]
+   cd /root/tests_gasnet_per
+   ./run_tests_GASNET.sh test??? [parameters]
 ```
 The parameters are specific of every test and, usually, can be show using the --help command line options.
 

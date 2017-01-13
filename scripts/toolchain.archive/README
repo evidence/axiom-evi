@@ -21,7 +21,7 @@ and some examples to use it:
    The binaries are generated in the ```output``` dir and you can copy them to
    the running guests through ```copy_to_guests.sh``` utility:
 ```
-   ../utils/host/copy_to_guest.sh -n $NODES -o ./output
+   ./utils/host/copy_to_guests.sh -n $NODES -o ./output
 ```
    Before to launch the applications you need to start the axiom-init deamon in
    all guests:
