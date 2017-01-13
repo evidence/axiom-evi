@@ -127,10 +127,10 @@ config-buildroot:
 
 help::
 	@echo "CONFIGURE"
-	@echo "  configure          Configure the subrojects (and build toolschain)"
+	@echo "  configure          Configure the subrojects (and build toolchain)"
 	@echo "  "
 	@echo "  config-alloc       Configure memory allocator"
-	@echo "  config-buildroot   Build buildroot toolschain"
+	@echo "  config-buildroot   Build buildroot toolchain"
 	@echo " "
 
 #
@@ -424,10 +424,11 @@ archive-vms: clean-archive-vms
 
 archive-toolchain: clean-archive-toolchain
 	mkdir -p $(ARCHIVE_TOOLCHAIN_DIR)/toolchain
-	mkdir -p $(ARCHIVE_TOOLCHAIN_DIR)/examples
+	mkdir -p $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
 	cp -r $(MKFILE_DIR)/toolchain.archive/* $(ARCHIVE_TOOLCHAIN_DIR)/
 	cp -r $(TESTS_DIR)/utils $(ARCHIVE_TOOLCHAIN_DIR)/examples
-	cp -r $(OMPSS_TESTS_DIR)/src $(ARCHIVE_TOOLCHAIN_DIR)/examples
+	cp -r $(OMPSS_TESTS_DIR)/src/*.c $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
+	cp -r $(OMPSS_TESTS_DIR)/src/*.h $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
 	cp -r $(OUTPUT_DIR)/host $(ARCHIVE_TOOLCHAIN_DIR)/toolchain/host
 	cd $(ARCHIVE_TOOLCHAIN_DIR)/toolchain && ln -s host/usr/aarch64-buildroot-linux-gnu/sysroot sysroot
 	cd $(ARCHIVE_TOOLCHAIN_DIR)/toolchain/host/usr/share/mcxx/config.d && \
@@ -516,7 +517,7 @@ help::
 # CLEAN
 #
 
-.PHONY: clean-log clean-evi clean-archive-vms clean-archive-toolchain clean distclean-evi distclean
+.PHONY: clean-log clean-evi clean-archive-vms clean-archive-toolchain clean distclean-evi distclean clean-tests-axiom clean-tests clean-tests-gasnet clean-tests-ompss
 
 clean-log:
 	-@rm $(LOG_FILE)
@@ -533,19 +534,19 @@ clean-archive-vms:
 clean-archive-toolchain:
 	-@rm -rf $(ARCHIVE_TOOLCHAIN_DIR)
 
-clean: clean-log clean-evi clean-archive-vms clean-archive-toolchain
+clean: clean-log clean-evi clean-archive-vms clean-archive-toolchain clean-tests
 
 distclean: clean-log distclean-evi clean-archive-vms clean-archive-toolchain
 #	[ -d "$(TARGET_DIR)" -a -n "$(TARGET_DIR)" ] && rm -rf $(TARGET_DIR) || true
 
-clean-toolschain: distclean
+clean-toolchain: distclean
 	[ -d "$(OUTPUT_DIR)" -a -n "$(OUTPUT_DIR)" ] && rm -rf $(OUTPUT_DIR) || true
 
 help::
 	@echo "CLEANING"
 	@echo "  clean                    Clean subprojects"
 	@echo "  distclean                Clean subprojects including configuration AND PARTIAL TARGET ROOT FILESYSTEM"
-	@echo "  clean-toolschain         As 'distclean' including BUILDROOT TOOLSCHAIN"
+	@echo "  clean-toolchain          As 'distclean' including BUILDROOT TOOLCHAIN"
 	@echo " "
 	@echo "  clean-log                Clean qemu log file"
 	@echo "  clean-evi                Clean subproject (libs,nic,apps,allocator)"
@@ -553,6 +554,11 @@ help::
 	@echo "  clean-archive-vms        Clean archive VMs directory"
 	@echo "  clean-archive-toolchain  Clean archive toolchain directory"
 	@echo " "
+	@echo "  clean-tests-axiom        Clean AXIOM API tests"
+	@echo "  clean-tests-gasnet       Clean GASNet tests"
+	@echo "  clean-tests-ompss        Clean OmpSS tests"
+	@echo " "
+	@echo "  clean tests              Clean all tests"
 
 #
 # TEST
@@ -563,8 +569,14 @@ help::
 tests-axiom: axiom-nic axiom-apps
 	@$(MAKE) -C $(EVI_APPS_DIR)/tests install
 
+clean-tests-axiom:
+	@$(MAKE) -C $(EVI_APPS_DIR)/tests clean
+
 tests-ompss:
 	@$(MAKE) -C $(OMPSS_TESTS_DIR) install
+
+clean-tests-ompss:
+	@$(MAKE) -C $(OMPSS_TESTS_DIR) clean
 
 tests-gasnet: gasnet
 	@$(MAKE) -j$(BUILDCPUS) -C $(GASNET_BUILD_DIR_DEBUG) tests-par
@@ -579,7 +591,13 @@ tests-gasnet: gasnet
 	done
 	@$(MAKE) -C $(GASNET_TESTS_DIR) install
 
+clean-tests-gasnet:
+	@$(MAKE) -C $(GASNET_TESTS_DIR) clean
+
+
 tests: tests-axiom tests-gasnet tests-ompss
+
+clean-tests: clean-tests-axiom clean-tests-gasnet clean-tests-ompss
 
 help::
 	@echo "TEST"
