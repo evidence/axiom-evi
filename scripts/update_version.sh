@@ -69,7 +69,7 @@ DOXYGEN_SUBS="PROJECT_NUMBER         = v${VERSION}"
 DOXYGEN_PATH="../axiom-evi-nic/axiom_docs/doxygen"
 DOXYGEN_INCLUDE="--include *.doxyfile"
 
-GASNET_RE="#define GASNET_CORE_VERSION *"
+GASNET_RE="#define GASNET_CORE_VERSION .*"
 GASNET_SUBS="#define GASNET_CORE_VERSION      ${VERSION}"
 GASNET_PATH="../axiom-evi-gasnet/axiom-conduit"
 GASNET_INCLUDE="--include *.h"
@@ -77,19 +77,19 @@ GASNET_INCLUDE="--include *.h"
 if [ "$SET" = "1" ]; then
     echo "setting version: $VERSION"
     set -x
-    grep -rIl "$APPS_RE" "$APPS_PATH" "$APPS_INCLUDE" | \
+    grep -rIl "$APPS_RE" "$APPS_PATH" $APPS_INCLUDE | \
         xargs sed -i -e "s/${APPS_RE}/${APPS_SUBS}/"
-    grep -rIl "$DRIVER_RE" "$DRIVER_PATH" "$DRIVER_INCLUDE" | \
+    grep -rIl "$DRIVER_RE" "$DRIVER_PATH" $DRIVER_INCLUDE | \
         xargs sed -i -e "s/${DRIVER_RE}/${DRIVER_SUBS}/"
-    grep -rIl "$NIC_RE" "$NIC_PATH" "$NIC_INCLUDE" | \
+    grep -rIl "$NIC_RE" "$NIC_PATH" $NIC_INCLUDE | \
         xargs sed -i -e "s/${NIC_RE}/${NIC_SUBS}/"
-    grep -rIl "$ALLOC_RE" "$ALLOC_PATH" "$ALLOC_INCLUDE" | \
+    grep -rIl "$ALLOC_RE" "$ALLOC_PATH" $ALLOC_INCLUDE | \
         xargs sed -i -e "s/${ALLOC_RE}/${ALLOC_SUBS}/"
-    grep -rIl "$DATASHEET_RE" "$DATASHEET_PATH" "$DATASHEET_INCLUDE" | \
+    grep -rIl "$DATASHEET_RE" "$DATASHEET_PATH" $DATASHEET_INCLUDE | \
         xargs sed -i -e "s/${DATASHEET_RE}/${DATASHEET_SUBS}/"
-    grep -rIl "$DOXYGEN_RE" "$DOXYGEN_PATH" "$DOXYGEN_INCLUDE" | \
+    grep -rIl "$DOXYGEN_RE" "$DOXYGEN_PATH" $DOXYGEN_INCLUDE | \
         xargs sed -i -e "s/${DOXYGEN_RE}/${DOXYGEN_SUBS}/"
-    grep -rIl "$GASNET_RE" "$GASNET_PATH" "$GASNET_INCLUDE" | \
+    grep -rIl "$GASNET_RE" "$GASNET_PATH" $GASNET_INCLUDE | \
         xargs sed -i -e "s/${GASNET_RE}/${GASNET_SUBS}/"
 elif [ "$PRINT" = "1" ]; then
     echo "printing version"
