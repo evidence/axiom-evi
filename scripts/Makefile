@@ -202,7 +202,7 @@ help::
 	@echo "  allocator-lib      Build Evidence memory allocator libreries"    
 	@echo "  allocator          Build memory allocator"
 	@echo "  axiom-nic          Build axiom kernel driver (and, eventually, user API libs)"
-	@echo "  axiom-app          Build axiom user applications (and, eventually, run/init API libs)"
+	@echo "  axiom-apps         Build axiom user applications (and, eventually, run/init API libs)"
 	@echo "  buildroot          Build target filesystem"
 	@echo "  arm-firmware       Build arm firmware"
 	@echo "  qemu-dts           Build system DTS"
