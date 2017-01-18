@@ -10,7 +10,7 @@ OMPSS_CFLAGS := $(CFLAGS) $(call PKG-CFLAGS, axiom_user_api axiom_init_api  axio
 OMPSS_LDFLAGS := $(LDFLAGS) $(call PKG-LDFLAGS, axiom_user_api axiom_init_api  axiom_run_api axiom_allocator evi_lmm)
 OMPSS_LDLIBS := $(LDLIBS) $(call PKG-LDLIBS, axiom_user_api axiom_init_api  axiom_run_api axiom_allocator evi_lmm)
 
-MCCFLAGS= --cluster --ompss
+MCCFLAGS= --cluster --ompss --instrument
 
 SOURCES:=$(wildcard src/ompss_*.c)
 OBJS:=$(SOURCES:.c=.o)
@@ -20,6 +20,8 @@ DESTDIR:=$(TARGET_DIR)/root/tests_ompss
 LAUNCHER:=$(COMFILE_DIR)/utils/guest/run_test_ompss.sh
 LAUNCHER+=$(COMFILE_DIR)/utils/guest/run_suite.sh
 LAUNCHER+=./run_test_nbody.sh
+LAUNCHER+=$(COMFILE_DIR)/utils/guest/run_tests_OMPSS_extrae.sh
+LAUNCHER+=$(COMFILE_DIR)/utils/guest/extrae.xml
 
 %: %.o
 	$(MCC) $(MCCFLAGS) $(OMPSS_LDFLAGS) -o $@ $? $(OMPSS_LDLIBS)

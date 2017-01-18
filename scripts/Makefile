@@ -321,15 +321,27 @@ nanox-perf: nanox-config-perf
 	@$(MAKE) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=$(SYSROOT_DIR) install
 	@$(MAKE) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=$(TARGET_DIR) install
 
-nanox: nanox-debug nanox-perf
+nanox-config-instr: extrae nanox-bootstrap
+	@mkdir -p $(NANOX_BUILD_DIR_INSTR)
+	@cd $(NANOX_BUILD_DIR_INSTR); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr \
+		../scripts/cross-configure-axiom_instrumentation.sh
+
+nanox-instr: nanox-config-instr
+	@$(MAKE) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_INSTR)
+	@$(MAKE) -C $(NANOX_BUILD_DIR_INSTR) DESTDIR=$(SYSROOT_DIR) install
+	@$(MAKE) -C $(NANOX_BUILD_DIR_INSTR) DESTDIR=$(TARGET_DIR) install
+
+nanox: nanox-debug nanox-perf nanox-instr
 
 clean-nanox:
 	@[ -d $(NANOX_BUILD_DIR_DEBUG) ] && make -C $(NANOX_BUILD_DIR_DEBUG) clean
 	@[ -d $(NANOX_BUILD_DIR_PERF) ] && make -C $(NANOX_BUILD_DIR_PERF) clean
+	@[ -d $(NANOX_BUILD_DIR_INSTR) ] && make -C $(NANOX_BUILD_DIR_INSTR) clean
 
 distclean-nanox:
 	@[ -d $(NANOX_BUILD_DIR_DEBUG) ] && rm -rf $(NANOX_BUILD_DIR_DEBUG) || true
 	@[ -d $(NANOX_BUILD_DIR_PERF) ] && rm -rf $(NANOX_BUILD_DIR_PERF) || true
+	@[ -d $(NANOX_BUILD_DIR_INSTR) ] && rm -rf $(NANOX_BUILD_DIR_INSTR) || true
 
 help::
 	@echo "NANOX (OMPSS)"
@@ -340,8 +352,10 @@ help::
 	@echo "  nanox-bootstrap          Configuration bootsrap"
 	@echo "  nanox-config-debug       Configure debug library"
 	@echo "  nanox-config-perf        Configure performace library"
+	@echo "  nanox-config-instr       Configure performace library with Extrae"
 	@echo "  nanox-debug              Build debug library"
 	@echo "  nanox-perf               Build performance library"
+	@echo "  nanox-instr         	  Build performance library with Extrae"
 	@echo "  nanox-config-debug-force Force the configuration of nanox debug"
 	@echo "  nanox-config-perf-force  Force the configuration of nanox performance"
 	@echo " "
@@ -388,6 +402,44 @@ help::
 	@echo "  mcxx-config       Mercurium configuration"
 	@echo "  mcxx-config-force Force the configuration of Mercurium"
 	@echo " "
+
+#
+# EXTRAE
+#
+
+.PHONY: extrae-boostrap extrae-config extrae clean-extrae distclean-extrae
+
+extrae-bootstrap:
+	@if [ ! -r $(EXTRAE_DIR)/configure ]; then \
+		cd $(EXTRAE_DIR);\
+		autoreconf -fiv;\
+	fi
+
+extrae-config: extrae-bootstrap
+	@mkdir -p $(EXTRAE_BUILD_DIR)
+	cd $(EXTRAE_BUILD_DIR); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr \
+		../scripts/cross-configure-axiom.sh
+
+extrae: extrae-config
+	@$(MAKE) -j$(BUILDCPUS) -C $(EXTRAE_BUILD_DIR)
+	@$(MAKE) -C $(EXTRAE_BUILD_DIR) DESTDIR=$(SYSROOT_DIR) install
+	@$(MAKE) -C $(EXTRAE_BUILD_DIR) DESTDIR=$(TARGET_DIR) install
+
+clean-extrae:
+	@[ -d $(EXTRAE_BUILD_DIR) ] && make -C $(EXTRAE_BUILD_DIR) clean
+
+distclean-extrae:
+	@[ -d $(EXTRAE_BUILD_DIR) ] && rm -rf $(EXTRAE_BUILD_DIR) || true
+
+help::
+	@echo "EXTRAE (OMPSS)"
+	@echo "  extrae              Build Extrae library"
+	@echo "  clean-extrae        Clean Extrae"
+	@echo "  distclean-extrae    Clean Extrae includind configuration"
+	@echo ""
+	@echo "  extrae-bootstrap    Configuration bootstrap"
+	@echo "  extrae-config       Extrae configuration"
+	@echo ""
 
 #
 # OMPSS
