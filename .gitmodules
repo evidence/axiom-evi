@@ -47,3 +47,7 @@
 	path = axiom-evi-mcxx
 	url = privatevm:/home/git/axiom-evi-mcxx
 	branch = axiom
+[submodule "axiom-evi-extrae"]
+	path = axiom-evi-extrae
+	url = privatevm:/home/git/axiom-evi-extrae
+	branch = axiom
