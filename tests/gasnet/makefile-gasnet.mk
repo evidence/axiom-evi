@@ -7,7 +7,7 @@ GASNET:=gasnet-performance
 GASNET_CONDUIT:=axiom
 GASNET_MODE:=par
 
-# per or dbg
+# = per | dbg
 GASNET_TYPE:=$(subst debug,dbg,$(subst performance,per,$(subst gasnet-,,$(GASNET))))
 
 # my files
@@ -54,14 +54,17 @@ DEPFLAGS = -MT $@ -MMD -MP -MF $@.Td
 # my targets
 
 DESTDIR:=$(TARGET_DIR)/root/tests_gasnet_$(GASNET_TYPE)
-LAUNCHER:=$(COMFILE_DIR)/utils/guest/run_tests_GASNET.sh
+LAUNCHERS:=$(COMFILE_DIR)/utils/guest/run_test_gasnet.sh
+LAUNCHERS+=$(COMFILE_DIR)/utils/guest/run_suite.sh
 
 .PHONY: clean build install distclean
 
 install: build
 	mkdir -p $(DESTDIR)
-	-cp $(EXECS) $(DESTDIR)
-	-cp $(LAUNCHER) $(DESTDIR)
+	for EXE in $(EXECS); do cp $${EXE} $(DESTDIR)/`echo $${EXE}|sed -e 's,.*/,,' -e 's,_$(GASNET_TYPE),,'`; done
+	cp $(LAUNCHERS) $(DESTDIR)
+	cp suite/* $(DESTDIR)
+
 
 -include $(DEPS)
 

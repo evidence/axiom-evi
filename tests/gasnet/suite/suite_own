@@ -1,0 +1,7 @@
+
+#
+
+NUMTESTS=1
+
+TEST1E=gasnet_evimm_axiom
+TEST1N=1
