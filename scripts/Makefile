@@ -1,89 +1,72 @@
 
+include locations.mk
+
+#
+# archive/release definitions/parameters
+#
+
 DATE := $(shell date +%Y%m%d_%H%M%S)-
-MKFILE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-
-# number of Virtual Machines to run
-VMS := 2
-
 GIT_DESC := $(shell git describe --tags | sed s/axiom-//g)
 ARCHIVE_VMS_TGZ := $(DATE)axiom-nic-evisim-$(GIT_DESC)
-release: ARCHIVE_VMS_TGZ := axiom-nic-evisim-$(GIT_DESC)
 ARCHIVE_TOOLCHAIN_TGZ := $(DATE)axiom-evi-toolchain-$(GIT_DESC)
+release: ARCHIVE_VMS_TGZ := axiom-nic-evisim-$(GIT_DESC)
 release: ARCHIVE_TOOLCHAIN_TGZ := axiom-evi-toolchain-$(GIT_DESC)
 
 #
-# directories
-#(i.e. where files are located)
+# misc definitions/parameters
 #
-QEMU_DIR := $(MKFILE_DIR)/../axiom-evi-qemu
-QEMU_PARAM := ""
-BUILDROOT_DIR := $(MKFILE_DIR)/../axiom-evi-buildroot
-ARM_FIRMWARE_DIR := $(MKFILE_DIR)/../arm-trusted-firmware
-QEMU_DTS_DIR := $(MKFILE_DIR)/./buildroot/qemu-dts
-EVI_NIC_DIR := $(MKFILE_DIR)/../axiom-evi-nic
-EVI_APPS_DIR := $(MKFILE_DIR)/../axiom-evi-apps
-GASNET_DIR := $(MKFILE_DIR)/../axiom-evi-gasnet
-GASNET_BUILD_DIR_DEBUG := $(MKFILE_DIR)/../axiom-evi-gasnet/build_debug
-GASNET_BUILD_DIR_PERF := $(MKFILE_DIR)/../axiom-evi-gasnet/build_perf
-MCXX_DIR := $(MKFILE_DIR)/../axiom-evi-mcxx
-MCXX_BUILD_DIR := $(MCXX_DIR)/build
-NANOX_DIR := $(MKFILE_DIR)/../axiom-evi-nanox
-NANOX_BUILD_DIR_DEBUG := $(NANOX_DIR)/build_debug
-NANOX_BUILD_DIR_PERF := $(NANOX_DIR)/build_perf
-EVI_ALLOC_DRV_DIR := $(MKFILE_DIR)/../axiom-evi-allocator-drv
-EVI_ALLOC_LIB_DIR := $(MKFILE_DIR)/../axiom-evi-allocator-lib
-ALLOCATOR_DIR := $(MKFILE_DIR)/../axiom-allocator
-OVERLAY_DIR := $(MKFILE_DIR)/buildroot/overlay
-OUTPUT_DIR = $(realpath $(MKFILE_DIR)/../output)
-#HOST_DIR=$(OUTPUT_DIR)/host
-#TARGET_DIR=$(OUTPUT_DIR)/target
-TARGET_DIR := $(realpath ${OUTPUT_DIR}/target)
-SYSROOT_DIR := $(realpath ${OUTPUT_DIR}/staging)
-HOST_DIR := $(realpath ${OUTPUT_DIR}/host)
 
 AXIOM_DTB := axiom-board.dtb
+LOG_FILE := make.log
+
+#
+# start/run definitions/parameters
+#
+
+# default number of Virtual Machines to run
+VMS := 2
+
+# qemu
+
+QEMU := $(QEMU_DIR)/aarch64-softmmu/qemu-system-aarch64
+QEMU_PARAM := "-l"
+ifeq ($(LONG_ENQUEUE), 0)
+QEMU_PARAM := ""
+endif
+
+# axiom switch
+
+SWITCH :=$(EVI_NIC_DIR)/axiom_switch/axiom_switch
+SWITCH_PARAM := -r -n $(VMS)
+ifdef SWITCH
+SWITCH_RUN := $(SWITCH) $(SWITCH_PARAM) >> $(LOG_FILE) 2>&1 &
+else
+SWITCH_RUN :=
+SWITCH_PARAM :=
+endif
+
+#
+# compile/build definitions/parameters
+#
+
 DFLAGS := -g
 debug: DFLAGS := -g -DPDEBUG
-
 export DFLAGS
 
 #CCARCH := arm
 CCARCH := aarch64
-IMAGES := $(OUTPUT_DIR)/images
-QEMU := $(QEMU_DIR)/aarch64-softmmu/qemu-system-aarch64
 CCPREFIX := ${OUTPUT_DIR}/host/usr/bin/$(CCARCH)-linux-
-SWITCH :=$(EVI_NIC_DIR)/axiom_switch/axiom_switch
-SWITCH_PARAM := -r -n $(VMS)
-ARCHIVE_VMS_DIR := archive_vms
-ARCHIVE_TOOLCHAIN_DIR := archive_toolchain
-TESTS_DIR := $(MKFILE_DIR)/../tests/
-OMPSS_TESTS_DIR := $(TESTS_DIR)/ompss
-GASNET_TESTS_DIR := $(TESTS_DIR)/gasnet
-ARCHIVE_DIR := archive
-LOG_FILE := make.log
-
 BDPATH := $(OUTPUT_DIR)/host/usr/bin/:$(PATH)
 
-ifndef AXIOMHOME
-    AXIOMHOME=$(realpath ${MKFILE_DIR}/..)
-endif
-
-ifdef SWITCH
-SWITCH_RUN = $(SWITCH) $(SWITCH_PARAM) >> $(LOG_FILE) 2>&1 &
-else
-SWITCH_RUN=
-SWITCH_PARAM=
-endif
+#
+# makefile definitions/parameters
+#
 
 IDS := $(shell seq 0 $$(( $(VMS) - 1 )))
 RUNS := $(addprefix run,$(IDS))
 SYNCS := $(addprefix sync,$(IDS))
 
-ifeq ($(LONG_ENQUEUE), 1)
-QEMU_PARAM = "-l"
-endif
-
-BUILDCPUS:=$(shell getconf _NPROCESSORS_ONLN)
+BUILDCPUS := $(shell getconf _NPROCESSORS_ONLN)
 
 #
 # MAIN targets
@@ -137,7 +120,7 @@ help::
 # BUILD target filesystem
 #
 
-.PHONY: libs allocator-driver allocator-libs allocator axiom-nic axiom-apps _buildroot buildroot arm-firmware qemu-dts qemu
+.PHONY: libs allocator-driver allocator-lib allocator-lib-config allocator-lib-config-force allocator axiom-nic axiom-apps _buildroot buildroot arm-firmware qemu-dts qemu allocator allocator-config-force allocator-config
 
 libs:
 	$(MAKE) -C $(EVI_NIC_DIR) libs
@@ -148,9 +131,15 @@ allocator-driver: libs
 	$(MAKE) DESTDIR=$(TARGET_DIR) -C $(EVI_ALLOC_DRV_DIR) install
 	$(MAKE) DESTDIR=$(SYSROOT_DIR) -C $(EVI_ALLOC_DRV_DIR) install
 
-allocator-lib: libs
+allocator-lib-config-force:
 	cd $(EVI_ALLOC_LIB_DIR) && CC=$(CCPREFIX)gcc ./configure \
 		--host=aarch64-buildroot-linux-gnu --prefix=/usr --disable-debug --enable-extld
+
+allocator-lib-config: libs
+	if [ ! -r "$(EVI_ALLOC_LIB_DIR)/config.status" ]; then $(MAKE) allocator-lib-config-force; fi
+
+
+allocator-lib: allocator-lib-config
 	$(MAKE) -C $(EVI_ALLOC_LIB_DIR)
 	$(MAKE) DESTDIR=$(TARGET_DIR) -C $(EVI_ALLOC_LIB_DIR) install
 	$(MAKE) DESTDIR=$(SYSROOT_DIR) -C $(EVI_ALLOC_LIB_DIR) install
@@ -161,9 +150,14 @@ allocator-lib: libs
 		       $${LIB} ;\
 	done
 
-allocator: allocator-driver allocator-lib
+allocator-config-force:
 	cd $(ALLOCATOR_DIR) && CC=$(CCPREFIX)gcc ./configure \
 		--host=aarch64-buildroot-linux-gnu --prefix=/usr
+
+allocator-config: allocator-driver allocator-lib
+	if [ ! -r "$(ALLOCATOR_DIR)/config.status" ]; then $(MAKE) allocator-config-force; fi
+
+allocator: allocator-config
 	$(MAKE) -C $(ALLOCATOR_DIR)
 	$(MAKE) DESTDIR=$(TARGET_DIR) -C $(ALLOCATOR_DIR) install
 	$(MAKE) DESTDIR=$(SYSROOT_DIR) -C $(ALLOCATOR_DIR) install
@@ -199,7 +193,7 @@ help::
 	@echo "BUILD"
 	@echo "  libs               Build axiom API libraries"
 	@echo "  allocator-driver   Build Evidence kernel allocator driver"
-	@echo "  allocator-lib      Build Evidence memory allocator libreries"    
+	@echo "  allocator-lib      Build Evidence memory allocator libraries"    
 	@echo "  allocator          Build memory allocator"
 	@echo "  axiom-nic          Build axiom kernel driver (and, eventually, user API libs)"
 	@echo "  axiom-apps         Build axiom user applications (and, eventually, run/init API libs)"
@@ -208,7 +202,11 @@ help::
 	@echo "  qemu-dts           Build system DTS"
 	@echo "  qemu               Build QEMU"
 	@echo " "
-	@echo "  _buildroot        Build ONLY buildroot target filesystem"
+	@echo "  _buildroot                Build ONLY buildroot target filesystem"
+	@echo " allocator-lib-config       Configure the allocator libraries"
+	@echo " allocator-lib-config-force Force the configuration of the allocator libraries"
+	@echo " allocator-config           Configure the allocator"
+	@echo " allocator-config-force     Force the configuration of the allocato"
 	@echo " "
 
 #
@@ -233,7 +231,8 @@ gasnet-config-debug: gasnet-bootstrap libs
 		--libdir=/usr/lib/debug \
 		--includedir=/usr/include/debug \
 		--enable-udp \
-		--enable-debug ;\
+		--enable-debug \
+		--enable-trace --enable-backtrace;\
 	fi
 
 gasnet-debug: gasnet-config-debug
@@ -288,7 +287,7 @@ help::
 # NANOX
 #
 
-.PHONY: nanox-bootstrap nanox-debug-config nanox-debug nanox-perf-config nanox-perf nanox clean-nanox distclean-nanox
+.PHONY: nanox-bootstrap nanox-config-debug nanox-config-debug-force nanox-debug nanox-config-perf nanox-config-perf-force nanox-perf nanox clean-nanox distclean-nanox
 
 nanox-bootstrap:
 	@if [ ! -r $(NANOX_DIR)/configure ]; then \
@@ -296,20 +295,26 @@ nanox-bootstrap:
 		./bootstrap;\
 	fi
 
-nanox-config-debug: nanox-bootstrap
+nanox-config-debug-force: nanox-bootstrap
 	@mkdir -p $(NANOX_BUILD_DIR_DEBUG)
 	@cd $(NANOX_BUILD_DIR_DEBUG); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr \
 		../scripts/cross-configure-axiom_debug.sh
+
+nanox-config-debug:
+	@if [ ! -r "$(NANOX_BUILD_DIR_DEBUG)/config.status" ]; then $(MAKE) nanox-config-debug-force; fi
 
 nanox-debug: nanox-config-debug
 	@$(MAKE) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_DEBUG)
 	@$(MAKE) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=$(SYSROOT_DIR) install
 	@$(MAKE) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=$(TARGET_DIR) install
 
-nanox-config-perf: nanox-bootstrap
+nanox-config-perf-force: nanox-bootstrap
 	@mkdir -p $(NANOX_BUILD_DIR_PERF)
 	@cd $(NANOX_BUILD_DIR_PERF); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr \
 		../scripts/cross-configure-axiom_performance.sh
+
+nanox-config-perf:
+	@if [ ! -r "$(NANOX_BUILD_DIR_PERF)/config.status" ]; then $(MAKE) nanox-config-perf-force; fi
 
 nanox-perf: nanox-config-perf
 	@$(MAKE) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_PERF)
@@ -332,18 +337,20 @@ help::
 	@echo "  clean-nanox         Clean Nanos++ libraries"
 	@echo "  distclean-nanox     Clean Nanos++ libraries including configuration"
 	@echo " "
-	@echo "  nanox-bootstrap     Configuration bootsrap"
-	@echo "  nanox-config-debug  Configure debug library"
-	@echo "  nanox-config-perf   Configure performace library"
-	@echo "  nanox-debug         Build debug library"
-	@echo "  nanox-perf          Build performance library"
+	@echo "  nanox-bootstrap          Configuration bootsrap"
+	@echo "  nanox-config-debug       Configure debug library"
+	@echo "  nanox-config-perf        Configure performace library"
+	@echo "  nanox-debug              Build debug library"
+	@echo "  nanox-perf               Build performance library"
+	@echo "  nanox-config-debug-force Force the configuration of nanox debug"
+	@echo "  nanox-config-perf-force  Force the configuration of nanox performance"
 	@echo " "
 
 #
 # MCXX
 #
 
-.PHONY: mcxx-boostrap mcxx-config mcxx clean-mcxx distclean-mcxx
+.PHONY: mcxx-boostrap mcxx-config mcxx-config-force mcxx clean-mcxx distclean-mcxx
 
 mcxx-bootstrap:
 	@if [ ! -r $(MCXX_DIR)/configure ]; then \
@@ -351,10 +358,13 @@ mcxx-bootstrap:
 		autoreconf -fiv;\
 	fi
 
-mcxx-config: nanox mcxx-bootstrap
+mcxx-config-force: nanox mcxx-bootstrap
 	@mkdir -p $(MCXX_BUILD_DIR)
 	cd $(MCXX_BUILD_DIR); AXIOMHOME=$(AXIOMHOME) PREFIX=$(HOST_DIR)/usr \
 		../scripts/cross-configure-axiom.sh
+
+mcxx-config:
+	@if [ ! -r "$(MCXX_BUILD_DIR)/config.status" ]; then $(MAKE) mcxx-config-force; fi
 
 mcxx: mcxx-config
 	@make -j$(BUILDCPUS) PATH=$(PATH):$(HOST_DIR)/usr/bin -C $(MCXX_BUILD_DIR)
@@ -376,7 +386,8 @@ help::
 	@echo ""
 	@echo "  mcxx-bootstrap    Configuration bootstrap"
 	@echo "  mcxx-config       Mercurium configuration"
-	@echo ""
+	@echo "  mcxx-config-force Force the configuration of Mercurium"
+	@echo " "
 
 #
 # OMPSS
@@ -395,7 +406,7 @@ help::
 	@echo "  ompss             Build OmpSs (Nanos++ and Mercurium)"
 	@echo "  clean-ompss       Clean OmpSs"
 	@echo "  distclean-ompss   Clean OmpSS including configuration"
-	@echo ""
+	@echo " "
 
 #
 # ARCHIVE
@@ -412,8 +423,8 @@ archive-vms: clean-archive-vms
 	cp $(IMAGES)/*Image $(ARCHIVE_VMS_DIR)/images/
 	cp $(QEMU_DTS_DIR)/$(AXIOM_DTB) $(ARCHIVE_VMS_DIR)/images/
 	cp $(ARM_FIRMWARE_DIR)/build/zynqmp/release/bl31/bl31.elf $(ARCHIVE_VMS_DIR)/images/
-	cp $(MKFILE_DIR)/../CHANGELOG $(ARCHIVE_VMS_DIR)/CHANGELOG
-	cp -r $(MKFILE_DIR)/vms.archive/* $(ARCHIVE_VMS_DIR)/
+	cp $(AXIOMHOME/CHANGELOG $(ARCHIVE_VMS_DIR)/CHANGELOG
+	cp -r ./vms.archive/* $(ARCHIVE_VMS_DIR)/
 	cp $(OMPSS_TESTS_DIR)/README $(ARCHIVE_VMS_DIR)/README.tests.ompss
 	cp $(EVI_APPS_DIR)/tests/README $(ARCHIVE_VMS_DIR)/README.tests.axiom
 	cp $(GASNET_TESTS_DIR)/README $(ARCHIVE_VMS_DIR)/README.tests.gasnet
@@ -425,7 +436,7 @@ archive-vms: clean-archive-vms
 archive-toolchain: clean-archive-toolchain
 	mkdir -p $(ARCHIVE_TOOLCHAIN_DIR)/toolchain
 	mkdir -p $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
-	cp -r $(MKFILE_DIR)/toolchain.archive/* $(ARCHIVE_TOOLCHAIN_DIR)/
+	cp -r ./toolchain.archive/* $(ARCHIVE_TOOLCHAIN_DIR)/
 	cp -r $(TESTS_DIR)/utils $(ARCHIVE_TOOLCHAIN_DIR)/examples
 	cp -r $(OMPSS_TESTS_DIR)/src/*.c $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
 	cp -r $(OMPSS_TESTS_DIR)/src/*.h $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
@@ -500,8 +511,8 @@ help::
 	@echo "RUNNING"
 	@echo "  run|start        Start nodes and axiom switch; with the following parameters:"
 	@echo "    VMS=?             number of node to run (default: $(VMS))"
-	@echo "    NETWORK=1         enable TCP/IP network between nodes"
-	@echo "    LONG_ENQUEUE=1    ensure a strict FIFO policy on axiom queue"
+	@echo "    NETWORK=0|1       enable TCP/IP network between nodes (default: 0)"
+	@echo "    LONG_ENQUEUE=0|1  ensure a strict FIFO policy on axiom queue (default: 1)"
 	@echo "  stop             Stop nodes and axiom_switch"
 	@echo "  netup            Setup network on host (must run by root prior to run vms)"
 	@echo "  netdown          Clean network on host (can be run by root after shutdown vms)"
@@ -559,6 +570,7 @@ help::
 	@echo "  clean-tests-ompss        Clean OmpSS tests"
 	@echo " "
 	@echo "  clean tests              Clean all tests"
+	@echo " "
 
 #
 # TEST
@@ -566,11 +578,11 @@ help::
 
 .PHONY: tests-axiom tests tests-gasnet tests-ompss
 
-tests-axiom: axiom-nic axiom-apps
-	@$(MAKE) -C $(EVI_APPS_DIR)/tests install
+tests-axiom:
+	@$(MAKE) -C $(AXIOM_TESTS_DIR) install
 
 clean-tests-axiom:
-	@$(MAKE) -C $(EVI_APPS_DIR)/tests clean
+	@$(MAKE) -C $(AXIOM_TESTS_DIR) clean
 
 tests-ompss:
 	@$(MAKE) -C $(OMPSS_TESTS_DIR) install
@@ -579,21 +591,10 @@ clean-tests-ompss:
 	@$(MAKE) -C $(OMPSS_TESTS_DIR) clean
 
 tests-gasnet: gasnet
-	@$(MAKE) -j$(BUILDCPUS) -C $(GASNET_BUILD_DIR_DEBUG) tests-par
-	@$(MAKE) -j$(BUILDCPUS) -C $(GASNET_BUILD_DIR_PERF) tests-par
-	for DESTDIR in $(TARGET_DIR); do \
-		mkdir -p $${DESTDIR}/root/tests_gasnet_dbg ;\
-		cp $(GASNET_BUILD_DIR_DEBUG)/axiom-conduit/test* \
-			$${DESTDIR}/root/tests_gasnet_dbg ;\
-		mkdir -p $${DESTDIR}/root/tests_gasnet_per ;\
-		cp $(GASNET_BUILD_DIR_PERF)/axiom-conduit/test* \
-			$${DESTDIR}/root/tests_gasnet_per ;\
-	done
 	@$(MAKE) -C $(GASNET_TESTS_DIR) install
 
 clean-tests-gasnet:
 	@$(MAKE) -C $(GASNET_TESTS_DIR) clean
-
 
 tests: tests-axiom tests-gasnet tests-ompss
 
@@ -601,9 +602,13 @@ clean-tests: clean-tests-axiom clean-tests-gasnet clean-tests-ompss
 
 help::
 	@echo "TEST"
-	@echo "  tests-axiom   Build (and install) AXIOM API tests"
-	@echo "  tests-gasnet  Build (and install) GASNet tests"
-	@echo "  tests-ompss   Build (and install) OmpSS tests"
+	@echo "  tests-axiom        Build (and install) AXIOM API tests"
+	@echo "  tests-gasnet       Build (and install) GASNet tests"
+	@echo "  tests-ompss        Build (and install) OmpSS tests"
+	@echo "  tests              Build all tests"
+	@echo "  clean-tests-gasnet Clean gasnet tests"
+	@echo "  clean-tests-ompss  Clean OMPSS tests"
+	@echo "  clean-tests-axiom  Clean AXIOM tests"
+	@echo "  clean-test         Clean all tests"
 	@echo " "
-	@echo "  tests         Build all tests"
-	@echo " "
+	@echo "To run test automatically go to ./tests/ directory and read the README. "
