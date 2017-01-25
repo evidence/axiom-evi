@@ -1,11 +1,13 @@
                             AXIOM tests
 ===============================================================================
 
+# Structure
+
 Each subdirectories contain a README that examplains the tests:
  * ompss	
    Tests written for OmpSS programming model
  * gasnet	
-   Regression tests for GASNet
+   Regression tests and specific tests for GASNet
  * axiom	
    Tests writter for Axiom API
 
@@ -16,3 +18,5 @@ Each subdirectories contain a README that examplains the tests:
 
 	* guest	
 	  contains some scripts to launch the tests through axiom-run
+
+#

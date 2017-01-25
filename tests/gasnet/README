@@ -4,6 +4,11 @@
 # Regression tests
 
 GASNET regression tests are in the gasnet distribution.
+The descriptions of all the regression tests is beyond the scope of this readme.
+Some information about these tests can be found on axion-evi-gasnet/tests/README.
+
+## How to compile
+
 To cross-compile all the test for axiom and install into the target file-system:
 ```
   make tests-gasnet
@@ -11,28 +16,40 @@ To cross-compile all the test for axiom and install into the target file-system:
 ```
 (from the scripts/ directory)
 
-## Tests
+or
 
-The descriptions of all the regression tests is beyond the scope of this readme.
-Some information about these tests can be found on axion-evi-gasnet/tests/README.
+```
+  make install
+  make target
+```
+
+(from this directory)
+
+A
+```
+make help
+```
+show possible make targets.
 
 ## How to run
 
 To run in the guests, choose one guest and do the following:
 ```
    cd /root/tests_gasnet_per
-   ./run_tests_GASNET.sh test??? [parameters]
+   ./run_test_gasnet.sh ./test??? [parameters]
 ```
 The parameters are specific of every test and, usually, can be show using the --help command line options.
 
 # Own tests
 
-## Tests
-
 * gasnet_evimm	
-  This example implements Matrix Multiplication on top of Ompss		
+  This example implements Matrix Multiplication on top of gasnet
+  (similar to a test of OMPSS)
 
-## How to run
+## How to compile or run
 
-```
-   ./run_test_GASNET.sh gasnet??? [parameters]
+As previuosly described for regression tests.
+
+# Run a suite of tests
+
+See ../README.

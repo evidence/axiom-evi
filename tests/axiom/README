@@ -1,4 +1,43 @@
                             AXIOM tests
 ===============================================================================
 
-The AXIOM tests are located in axiom-evi-apps/tests.
+# Tests
+
+The AXIOM tests are located and described in axiom-evi-apps/tests.
+
+## How to compile
+
+To cross-compile all the test for axiom and install into the target file-system:
+```
+  make tests-axiom
+  make target
+```
+(from the scripts/ directory)
+
+or
+
+```
+  make install
+  make target
+```
+
+(from this directory)
+
+A
+```
+make help
+```
+show possible make targets.
+
+## How to run
+
+To run in the guests, choose one guest and do the following:
+```
+   cd /root/tests_axiom
+   ./run_test_axiom.sh ./test??? [parameters]
+```
+The parameters are specific of every test and, usually, can be show using the --help command line options.
+
+# Run a suite of tests
+
+See ../README.
