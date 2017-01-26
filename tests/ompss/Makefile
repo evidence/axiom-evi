@@ -19,9 +19,9 @@ EXECS:=$(OBJS:.o=)
 DESTDIR:=$(TARGET_DIR)/root/tests_ompss
 LAUNCHER:=$(COMFILE_DIR)/utils/guest/run_test_ompss.sh
 LAUNCHER+=$(COMFILE_DIR)/utils/guest/run_suite.sh
-LAUNCHER+=./run_test_nbody.sh
-LAUNCHER+=./run_test_nbody_extrae.sh
-LAUNCHER+=$(COMFILE_DIR)/utils/guest/run_tests_OMPSS_extrae.sh
+LAUNCHER+=$(COMFILE_DIR)/utils/guest/run_test_nbody.sh
+LAUNCHER+=$(COMFILE_DIR)/utils/guest/run_test_nbody_extrae.sh
+LAUNCHER+=$(COMFILE_DIR)/utils/guest/run_test_ompss_extrae.sh
 LAUNCHER+=$(COMFILE_DIR)/utils/guest/extrae.xml
 
 %: %.o

@@ -10,6 +10,7 @@ SERIAL_VIDEO="-serial chardev:char1"
 SERIAL_CONSOLE="-serial mon:stdio -display none"
 
 CONSOLE=0
+LONG_ENQUEUE=0
 NETWORK=${NETWORK:-0}
 
 TAPNAME=tapax
@@ -60,6 +61,9 @@ while [ "$1" != "" ]; do
             shift
             IMAGES=$1
             ;;
+        -l | --longenq )
+            LONG_ENQUEUE=1
+            ;;
         -h | --help )
             usage
             exit
@@ -75,6 +79,10 @@ if [ "$CONSOLE" = "1" ]; then
     SERIAL=$SERIAL_CONSOLE
 else
     SERIAL=$SERIAL_VIDEO
+fi
+
+if [ "$LONG_ENQUEUE" = "1" ]; then
+    AXIOM_DTB="axiom-board-long-enqueue.dtb"
 fi
 
 NETLINE="-net nic,vlan=1 -net none,vlan=1"

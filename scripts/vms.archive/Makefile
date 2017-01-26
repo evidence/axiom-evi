@@ -14,6 +14,11 @@ SWITCH_RUN=
 SWITCH_PARAM=
 endif
 
+QEMU_PARAM := "-l"
+ifeq ($(LONG_ENQUEUE), 0)
+QEMU_PARAM := ""
+endif
+
 IDS := $(shell seq 0 $$(( $(VMS) - 1 )))
 RUNS := $(addprefix run,$(IDS))
 
@@ -25,7 +30,7 @@ run: clean-log stop switch $(RUNS)
 
 $(RUNS): run%:
 	@echo "starting qemu[$*]: $(QEMU)" | tee -a $(LOG_FILE)
-	@./start_qemu.sh --id $* --qemu ${QEMU} >> $(LOG_FILE) 2>&1 &
+	@./start_qemu.sh --id $* --qemu ${QEMU} $(QEMU_PARAM) >> $(LOG_FILE) 2>&1 &
 
 stop:
 	@echo "stopping qemu and axiom_switch" | tee -a $(LOG_FILE)
