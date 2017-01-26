@@ -321,10 +321,13 @@ nanox-perf: nanox-config-perf
 	@$(MAKE) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=$(SYSROOT_DIR) install
 	@$(MAKE) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=$(TARGET_DIR) install
 
-nanox-config-instr: extrae nanox-bootstrap
+nanox-config-instr-force: extrae nanox-bootstrap
 	@mkdir -p $(NANOX_BUILD_DIR_INSTR)
 	@cd $(NANOX_BUILD_DIR_INSTR); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr \
 		../scripts/cross-configure-axiom_instrumentation.sh
+
+nanox-config-instr:
+	@if [ ! -r "$(NANOX_BUILD_DIR_INSTR)/config.status" ]; then $(MAKE) nanox-config-instr-force; fi
 
 nanox-instr: nanox-config-instr
 	@$(MAKE) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_INSTR)
@@ -358,6 +361,7 @@ help::
 	@echo "  nanox-instr         	  Build performance library with Extrae"
 	@echo "  nanox-config-debug-force Force the configuration of nanox debug"
 	@echo "  nanox-config-perf-force  Force the configuration of nanox performance"
+	@echo "  nanox-config-instr-force Force the configuration of nanox instrumentation"
 	@echo " "
 
 #
@@ -407,7 +411,7 @@ help::
 # EXTRAE
 #
 
-.PHONY: extrae-boostrap extrae-config extrae clean-extrae distclean-extrae
+.PHONY: extrae-boostrap extrae-config-force extrae-config extrae clean-extrae distclean-extrae
 
 extrae-bootstrap:
 	@if [ ! -r $(EXTRAE_DIR)/configure ]; then \
@@ -415,10 +419,13 @@ extrae-bootstrap:
 		autoreconf -fiv;\
 	fi
 
-extrae-config: extrae-bootstrap
+extrae-config-force: extrae-bootstrap
 	@mkdir -p $(EXTRAE_BUILD_DIR)
 	cd $(EXTRAE_BUILD_DIR); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr \
 		../scripts/cross-configure-axiom.sh
+
+extrae-config:
+	@if [ ! -r "$(EXTRAE_BUILD_DIR)/config.status" ]; then $(MAKE) extrae-config-force; fi
 
 extrae: extrae-config
 	@$(MAKE) -j$(BUILDCPUS) -C $(EXTRAE_BUILD_DIR)
@@ -438,7 +445,8 @@ help::
 	@echo "  distclean-extrae    Clean Extrae includind configuration"
 	@echo ""
 	@echo "  extrae-bootstrap    Configuration bootstrap"
-	@echo "  extrae-config       Extrae configuration"
+	@echo "  extrae-config-force Extrae configuration"
+	@echo "  extrae-config       Force the configuration of Extrae"
 	@echo ""
 
 #
