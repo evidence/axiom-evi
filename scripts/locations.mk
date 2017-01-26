@@ -16,6 +16,7 @@ MCXX_BUILD_DIR := $(MCXX_DIR)/build
 NANOX_DIR := $(LOCFILE_DIR)/../axiom-evi-nanox
 NANOX_BUILD_DIR_DEBUG := $(NANOX_DIR)/build_debug
 NANOX_BUILD_DIR_PERF := $(NANOX_DIR)/build_perf
+NANOX_BUILD_DIR_INSTR := $(NANOX_DIR)/build_instr
 EXTRAE_DIR := $(LOCFILE_DIR)/../axiom-evi-extrae
 EXTRAE_BUILD_DIR := $(EXTRAE_DIR)/build
 EVI_ALLOC_DRV_DIR := $(LOCFILE_DIR)/../axiom-evi-allocator-drv
