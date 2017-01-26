@@ -58,3 +58,8 @@ After the computation end the result system is written into 'particles-1024-128-
 # Run a suite of tests
 
 See ../README.
+
+## Suites
+
+* own
+  Some tests written for the AXIOM project

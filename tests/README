@@ -19,4 +19,24 @@ Each subdirectories contain a README that examplains the tests:
 	* guest	
 	  contains some scripts to launch the tests through axiom-run
 
-#
+# Run a suite of tests
+
+Tests are groupped into suites that can be run automatically.
+For example to run the 'core' suite of tests for gasnet
+
+```
+cd tests/gasnet
+make tests-core
+
+```
+a
+
+```
+make help
+```
+
+show the available suites.
+
+Note that the system must be already running; you must ```make start```
+to run a 2 nodes system and then launch ```/root/axim-startup.sh``
+in every node (in one node use the '-m' flag) as already described.

@@ -53,3 +53,22 @@ As previuosly described for regression tests.
 # Run a suite of tests
 
 See ../README.
+
+## Suites
+
+* core
+  GASNet regression tests for specification conformance
+
+* perf
+  GASNet regression tests for performance
+
+* hsl
+  High Speed Lock tests
+  We are using the default GASNet implementation of HSL that is based
+  on POSIX libraries; some (not requested) tests fail
+
+* exit
+  GASNet exit tests
+
+* own
+  Some tests written for AXIOM project

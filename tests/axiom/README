@@ -41,3 +41,8 @@ The parameters are specific of every test and, usually, can be show using the --
 # Run a suite of tests
 
 See ../README.
+
+## Suites
+
+* own
+  Some internal regression tests to check board data exchange
