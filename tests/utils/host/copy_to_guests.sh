@@ -37,5 +37,5 @@ set -x
 for n in `seq 0 $((${NODES}-1))`;
 do
 	ssh-keygen -f "${HOME}/.ssh/known_hosts" -R [localhost]:2220$n
-	sshpass -p root scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P 2220$n -r ${OUTPUTDIR}/* root@localhost:
+	sshpass -p root scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P 2220$n -r ${OUTPUTDIR}/* root@localhost:/tmp/
 done

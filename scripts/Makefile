@@ -16,7 +16,6 @@ release: ARCHIVE_TOOLCHAIN_TGZ := axiom-evi-toolchain-$(GIT_DESC)
 # misc definitions/parameters
 #
 
-AXIOM_DTB := axiom-board.dtb
 LOG_FILE := make.log
 
 #
@@ -476,15 +475,19 @@ help::
 
 archive-vms: clean-archive-vms
 	mkdir -p $(ARCHIVE_VMS_DIR)/images
+	mkdir -p $(ARCHIVE_VMS_DIR)/extrae
 	cp $(QEMU) $(ARCHIVE_VMS_DIR)/
 	cp $(SWITCH) $(ARCHIVE_VMS_DIR)/
 	cp $(IMAGES)/*dtb $(ARCHIVE_VMS_DIR)/images/
 	cp $(IMAGES)/*elf $(ARCHIVE_VMS_DIR)/images/
 	cp $(IMAGES)/*Image $(ARCHIVE_VMS_DIR)/images/
-	cp $(QEMU_DTS_DIR)/$(AXIOM_DTB) $(ARCHIVE_VMS_DIR)/images/
+	cp $(QEMU_DTS_DIR)/*dtb $(ARCHIVE_VMS_DIR)/images/
 	cp $(ARM_FIRMWARE_DIR)/build/zynqmp/release/bl31/bl31.elf $(ARCHIVE_VMS_DIR)/images/
-	cp $(AXIOMHOME/CHANGELOG $(ARCHIVE_VMS_DIR)/CHANGELOG
+	cp $(AXIOMHOME)/CHANGELOG $(ARCHIVE_VMS_DIR)/CHANGELOG
 	cp -r ./vms.archive/* $(ARCHIVE_VMS_DIR)/
+	cp $(TESTS_DIR)/utils/host/extrae_merge.sh $(ARCHIVE_VMS_DIR)/extrae
+	cp $(TESTS_DIR)/utils/host/mpi2prv $(ARCHIVE_VMS_DIR)/extrae
+	cp -r $(TESTS_DIR)/utils/host/paraver_cfg $(ARCHIVE_VMS_DIR)/extrae
 	cp $(OMPSS_TESTS_DIR)/README $(ARCHIVE_VMS_DIR)/README.tests.ompss
 	cp $(EVI_APPS_DIR)/tests/README $(ARCHIVE_VMS_DIR)/README.tests.axiom
 	cp $(GASNET_TESTS_DIR)/README $(ARCHIVE_VMS_DIR)/README.tests.gasnet
@@ -493,11 +496,12 @@ archive-vms: clean-archive-vms
 	mv $(ARCHIVE_VMS_TGZ).tgz $(ARCHIVE_DIR)
 
 
-archive-toolchain: clean-archive-toolchain
+archive-toolchain: clean-archive-toolchain clean-tests
 	mkdir -p $(ARCHIVE_TOOLCHAIN_DIR)/toolchain
 	mkdir -p $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
 	cp -r ./toolchain.archive/* $(ARCHIVE_TOOLCHAIN_DIR)/
 	cp -r $(TESTS_DIR)/utils $(ARCHIVE_TOOLCHAIN_DIR)/examples
+	cp -r $(TESTS_DIR)/ompss/N-body $(ARCHIVE_TOOLCHAIN_DIR)/examples
 	cp -r $(OMPSS_TESTS_DIR)/src/*.c $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
 	cp -r $(OMPSS_TESTS_DIR)/src/*.h $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
 	cp -r $(OUTPUT_DIR)/host $(ARCHIVE_TOOLCHAIN_DIR)/toolchain/host

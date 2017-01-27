@@ -5,6 +5,8 @@ export LD_PRELOAD=/usr/lib/libnanostrace.so
 
 set -x
 
+rm -rf set-0
+
 NX_ARGS="--cluster --cluster-network=axiom --smp-workers=1 --instrumentation=extrae" \
        NX_CLUSTER_NODE_MEMORY=16777216 \
        NX_GASNET_SEGMENT_SIZE=67108864 \
