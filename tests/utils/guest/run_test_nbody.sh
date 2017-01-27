@@ -1,36 +1,30 @@
 #!/bin/sh
 
 if [ x$1 == x ]; then
-   echo "Us: $0" '<particles input file>'
+    echo "Use: $0 NUM_PARTICLES NUM_STEPS"
+    echo "Example: $0 256 5"
+    echo "(for using file 'particles-256-128-5.in')"
 else
+    NUM_PART=$1
+    NUM_STEP=$2
+    NUM_THREADS=1
 
-ARG1=`echo $1 | sed -e 's/[a-z]*-//' -e 's/-.*//'`
-ARG3=`echo $1 |sed -e 's/.*-//' -e 's/\..*//'`
-    
-echo "Executing N-body on `axiom-info -N -q` boards..."
+    echo "Using file 'particles-${NUM_PART}-128-${NUM_STEP}.in'"        
+    echo "Executing N-body on `axiom-info -N -q` boards..."
 
-NUM_TH=3
+    #export NX_ARGS="--cluster --cluster-network axiom --smp-workers $NUM_THREADS --disable-binding --cluster-smp-presend 780 --thd-output"
+    export NX_ARGS="--cluster --cluster-network axiom --smp-workers $NUM_THREADS --disable-binding --thd-output"
+    export NX_GASNET_SEGMENT_SIZE=268435456
+    export NX_CLUSTER_NODE_MEMORY=134217728
+    if [ $NUM_THREADS == 1 ]; then
+    	export NX_SCHEDULE=affinity-ready
+    else
+    	export NX_SCHEDULE=affinity
+    fi
 
-#
-#
-#
-
-export NX_ARGS="--cluster --cluster-network axiom --smp-workers $NUM_TH --disable-binding --cluster-smp-presend 780 --cluster-node-memory $((1024*1024*(128))) --thd-output"
-
-export NX_GASNET_SEGMENT_SIZE=67108864
-
-if [ $NUM_TH == 1 ]; then
-   export NX_SCHEDULE=affinity-ready
-else
-   export NX_SCHEDULE=affinity
-fi
-echo "Using $NX_SCHEDULE scheduling policy"
-
-export EXTRAE_CONFIG_FILE=./extrae.xml
-export LD_BIND_NOW=1
-export LD_LIBRARY_PATH=/usr/lib/performance
-
-echo axiom-run -P ompss ./nbody $ARG1 $ARG3 0
-axiom-run -P ompss ./nbody $ARG1 $ARG3 0
-
+    export LD_BIND_NOW=1
+    export LD_LIBRARY_PATH=/usr/lib/performance
+        
+    echo axiom-run -P ompss ./nbody $NUM_PART $NUM_STEP 0
+    axiom-run -P ompss ./nbody $NUM_PART $NUM_STEP 0
 fi

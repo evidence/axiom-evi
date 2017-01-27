@@ -50,9 +50,9 @@ The parameters are specific of every test and, usually, can be show using the --
 To run in the guest, do
 ```
 cd /root/tests_ompss/
-./run_test_nbody.sh particles-1024-128-100.in
+./run_test_nbody.sh 1024 100
 ```
-The file particles-1024-128-100.in is using to build the initial system.
+The file particles-1024-128-100.in is using to build the initial system (in this example).
 After the computation end the result system is written into 'particles-1024-128-100.out' and compared against 'particles-1024-128-100.ref' to check for failure.
 
 # Run a suite of tests
