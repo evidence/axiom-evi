@@ -4,17 +4,31 @@
 This repository contains the following git submodules:
 
  * axiom-allocator
+    + Implementation of the three level AXIOM allocator
  * axiom-evi-allocator-drv
+    + Implementation of the memory device to handle virtual to physical memory mapping
  * axiom-evi-allocator-lib
+    + Implementation of 3th level software allocator based on LMM
  * axiom-evi-apps
+    + Implementation of AXIOM application and deamons (axiom-init, axiom-run, etc.)
  * axiom-evi-buildroot
+    + Modified version of Buildroot to support AXIOM board
+ * axiom-evi-extrae
+    + Modified version of Extrae to support IOCTL and AXIOM api
  * axiom-evi-gasnet
+    + Modified version of GASNet that includes the new AXIOM conduit
  * axiom-evi-linux
+    + Modified version of Linux kernel to support AXIOM board
  * axiom-evi-mcxx
+    + Modified version of mcxx to support AXIOM GASNet conduit and cross-compilation
  * axiom-evi-nanox
+    + Modified version of nanox to support AXIOM GASNet conduit and cross-compilation
  * axiom-evi-nic
+    + Implementation of AXIOM NIC device driver and User Space libraries
  * axiom-evi-qemu
+    + Modified version of QEMU to emulate the AXIOM-NIC device
  * axiom-evi-u-boot
+    + Modified version of u-boot to support AXIOM board
  * arm-trusted-firmware
 
 
