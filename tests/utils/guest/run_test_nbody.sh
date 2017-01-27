@@ -17,6 +17,8 @@ NUM_TH=3
 
 export NX_ARGS="--cluster --cluster-network axiom --smp-workers $NUM_TH --disable-binding --cluster-smp-presend 780 --cluster-node-memory $((1024*1024*(128))) --thd-output"
 
+export NX_GASNET_SEGMENT_SIZE=67108864
+
 if [ $NUM_TH == 1 ]; then
    export NX_SCHEDULE=affinity-ready
 else
