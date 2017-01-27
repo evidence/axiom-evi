@@ -84,8 +84,8 @@ NBODY_EXEC=$(NBODY_DIR)/nbody
 install-nbody: build-nbody
 	mkdir -p $(DESTDIR)
 	cp -f $(NBODY_EXEC) $(DESTDIR)
-	cp -f $(NBODY_DIR)/../particles-1024-128-100.in $(DESTDIR)
-	cp -f $(NBODY_DIR)/../particles-1024-128-100.ref $(DESTDIR)
+	cp -f $(NBODY_DIR)/../particles-*.in $(DESTDIR)
+	cp -f $(NBODY_DIR)/../particles-*.ref $(DESTDIR)
 
 build-nbody: $(NBODY_EXEC)
 
