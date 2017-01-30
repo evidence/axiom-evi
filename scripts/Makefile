@@ -201,11 +201,11 @@ help::
 	@echo "  qemu-dts           Build system DTS"
 	@echo "  qemu               Build QEMU"
 	@echo " "
-	@echo "  _buildroot                Build ONLY buildroot target filesystem"
-	@echo " allocator-lib-config       Configure the allocator libraries"
-	@echo " allocator-lib-config-force Force the configuration of the allocator libraries"
-	@echo " allocator-config           Configure the allocator"
-	@echo " allocator-config-force     Force the configuration of the allocato"
+	@echo "  _buildroot                 Build ONLY buildroot target filesystem"
+	@echo "  allocator-lib-config       Configure the allocator libraries"
+	@echo "  allocator-lib-config-force Force the configuration of the allocator libraries"
+	@echo "  allocator-config           Configure the allocator"
+	@echo "  allocator-config-force     Force the configuration of the allocato"
 	@echo " "
 
 #
