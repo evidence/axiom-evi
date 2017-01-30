@@ -3,7 +3,37 @@
 
 The following is the list of the main tags of the repository:
 
-## axiom-v0.10
+## axiom-v0.11          (30/01/2017)
+* User space library
+    + add Extrae (tracing) support in the AXIOM NIC API
+    + fix doxygen documentation
+    + small bug fix
+* User space applications
+    + axiom-init
+        - fix spawner function
+    + axiom-run
+        - fix exit cleanup
+        - fix profiles
+        - add propagation of EXTRAE_ var enviroments
+    + tests:
+        - add regression tests (raw, long, rdma)
+* Memory allocator
+    + Add Extrae (tracing) support in the AXIOM Allocator API
+* GASNet
+    + small bug fix to run all gasnet regression tests
+* OmpSS (mcxx + nanox + extrae)
+    + add NX_EXTRAE_AVOID_MERGE env to disable extrae merge
+    + add scripts to cross-compile OmpSS for AXIOM board
+    + Extrae:
+        - add --enable-aarch64 config parameter
+        - some fix in Makefiles
+        - add wrapper to trace IOCTLs
+* Tests
+    + Add several regression tests for the AXIOM software stack, GASNet
+      and OmpSS
+    + Add Makefiles to automate the execution of tests
+
+## axiom-v0.10          (13/01/2017)
 * axiom-nic
     + add support to no-blocking RDMA operation
     + some code cleanup
@@ -22,7 +52,7 @@ The following is the list of the main tags of the repository:
 * OmpSS
     + add support to axiom-conduit
 
-## axiom-v0.9
+## axiom-v0.9           (04/11/2016)
 * axiom-nic
     + add multiple chrdev to handle poll/select
     + add iovec support on send/recv functions
@@ -65,7 +95,7 @@ The following is the list of the main tags of the repository:
         - L3 support of multiple implementation (HW or SW)
         - L3 SW implementation (based on LMM)
 
-## axiom-v0.8
+## axiom-v0.8           (05/09/2016)
 * axiom-nic
     + add LONG message driver support
     + add error flag in the packet header
@@ -90,7 +120,7 @@ The following is the list of the main tags of the repository:
         - send/receive raw and long messages
     + small bug fix
 
-## axiom-v0.7
+## axiom-v0.7           (21/07/2016)
 * axiom-nic
     + add RDMA driver support (RDMA zone currently handled internally, to be
     changed in future releases)
@@ -120,7 +150,7 @@ The following is the list of the main tags of the repository:
     + update datasheet and documentation following latest specification agreed
       with FORTH
 
-## axiom-v0.6
+## axiom-v0.6           (14/06/2016)
 * axiom-nic / QEMU
     + new registers layout provided by FORTH:
         - only one descriptor per queue memory mapped to the CPU
@@ -151,7 +181,7 @@ The following is the list of the main tags of the repository:
     + axiom-ping
         - improve code using separated thread to send messages
 
-## axiom-v0.5
+## axiom-v0.5           (06/05/2016)
 * 64 bit support
     + Ultrascale+ emulation in QEMU
     + Axiom-NIC for 64 bit architecture
@@ -159,7 +189,7 @@ The following is the list of the main tags of the repository:
 * Doxygen documentation
     + axiom-evi-nic and axiom-evi-apps doxygen documentation
 
-## axiom-v0.4
+## axiom-v0.4           (26/04/2016)
 * user space applications
     + axiom-init deamon to respond to ping/netperf/traceroute messages
     + axiom-info
@@ -177,11 +207,11 @@ The following is the list of the main tags of the repository:
     + support of control packet from the axiom_switch
 * other small fixes
 
-## axiom-v0.3.1
+## axiom-v0.3.1         (07/04/2016)
 * small fixes
 * first public release to the AXIOM partners
 
-## axiom-v0.3
+## axiom-v0.3           (05/04/2016)
 * QEMU
     + support for the register specification in the frontend
     + support for backend connection with the axiom-switch with sockets
