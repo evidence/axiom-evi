@@ -54,6 +54,26 @@ ALLOC_SUBS=$VERSION_DOXY_SUBS
 ALLOC_PATH="../axiom-allocator"
 ALLOC_INCLUDE="--include *.c --include *.h"
 
+TESTS_RE=$VERSION_DOXY_RE
+TESTS_SUBS=$VERSION_DOXY_SUBS
+TESTS_PATH="../tests"
+TESTS_INCLUDE="--include *.c --include *.h"
+
+MEMLIB_RE=$VERSION_DOXY_RE
+MEMLIB_SUBS=$VERSION_DOXY_SUBS
+MEMLIB_PATH="../axiom-evi-allocator-lib"
+MEMLIB_INCLUDE="--include *.c --include *.h"
+
+MEMDRV_RE=$VERSION_DOXY_RE
+MEMDRV_SUBS=$VERSION_DOXY_SUBS
+MEMDRV_PATH="../axiom-evi-allocator-drv"
+MEMDRV_INCLUDE="--include *.c --include *.h"
+
+MEMDRV2_RE="MODULE_VERSION(.*"
+MEMDRV2_SUBS="MODULE_VERSION(\"v${VERSION}\");"
+MEMDRV2_PATH="../axiom-evi-allocator-drv"
+MEMDRV2_INCLUDE="--include *.c"
+
 DRIVER_RE="MODULE_VERSION(.*"
 DRIVER_SUBS="MODULE_VERSION(\"v${VERSION}\");"
 DRIVER_PATH="../axiom-evi-nic/axiom_netdev_driver"
@@ -85,6 +105,14 @@ if [ "$SET" = "1" ]; then
         xargs sed -i -e "s/${NIC_RE}/${NIC_SUBS}/"
     grep -rIl "$ALLOC_RE" "$ALLOC_PATH" $ALLOC_INCLUDE | \
         xargs sed -i -e "s/${ALLOC_RE}/${ALLOC_SUBS}/"
+    grep -rIl "$TESTS_RE" "$TESTS_PATH" $TESTS_INCLUDE | \
+        xargs sed -i -e "s/${TESTS_RE}/${TESTS_SUBS}/"
+    grep -rIl "$MEMLIB_RE" "$MEMLIB_PATH" $MEMLIB_INCLUDE | \
+        xargs sed -i -e "s/${MEMLIB_RE}/${MEMLIB_SUBS}/"
+    grep -rIl "$MEMDRV_RE" "$MEMDRV_PATH" $MEMDRV_INCLUDE | \
+        xargs sed -i -e "s/${MEMDRV_RE}/${MEMDRV_SUBS}/"
+    grep -rIl "$MEMDRV2_RE" "$MEMDRV2_PATH" $MEMDRV2_INCLUDE | \
+        xargs sed -i -e "s/${MEMDRV2_RE}/${MEMDRV2_SUBS}/"
     grep -rIl "$DATASHEET_RE" "$DATASHEET_PATH" $DATASHEET_INCLUDE | \
         xargs sed -i -e "s/${DATASHEET_RE}/${DATASHEET_SUBS}/"
     grep -rIl "$DOXYGEN_RE" "$DOXYGEN_PATH" $DOXYGEN_INCLUDE | \
@@ -96,6 +124,11 @@ elif [ "$PRINT" = "1" ]; then
     grep -rnIe "$APPS_RE" "$APPS_PATH" $APPS_INCLUDE
     grep -rnIe "$DRIVER_RE" "$DRIVER_PATH" $DRIVER_INCLUDE
     grep -rnIe "$NIC_RE" "$NIC_PATH" $NIC_INCLUDE
+    grep -rnIe "$ALLOC_RE" "$ALLOC_PATH" $ALLOC_INCLUDE
+    grep -rnIe "$TESTS_RE" "$TESTS_PATH" $TESTS_INCLUDE
+    grep -rnIe "$MEMLIB_RE" "$MEMLIB_PATH" $MEMLIB_INCLUDE
+    grep -rnIe "$MEMDRV_RE" "$MEMDRV_PATH" $MEMDRV_INCLUDE
+    grep -rnIe "$MEMDRV2_RE" "$MEMDRV2_PATH" $MEMDRV2_INCLUDE
     grep -rnIe "$DATASHEET_RE" "$DATASHEET_PATH" $DATASHEET_INCLUDE
     grep -rnIe "$DOXYGEN_RE" "$DOXYGEN_PATH" $DOXYGEN_INCLUDE
     grep -rnIe "$GASNET_RE" "$GASNET_PATH" $GASNET_INCLUDE

@@ -1,7 +1,7 @@
 /*!
  * \file ompss_evimm.c
  *
- * \version     v0.10
+ * \version     v0.11
  * \date        2016-02-13
  *
  * This example implements Matrix Multiplication on top of OmpSS in the same way
