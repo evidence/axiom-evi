@@ -1,8 +1,14 @@
-/**
- * This example implements Matrix Multiplication on top of Ompss in the same way
+/*!
+ * \file ompss_evimm.c
+ *
+ * \version     v0.10
+ * \date        2016-02-13
+ *
+ * This example implements Matrix Multiplication on top of OmpSS in the same way
  * of MM on JUMP.
  *
- * Author: Stefano Garzarella, Evidence Srl
+ * Copyright (C) 2016, Evidence Srl.
+ * Terms of use are as specified in COPYING
  */
 #include <errno.h>
 #include <stdio.h>

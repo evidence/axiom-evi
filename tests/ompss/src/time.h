@@ -1,3 +1,12 @@
+/*!
+ * \file time.h
+ *
+ * \version     v0.10
+ * \date        2016-02-13
+ *
+ * Copyright (C) 2016, Evidence Srl.
+ * Terms of use are as specified in COPYING
+ */
 #ifndef __MY_TIME_H
 #define __MY_TIME_H
 
