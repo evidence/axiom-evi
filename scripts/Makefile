@@ -121,7 +121,7 @@ help::
 
 .PHONY: libs allocator-driver allocator-lib allocator-lib-config allocator-lib-config-force allocator axiom-nic axiom-apps _buildroot buildroot arm-firmware qemu-dts qemu allocator allocator-config-force allocator-config
 
-libs:
+libs: extrae
 	$(MAKE) -C $(EVI_NIC_DIR) libs
 	$(MAKE) -C $(EVI_APPS_DIR) libs
 
