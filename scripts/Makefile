@@ -73,7 +73,7 @@ BUILDCPUS := $(shell getconf _NPROCESSORS_ONLN)
 
 .PHONY: all debug target help
 
-all: buildroot arm-firmware qemu gasnet ompss tests target
+all: axiom-nic axiom-apps arm-firmware qemu gasnet ompss tests target
 
 debug: all
 
@@ -176,8 +176,8 @@ axiom-apps: libs allocator
 _buildroot:
 	$(MAKE) -C $(OUTPUT_DIR)
 
-buildroot: axiom-apps axiom-nic
-	$(MAKE) _buildroot
+#buildroot: axiom-apps axiom-nic
+#	$(MAKE) _buildroot
 
 arm-firmware:
 	$(MAKE) -C $(ARM_FIRMWARE_DIR) CROSS_COMPILE=$(CCPREFIX) RESET_TO_BL31=1 PLAT=zynqmp all fip
