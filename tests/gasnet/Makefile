@@ -63,6 +63,7 @@ DATE := $(shell date +%Y%m%d_%H%M%S)
 tests: tests-core tests-exit tests-hsl tests-own tests-perf
 
 tests-core tests-exit tests-hsl tests-own tests-perf:
+	-@ssh-keygen -f "$${HOME}/.ssh/known_hosts" -R [127.0.0.1]:22200
 	@sshpass -p root \
 	  ssh  -q -o StrictHostKeyChecking=no -p 22200 -l root 127.0.0.1 \
 	  "/bin/sh -c 'cd /root/tests_gasnet_dbg; ./run_suite.sh gasnet suite_$(subst tests-,,$@)'" 2>&1 | tee tests_$(DATE)_$(subst tests-,,$@).log
