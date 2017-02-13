@@ -1,2 +1,2 @@
 #!/bin/sh
-axiom-run -P gasnet $@
+axiom-run -P gasnet "$@"
