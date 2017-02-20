@@ -3,4 +3,4 @@
 archive/*
 archive_vms/*
 archive_toolchain/*
-buildroot/overlay/usr/*
+buildroot/overlay/usr/axiom-evi-allocator-lib/*
