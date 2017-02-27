@@ -191,16 +191,14 @@ Otherwise the credentials are:
  * user: root
  * password: *empty*
 
-After the login, you must load the AXIOM NIC device driver and start the
-axiom-init deamon.
+The AXIOM NIC device driver and the AXIOM ethernet tap (user space application) should start
+on device startup.
+You must choose a node and set it as master:
 
-```
-# load device drivers and start axiom-init deamon to run the the discovery
-# algorithm, to set the routing table and to handle control messages
+axiom-make-master
 
-# slaves                                 # master
-/root/axiom-startup.sh                   /root/axiom-startup.sh -m
-```
+After that this node reconfigure itself as "master node", end the node discovery protocol and
+configure an ethernet device for intra-node comunication (assigning an IP address).
 
 #### run applications in the nodes:
 
