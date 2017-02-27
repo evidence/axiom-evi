@@ -7,7 +7,7 @@
 
 killall axiom-tuntap 2>/dev/null 1>/dev/null
 modprobe tun
-axiom-tuntap &
+axiom-ethtap &
 
 sleep 2
 
