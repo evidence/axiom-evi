@@ -47,9 +47,9 @@ install-int build-int clean-int distclean-int:
 # utility
 #
 
-.PHONY: start run stop sync target log
+.PHONY: start run stop sync target log gasnet
 
-start run stop sync target log:
+start run stop sync target log gasnet:
 	$(MAKE) -C $(SCRIPTS_DIR) $@
 
 #
@@ -83,13 +83,15 @@ help:
 	@echo "makefile relevant targets:"
 	@echo ""
 	@echo "build      build all the tests"
-	@echo "install    build and install all the tests"
+	@echo "install    build and install all the tests [DEFAULT TARGET]"
 	@echo "clean      clean the tests"
+	@echo ""
+	@echo "gasnet     rebuild gasnet library ('build' does NOT rebuild the library)"
+	@echo "target     rebuild target root filesystem"
 	@echo ""
 	@echo "start      start qemu/switch system"
 	@echo "stop       stop qemu/switch"
-	@echo "sync       sync running qemu axiom nodes with root filesystem"
-	@echo "target     rebuild the root filesystem"
+	@echo "sync       copy target root filesystem on running vms"
 	@echo ""
 	@echo "tests      run all the tests"
 	@echo "tests-core run core tests"
