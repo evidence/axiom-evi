@@ -13,6 +13,8 @@ fi
 PROFILE=$1
 . $2
 
+[ -e "./env.sh" ] && . ./env.sh
+
 OK=0
 FAILURE=0
 SKIP=0
