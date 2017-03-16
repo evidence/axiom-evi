@@ -25,10 +25,10 @@ ALLOCATOR_DIR := $(LOCFILE_DIR)/../axiom-allocator
 OVERLAY_DIR := $(LOCFILE_DIR)/buildroot/overlay
 SCRIPTS_DIR := $(LOCFILE_DIR)
 
-OUTPUT_DIR = $(realpath $(LOCFILE_DIR)/../output)
-TARGET_DIR := $(realpath ${OUTPUT_DIR}/target)
-SYSROOT_DIR := $(realpath ${OUTPUT_DIR}/staging)
-HOST_DIR := $(realpath ${OUTPUT_DIR}/host)
+OUTPUT_DIR := $(shell realpath $(LOCFILE_DIR)/../output)
+TARGET_DIR := $(shell realpath ${OUTPUT_DIR}/target)
+SYSROOT_DIR := $(shell realpath ${OUTPUT_DIR}/staging)
+HOST_DIR := $(shell realpath ${OUTPUT_DIR}/host)
 
 IMAGES := $(OUTPUT_DIR)/images
 ARCHIVE_VMS_DIR := archive_vms
