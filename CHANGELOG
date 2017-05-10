@@ -3,6 +3,26 @@
 
 The following is the list of the main tags of the repository:
 
+## axiom-v0.12          (11/05/2017)
+* QEMU
+    + remove LOOPBACK bit in the status register
+    + remove AVLIRQ register
+    + change LONG_BUF_BASE[n] registers
+* axiom-nic
+    + update new registers provided by FORTH
+    + fix rdma wait/wakeup
+    + add new RDMA async APIs
+    + extended axiom_rdma_check() API
+* User space applications
+    + add axiom-ethtap (user space program for virtual ethernet device on nodes)
+    + add new testasync
+    + axiom-init
+        - add end of discovery script
+* GASNet
+    + add blocking operations support
+    + use new async AXIOM user API
+    + update to gasnet-1.29.3
+    + small fixes
 ## axiom-v0.11          (30/01/2017)
 * User space library
     + add Extrae (tracing) support in the AXIOM NIC API

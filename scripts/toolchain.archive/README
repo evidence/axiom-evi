@@ -23,15 +23,7 @@ and some examples to use it:
 ```
    ./utils/host/copy_to_guests.sh -n $NODES -o ./output
 ```
-   Before to launch the applications you need to start the axiom-init deamon in
-   all guests:
-```
-   # in only one guest [the master node]
-   /root/axiom_startup.sh -m
-
-   # in the other guests
-   /root/axiom_startup.sh
-```
+   There are several test that can be run:
 	* ompss_evimm	
 	  This example implements Matrix Multiplication on top of Ompss		
 	  To run in the guests, choose one guest and do the following:	
