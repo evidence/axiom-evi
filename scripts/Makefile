@@ -272,8 +272,8 @@ distclean-gasnet:
 help::
 	@echo "GASNET"
 	@echo "  gasnet               Build all gasnet libraries"
-	@echo "  gasnet-clean         Clean gasnet libraries"
-	@echo "  gasnet-distclean     Clean gasnet libraries including configuration"
+	@echo "  clean-gasnet         Clean gasnet libraries"
+	@echo "  distclean-gasnet     Clean gasnet libraries including configuration"
 	@echo "  "
 	@echo "  gasnet-boostrap      Gasnet configure bootstrap"
 	@echo "  gasnet-config-debug  Configuration for debug libraries"

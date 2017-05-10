@@ -44,16 +44,15 @@ Otherwise the credentials are:
  * user: root
  * password: *empty*
 
-After the login, you must load the AXIOM NIC device driver and start the
-axiom-init deamon.
+The AXIOM NIC device driver and the AXIOM ethernet tap (user space application) should start
+on device startup.
+You must choose a node and set it as master executing this command:
+````
+axiom-make-master
+````
+After that this node reconfigure itself as "master node", end the node discovery protocol and
+configure an ethernet device for intra-node comunication (assigning an IP address).
 
-```
-# load device drivers and start axiom-init deamon to run the the discovery
-# algorithm, to set the routing table and to handle control messages
-
-# slaves                                 # master
-/root/axiom-startup.sh                   /root/axiom-startup.sh -m
-```
 
 #### run applications in the nodes:
 
@@ -133,29 +132,6 @@ axiom-init deamon.
         # send LONG data to node (node_id=0) with a specified payload
         axiom-send -t long -d 0   112 43 0 57 33
 ```
- * axiom-rdma
-     + use RDMA features (remote write, remote read) of Axiom NIC
-```
-        examples:
-        # dump local RDMA zone (starting from offset 0 to 1023)
-        axiom-rdma -m d -s 1k
-```
-```
-        # store in the local RDMA zone (starting from offset 1024 to 2043)
-        # the bytes ( 1, 2, 3, 4) repeated many times to fill the size
-        # specified
-        axiom-rdma -m s -o 1k -s 1k 1 2 3 4
-```
-```
-        # write 3072 bytes in the RDMA zone of node 3 (offset 2048) reading
-        # from the local RDMA zone (offset 1024)
-        axiom-rdma -m w -n 3 -o 1k -O 2k -s 3k
-```
-```
-        # read 4096 bytes in the RDMA zone of node 2 (offset 7168) reading
-        # from the local RDMA zone (offset 0)
-        axiom-rdma -m r -n 2 -O 7k -s 4k
-```
  * axiom-run
     + spawn application on multiple nodes
 ```
@@ -166,4 +142,19 @@ axiom-init deamon.
         # run ls on all nodes, redirect (-r) the stdin/stdout/stderr and print
         # the node id in each line (-i)
         axiom-run -r -i ls
+```
+ * axiom-rdma
+     + use RDMA features (remote write, remote read) of Axiom NIC
+```
+        examples:
+        # write 3 Kbytes in the RDMA zone of remote node reading from the local
+        # RDMA zone filled with the bytes (1, 2, 3, 4) repeated many times to
+        # fill the size specified (add -v to see the dump)
+        axiom-run -P all -n 1,2 axiom-rdma -m w -s 3k 1 2 3 4
+```
+```
+        # read 1 Kbytes in the RDMA zone of remote node reading from the remote
+        # RDMA zone filled with the bytes (5, 0, 1) repeated many times to
+        # fill the size specified (add -v to see the dump)
+        axiom-run -P all -n 1,2 axiom-rdma -m r -s 1k 5 0 1
 ```
