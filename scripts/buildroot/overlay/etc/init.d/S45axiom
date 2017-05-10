@@ -17,12 +17,13 @@ case "$1" in
 	fi
 	;;
     stop)
+        killall axiom-ethtap
   	killall axiom-init
-	rmmod axiom-netdev
+	modprobe -r axiom-netdev
 	;;
     restart|reload)
 	"$0" stop
-	"$0" start	
+	"$0" start
 	;;
     *)
 	echo "Usage: $0 {start|stop|restart}"
