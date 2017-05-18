@@ -3,6 +3,8 @@ LOCFILE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 AXIOMHOME=$(realpath ${LOCFILE_DIR}/..)
 
 QEMU_DIR := $(LOCFILE_DIR)/../axiom-evi-qemu
+QEMU_BUILD_DIR := $(LOCFILE_DIR)/../axiom-evi-qemu/build
+QEMU_STATIC_BUILD_DIR := $(LOCFILE_DIR)/../axiom-evi-qemu/build_static
 BUILDROOT_DIR := $(LOCFILE_DIR)/../axiom-evi-buildroot
 ARM_FIRMWARE_DIR := $(LOCFILE_DIR)/../arm-trusted-firmware
 QEMU_DTS_DIR := $(LOCFILE_DIR)/./buildroot/qemu-dts

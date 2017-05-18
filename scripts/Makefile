@@ -36,7 +36,7 @@ VMS := 2
 
 # qemu
 
-QEMU := $(QEMU_DIR)/aarch64-softmmu/qemu-system-aarch64
+QEMU := $(QEMU_BUILD_DIR)/aarch64-softmmu/qemu-system-aarch64
 QEMU_PARAM := "-l"
 ifeq ($(LONG_ENQUEUE), 0)
 QEMU_PARAM := ""
@@ -129,10 +129,11 @@ help::
 
 configure: config-alloc
 ifeq ($(P), 1)
-	cd $(QEMU_DIR) && ./axiom_configure_static.sh
-else
-	cd $(QEMU_DIR) && ./axiom_configure.sh
+	mkdir -p $(QEMU_STATIC_BUILD_DIR)
+	cd $(QEMU_STATIC_BUILD_DIR) && ../axiom_configure_static.sh
 endif
+	mkdir -p $(QEMU_BUILD_DIR)
+	cd $(QEMU_BUILD_DIR) && ../axiom_configure.sh
 
 config-alloc: config-buildroot
 	cd $(EVI_ALLOC_LIB_DIR) &&  autoreconf -fi
@@ -239,7 +240,10 @@ ifneq ($(P),1)
 endif
 
 qemu: qemu-dts
-	$(MAKE) -C $(QEMU_DIR) -j$(BUILDCPUS)
+ifeq ($(P),1)
+	$(MAKE) -C $(QEMU_STATIC_BUILD_DIR) -j$(BUILDCPUS)
+endif
+	$(MAKE) -C $(QEMU_BUILD_DIR) -j$(BUILDCPUS)
 
 help::
 	@echo "BUILD"
@@ -846,7 +850,7 @@ deb-prepare: qemu
 	mkdir -p $(ROOTFSTMP)
 	mkdir -p $(ROOTFSWRK)
 	sudo mount -t overlay overlay -olowerdir=$(ROOTFS),upperdir=$(ROOTFSTMP),workdir=$(ROOTFSWRK) $(ROOTFSTMP)
-	cp $(QEMU_DIR)/aarch64-linux-user/qemu-aarch64 $(ROOTFSTMP)/usr/bin
+	cp $(QEMU_STATIC_BUILD_DIR)/aarch64-linux-user/qemu-aarch64 $(ROOTFSTMP)/usr/bin
 
 deb-destroy:
 	-sudo umount $(ROOTFSTMP)

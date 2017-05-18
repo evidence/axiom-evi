@@ -2,7 +2,7 @@
 
 BUILDROOT=${BUILDROOT:-../axiom-evi-buildroot}
 IMAGES=${IMAGES:-../output/images}
-QEMU=${QEMU:-../axiom-evi-qemu/aarch64-softmmu/qemu-system-aarch64}
+QEMU=${QEMU:-../axiom-evi-qemu/build/aarch64-softmmu/qemu-system-aarch64}
 ID=${ID:-0}
 BOARD="zynqmp"
 ARM_FIRMWARE="../arm-trusted-firmware/build/zynqmp/release/bl31"
