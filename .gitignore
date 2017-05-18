@@ -3,3 +3,5 @@
 nbproject
 output
 debs
+rootfs-tmp
+rootfs-wrk
