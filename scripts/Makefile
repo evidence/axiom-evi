@@ -1,5 +1,14 @@
 
+export P
+
 include locations.mk
+
+# safety
+ifeq ($(P),1)
+ifeq ($(PETALINUX),)
+$(error You must set the environment to work with P=1 (see settings.sh))
+endif
+endif
 
 #
 # archive/release definitions/parameters
@@ -54,8 +63,25 @@ export DFLAGS
 
 #CCARCH := arm
 CCARCH := aarch64
+ifeq ($(P),1)
+CCPREFIX := ${LINARO}/host/usr/bin/$(CCARCH)-linux-gnu-
+HOSTID:=aarch64-linux-gnu
+LINPATH:=$(LINARO)/host/usr/bin:$(PATH)
+else
 CCPREFIX := ${OUTPUT_DIR}/host/usr/bin/$(CCARCH)-linux-
+HOSTID:=aarch64-buildroot-linux-gnu
 BDPATH := $(OUTPUT_DIR)/host/usr/bin/:$(PATH)
+LINPATH := $(PATH)
+endif
+
+# fakeroot
+
+FAKEROOT :=
+ifeq ($(P),1)
+ifndef FAKEROOTKEY
+FAKEROOT := fakeroot -i $(ROOTFS).faked -s $(ROOTFS).faked
+endif
+endif
 
 #
 # makefile definitions/parameters
@@ -73,7 +99,11 @@ BUILDCPUS := $(shell getconf _NPROCESSORS_ONLN)
 
 .PHONY: all debug target help
 
+ifeq ($(P),1)
+all: axiom-nic axiom-apps qemu gasnet ompss tests
+else
 all: axiom-nic axiom-apps arm-firmware qemu gasnet ompss tests target
+endif
 
 debug: all
 
@@ -98,14 +128,20 @@ help::
 .PHONY: configure config-alloc config-buildroot
 
 configure: config-alloc
+ifeq ($(P), 1)
+	cd $(QEMU_DIR) && ./axiom_configure_static.sh
+else
 	cd $(QEMU_DIR) && ./axiom_configure.sh
+endif
 
 config-alloc: config-buildroot
 	cd $(EVI_ALLOC_LIB_DIR) &&  autoreconf -fi
 	cd $(ALLOCATOR_DIR) && autoreconf -fi
 
 config-buildroot:
+ifneq ($(P), 1)
 	cd $(BUILDROOT_DIR) && $(MAKE) O=$(OUTPUT_DIR) evi_ultrascale_defconfig && $(MAKE) O=$(OUTPUT_DIR)
+endif
 
 help::
 	@echo "CONFIGURE"
@@ -127,42 +163,57 @@ libs: extrae
 
 allocator-driver: libs
 	$(MAKE) -C $(EVI_ALLOC_DRV_DIR)
-	$(MAKE) DESTDIR=$(TARGET_DIR) -C $(EVI_ALLOC_DRV_DIR) install
+	$(FAKEROOT) $(MAKE) DESTDIR=$(TARGET_DIR) -C $(EVI_ALLOC_DRV_DIR) install
+ifneq ($(P),1)
 	$(MAKE) DESTDIR=$(SYSROOT_DIR) -C $(EVI_ALLOC_DRV_DIR) install
+endif
 
 allocator-lib-config-force:
+ifeq ($(P),1)
+	cd $(EVI_ALLOC_LIB_DIR) && PATH=$(LINPATH) ./configure \
+		--host=$(HOSTID) --prefix=/usr --disable-debug --enable-extld
+else
 	cd $(EVI_ALLOC_LIB_DIR) && CC=$(CCPREFIX)gcc ./configure \
-		--host=aarch64-buildroot-linux-gnu --prefix=/usr --disable-debug --enable-extld
+		--host=$(HOSTID) --prefix=/usr --disable-debug --enable-extld
+endif
 
 allocator-lib-config: libs
 	if [ ! -r "$(EVI_ALLOC_LIB_DIR)/config.status" ]; then $(MAKE) allocator-lib-config-force; fi
 
-
 allocator-lib: allocator-lib-config
-	$(MAKE) -C $(EVI_ALLOC_LIB_DIR)
-	$(MAKE) DESTDIR=$(TARGET_DIR) -C $(EVI_ALLOC_LIB_DIR) install
+	PATH=$(LINPATH) $(MAKE) -C $(EVI_ALLOC_LIB_DIR)
+	$(FAKEROOT) $(MAKE) DESTDIR=$(TARGET_DIR) -C $(EVI_ALLOC_LIB_DIR) install
+ifneq ($(P),1)
 	$(MAKE) DESTDIR=$(SYSROOT_DIR) -C $(EVI_ALLOC_LIB_DIR) install
-# libtool fix :-(
+endif
+        # libtool fix :-(
 	for LIB in $(SYSROOT_DIR)/usr/lib/libevi_lmm.la $(TARGET_DIR)/usr/lib/libevi_lmm.la; do \
-		sed -i -e "s,libdir='/usr/lib',libdir='$(SYSROOT_DIR)/usr/lib'," \
+		$(FAKEROOT) sed -i -e "s,libdir='/usr/lib',libdir='$(SYSROOT_DIR)/usr/lib'," \
 		       -e "s, /usr/lib, $(SYSROOT_DIR)/usr/lib," \
 		       $${LIB} ;\
 	done
 
 allocator-config-force:
+ifeq ($(P),1)
+	cd $(ALLOCATOR_DIR) && PATH=$(LINPATH) ./configure \
+		--host=$(HOSTID) --prefix=/usr --with-axiom-sysroot=$(ROOTFS)
+else
 	cd $(ALLOCATOR_DIR) && CC=$(CCPREFIX)gcc ./configure \
-		--host=aarch64-buildroot-linux-gnu --prefix=/usr
+		--host=$(HOSTID) --prefix=/usr
+endif
 
 allocator-config: allocator-driver allocator-lib
 	if [ ! -r "$(ALLOCATOR_DIR)/config.status" ]; then $(MAKE) allocator-config-force; fi
 
 allocator: allocator-config
-	$(MAKE) -C $(ALLOCATOR_DIR)
-	$(MAKE) DESTDIR=$(TARGET_DIR) -C $(ALLOCATOR_DIR) install
+	PATH=$(LINPATH) $(MAKE) -C $(ALLOCATOR_DIR)
+	PATH=$(LINPATH) $(FAKEROOT) $(MAKE) DESTDIR=$(TARGET_DIR) -C $(ALLOCATOR_DIR) install
+ifneq ($(P),1)
 	$(MAKE) DESTDIR=$(SYSROOT_DIR) -C $(ALLOCATOR_DIR) install
-# libtools fix :-(
+endif
+        # libtools fix :-(
 	for LIB in $(SYSROOT_DIR)/usr/lib/libaxiom_allocator*.la; do \
-		sed -i -e "s,libdir='/usr/lib',libdir='$(SYSROOT_DIR)/usr/lib'," \
+		$(FAKEROOT) sed -i -e "s,libdir='/usr/lib',libdir='$(SYSROOT_DIR)/usr/lib'," \
 		       -e "s, /usr/lib, $(SYSROOT_DIR)/usr/lib," \
 		       $${LIB} ;\
 	done
@@ -183,7 +234,9 @@ arm-firmware:
 	$(MAKE) -C $(ARM_FIRMWARE_DIR) CROSS_COMPILE=$(CCPREFIX) RESET_TO_BL31=1 PLAT=zynqmp all fip
 
 qemu-dts:
+ifneq ($(P),1)
 	$(MAKE) -C $(QEMU_DTS_DIR) DTC=$(HOST_DIR)/usr/bin/linux-dtc
+endif
 
 qemu: qemu-dts
 	$(MAKE) -C $(QEMU_DIR) -j$(BUILDCPUS)
@@ -236,7 +289,11 @@ gasnet-config-debug: gasnet-bootstrap libs
 
 gasnet-debug: gasnet-config-debug
 	@$(MAKE) -C $(GASNET_BUILD_DIR_DEBUG)
+ifeq ($(P),1)
+	$(FAKEROOT) $(MAKE) -C $(GASNET_BUILD_DIR_DEBUG) DESTDIR=$(TARGET_DIR) install
+else
 	@$(MAKE) -C $(GASNET_BUILD_DIR_DEBUG) DESTDIR=$(SYSROOT_DIR) install
+endif
 
 gasnet-config-perf: gasnet-bootstrap libs
 	mkdir -p $(GASNET_BUILD_DIR_PERF)
@@ -253,7 +310,11 @@ gasnet-config-perf: gasnet-bootstrap libs
 
 gasnet-perf: gasnet-config-perf
 	@$(MAKE) -C $(GASNET_BUILD_DIR_PERF)
+ifeq ($(P),1)
+	$(FAKEROOT) $(MAKE) -C $(GASNET_BUILD_DIR_PERF) DESTDIR=$(TARGET_DIR) install
+else
 	@$(MAKE) -C $(GASNET_BUILD_DIR_PERF) DESTDIR=$(SYSROOT_DIR) install
+endif
 
 gasnet: gasnet-debug gasnet-perf
 
@@ -288,6 +349,12 @@ help::
 
 .PHONY: nanox-bootstrap nanox-config-debug nanox-config-debug-force nanox-debug nanox-config-perf nanox-config-perf-force nanox-perf nanox clean-nanox distclean-nanox
 
+NANOXFLAGS := CXXFLAGS="-std=c++11"
+NANOXFLAGS_INSTR := $(NANOXFLAGS)
+ifeq ($(P),1)
+NANOXFLAGS_INSTR := CXXFLAGS="-std=c++11 --sysroot=$(ROOTFS) -I$(ROOTFS)/usr/include/aarch64-linux-gnu"
+endif
+
 nanox-bootstrap:
 	@if [ ! -r $(NANOX_DIR)/configure ]; then \
 		cd $(NANOX_DIR);\
@@ -296,42 +363,63 @@ nanox-bootstrap:
 
 nanox-config-debug-force: nanox-bootstrap
 	@mkdir -p $(NANOX_BUILD_DIR_DEBUG)
-	@cd $(NANOX_BUILD_DIR_DEBUG); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr \
+	@cd $(NANOX_BUILD_DIR_DEBUG); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr $(NANOXFLAGS) \
 		../scripts/cross-configure-axiom_debug.sh
 
 nanox-config-debug:
 	@if [ ! -r "$(NANOX_BUILD_DIR_DEBUG)/config.status" ]; then $(MAKE) nanox-config-debug-force; fi
 
 nanox-debug: nanox-config-debug
-	@$(MAKE) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_DEBUG)
+	@PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_DEBUG)
+	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=$(TARGET_DIR) install
+ifneq ($(P),1)
 	@$(MAKE) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=$(SYSROOT_DIR) install
-	@$(MAKE) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=$(TARGET_DIR) install
+endif
 
 nanox-config-perf-force: nanox-bootstrap
 	@mkdir -p $(NANOX_BUILD_DIR_PERF)
-	@cd $(NANOX_BUILD_DIR_PERF); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr \
+	@cd $(NANOX_BUILD_DIR_PERF); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr $(NANOXFLAGS) \
 		../scripts/cross-configure-axiom_performance.sh
 
 nanox-config-perf:
 	@if [ ! -r "$(NANOX_BUILD_DIR_PERF)/config.status" ]; then $(MAKE) nanox-config-perf-force; fi
 
 nanox-perf: nanox-config-perf
-	@$(MAKE) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_PERF)
+	@PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_PERF)
+	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=$(TARGET_DIR) install
+ifneq ($(P),1)
 	@$(MAKE) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=$(SYSROOT_DIR) install
-	@$(MAKE) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=$(TARGET_DIR) install
+endif
 
 nanox-config-instr-force: extrae nanox-bootstrap
 	@mkdir -p $(NANOX_BUILD_DIR_INSTR)
-	@cd $(NANOX_BUILD_DIR_INSTR); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr \
+	@cd $(NANOX_BUILD_DIR_INSTR); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr $(NANOXFLAGS) \
 		../scripts/cross-configure-axiom_instrumentation.sh
 
 nanox-config-instr:
 	@if [ ! -r "$(NANOX_BUILD_DIR_INSTR)/config.status" ]; then $(MAKE) nanox-config-instr-force; fi
 
 nanox-instr: nanox-config-instr
-	@$(MAKE) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_INSTR)
+	PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS_INSTR) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_INSTR)
+	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(NANOX_BUILD_DIR_INSTR) DESTDIR=$(TARGET_DIR) install
+ifneq ($(P),1)
 	@$(MAKE) -C $(NANOX_BUILD_DIR_INSTR) DESTDIR=$(SYSROOT_DIR) install
-	@$(MAKE) -C $(NANOX_BUILD_DIR_INSTR) DESTDIR=$(TARGET_DIR) install
+endif
+
+nanox-config-instr-debug-force: extrae nanox-bootstrap
+	@mkdir -p $(NANOX_BUILD_DIR_INSTR_DEBUG)
+	@cd $(NANOX_BUILD_DIR_INSTR_DEBUG); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr $(NANOXFLAGS) \
+		../scripts/cross-configure-axiom_instrumentation_debug.sh
+
+nanox-config-instr-debug:
+	@if [ ! -r "$(NANOX_BUILD_DIR_INSTR_DEBUG)/config.status" ]; then $(MAKE) nanox-config-instr-debug-force; fi
+
+nanox-instr-debug: nanox-config-instr-debug
+	@PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_INSTR_DEBUG)
+	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(NANOX_BUILD_DIR_INSTR_DEBUG) DESTDIR=$(TARGET_DIR) install
+ifneq ($(P),1)
+	@$(MAKE) -C $(NANOX_BUILD_DIR_INSTR_DEBUG) DESTDIR=$(SYSROOT_DIR) install
+endif
 
 nanox: nanox-debug nanox-perf nanox-instr
 
@@ -387,7 +475,30 @@ mcxx: mcxx-config
 	@make -j$(BUILDCPUS) PATH=$(PATH):$(HOST_DIR)/usr/bin -C $(MCXX_BUILD_DIR)
 #	@make -C $(MCXX_BUILD_DIR) DESTDIR=$(HOST_DIR) install
 	@make -C $(MCXX_BUILD_DIR) install
+ifneq ($(P),1)
 	@cp $(HOST_DIR)/usr/lib/pkgconfig/mcxx.pc $(SYSROOT_DIR)/usr/lib/pkgconfig/mcxx.pc
+endif
+
+mcxx-native-config-force: nanox mcxx-bootstrap
+	@mkdir -p $(MCXX_BUILD_NATIVE_DIR)
+	cd $(MCXX_BUILD_NATIVE_DIR); AXIOMHOME=$(AXIOMHOME) PREFIX=$(HOST_DIR)/usr \
+		../scripts/cross-configure-axiom-native.sh
+
+mcxx-native-config:
+	@if [ ! -r "$(MCXX_BUILD_NATIVE_DIR)/config.status" ]; then $(MAKE) mcxx-native-config-force; fi
+
+# does not WORK!!!!!
+mcxx-native: mcxx-native-config
+	@make -j$(BUILDCPUS) \
+		CFLAGS="--sysroot=$(ROOTFS) -I$(ROOTFS)/usr/include/aarch64-linux-gnu" \
+		CXXFLAGS="--sysroot=$(ROOTFS) -I$(ROOTFS)/usr/include/aarch64-linux-gnu -std=gnu++11" \
+		LDFLAGS="-L$(ROOTFS)/lib/aarch64-linux-gnu -L$(ROOTFS)/usr/lib//aarch64-linux-gnu" \
+		PATH=$(PATH):$(HOST_DIR)/usr/bin \
+		-C $(MCXX_BUILD_NATIVE_DIR)
+	@make -C $(MCXX_BUILD_NATIVE_DIR) install
+ifneq ($(P),1)
+	@cp $(HOST_DIR)/usr/lib/pkgconfig/mcxx.pc $(SYSROOT_DIR)/usr/lib/pkgconfig/mcxx.pc
+endif
 
 clean-mcxx:
 	@[ -d $(MCXX_BUILD_DIR) ] && make -C $(MCXX_BUILD_DIR) clean
@@ -397,13 +508,16 @@ distclean-mcxx:
 
 help::
 	@echo "MCXX (OMPSS)"
-	@echo "  mcxx              Build Mercurium source cross compiler"
+	@echo "  mcxx              Build Mercurium source cross compiler (run on HOST)"
+	@echo "  mcxx-native       Build Mercurium source cross compiler (run on TARGET)"
 	@echo "  clean-mcxx        Clean Mercurium"
 	@echo "  distclean-mcxx    Clean Mercurium includind configuration"
 	@echo ""
-	@echo "  mcxx-bootstrap    Configuration bootstrap"
-	@echo "  mcxx-config       Mercurium configuration"
-	@echo "  mcxx-config-force Force the configuration of Mercurium"
+	@echo "  mcxx-bootstrap           Configuration bootstrap"
+	@echo "  mcxx-config              Mercurium configuration"
+	@echo "  mcxx-config-force        Force the configuration of Mercurium"
+	@echo "  mcxx-native-config       Mercurium configuration (native build)"
+	@echo "  mcxx-native-config-force Force the configuration of Mercurium (native build)"
 	@echo " "
 
 #
@@ -411,6 +525,18 @@ help::
 #
 
 .PHONY: extrae-boostrap extrae-config-force extrae-config extrae clean-extrae distclean-extrae
+
+#ifeq ($(P), 1)
+#
+#extrae-bootstrap:
+#extrae-config-force: extrae-bootstrap
+#extrae-config:
+#extrae: extrae-config
+#clean-extrae:
+#distclean-extrae:
+#	@[ -d $(EXTRAE_BUILD_DIR) ] && rm -rf $(EXTRAE_BUILD_DIR) || true
+#
+#else
 
 extrae-bootstrap:
 	@if [ ! -r $(EXTRAE_DIR)/configure ]; then \
@@ -427,15 +553,31 @@ extrae-config:
 	@if [ ! -r "$(EXTRAE_BUILD_DIR)/config.status" ]; then $(MAKE) extrae-config-force; fi
 
 extrae: extrae-config
+ifeq ($(P),1)
+	@PATH=$(LINPATH) $(MAKE) -j$(BUILDCPUS) -C $(EXTRAE_BUILD_DIR) \
+	  CFLAGS="--sysroot=$(ROOTFS) \
+		-I${ROOTFS}/usr/include/aarch64-linux-gnu \
+		-L${ROOTFS}/usr/lib/aarch64-linux-gnu \
+		-L${ROOTFS}/lib/aarch64-linux-gnu" \
+	  LDFLAGS="--sysroot=$(ROOTFS) \
+		-L${ROOTFS}/usr/lib/aarch64-linux-gnu \
+		-L${ROOTFS}/lib/aarch64-linux-gnu \
+		-Wl,-rpath-link -Wl,$(ROOTFS)/usr/lib/aarch64-linux-gnu \
+		-Wl,-rpath-link -Wl,$(ROOTFS)/lib/aarch64-linux-gnu"
+	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(EXTRAE_BUILD_DIR) DESTDIR=$(TARGET_DIR) install
+else
 	@$(MAKE) -j$(BUILDCPUS) -C $(EXTRAE_BUILD_DIR)
-	@$(MAKE) -C $(EXTRAE_BUILD_DIR) DESTDIR=$(SYSROOT_DIR) install
 	@$(MAKE) -C $(EXTRAE_BUILD_DIR) DESTDIR=$(TARGET_DIR) install
+	@$(MAKE) -C $(EXTRAE_BUILD_DIR) DESTDIR=$(SYSROOT_DIR) install
+endif
 
 clean-extrae:
 	@[ -d $(EXTRAE_BUILD_DIR) ] && make -C $(EXTRAE_BUILD_DIR) clean
 
 distclean-extrae:
 	@[ -d $(EXTRAE_BUILD_DIR) ] && rm -rf $(EXTRAE_BUILD_DIR) || true
+
+#endif
 
 help::
 	@echo "EXTRAE (OMPSS)"
@@ -676,3 +818,112 @@ help::
 	@echo "  clean-test         Clean all tests"
 	@echo " "
 	@echo "To run test automatically go to ./tests/ directory and read the README. "
+	@echo " "
+
+#
+# DEB
+#
+
+ifneq ($(P),1)
+
+.PHONY: deb clean-deb distclean-deb
+
+deb clean-deb distclean-deb:
+	$(error deb, clean-deb and distclean-deb makefile target need P=1 on commandline)
+
+else
+
+.PHONY: deb-prepare deb-destroy deb-install deb clean-deb distclean-deb
+
+ROOTFSTMP:=$(AXIOMHOME)/rootfs-tmp
+ROOTFSWRK:=$(AXIOMHOME)/rootfs-wrk
+
+DEBENV := ROOTFS=$(ROOTFSTMP) GCC_TARGET=arm64 CC=$(LINARO)/host/usr/bin/aarch64-linux-gnu-gcc
+
+deb-prepare: qemu
+	mkdir -p $(AXIOMHOME)/debs
+	-sudo umount $(ROOTFSTMP)
+	mkdir -p $(ROOTFSTMP)
+	mkdir -p $(ROOTFSWRK)
+	sudo mount -t overlay overlay -olowerdir=$(ROOTFS),upperdir=$(ROOTFSTMP),workdir=$(ROOTFSWRK) $(ROOTFSTMP)
+	cp $(QEMU_DIR)/aarch64-linux-user/qemu-aarch64 $(ROOTFSTMP)/usr/bin
+
+deb-destroy:
+	-sudo umount $(ROOTFSTMP)
+	sudo rm -r -f $(ROOTFSTMP) $(ROOTFSWRK)
+
+deb-install:
+	cp $(AXIOMHOME)/*deb $(ROOTFSTMP)
+	sudo chroot $(ROOTFSTMP) /bin/bash -c "/usr/bin/dpkg --install /*.deb"
+	cp $(AXIOMHOME)/*deb $(AXIOMHOME)/debs
+	rm -f $(ROOTFSTMP)/*.deb
+	rm -f $(AXIOMHOME)/*.deb
+
+deb: deb-prepare
+# extrae
+	$(MAKE) extrae
+	$(DEBENV) fakeroot $(MAKE) -C $(EXTRAE_DIR) -f debian/rules binary
+	$(MAKE) deb-install
+# axiom user library & kernel module
+	$(DEBENV) fakeroot $(MAKE) -C $(EVI_NIC_DIR) -f debian/rules binary
+	$(MAKE) deb-install
+# axiom allocator kernel module
+	$(DEBENV) fakeroot $(MAKE) -C $(EVI_ALLOC_DRV_DIR) -f debian/rules binary
+	$(MAKE) deb-install
+# axiom allocator library
+	$(MAKE) allocator-lib
+	$(DEBENV) fakeroot $(MAKE) -C $(EVI_ALLOC_LIB_DIR) -f debian/rules binary
+	$(MAKE) deb-install
+# axiom init library
+	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR)/axiom-init -f debian/rules binary
+	mv $(EVI_APPS_DIR)/*.deb $(AXIOMHOME)
+	$(MAKE) deb-install
+# axiom run library
+	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR)/axiom-run -f debian/rules binary
+	mv $(EVI_APPS_DIR)/*.deb $(AXIOMHOME)
+	$(MAKE) deb-install
+# memory allocator
+	$(MAKE) allocator
+	$(DEBENV) fakeroot $(MAKE) -C $(ALLOCATOR_DIR) -f debian/rules binary
+	$(MAKE) deb-install
+# axiom apps
+	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR) -f debian/rules binary
+	$(MAKE) deb-install
+# gasnet
+	$(MAKE) gasnet
+	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_DIR) -f debian/rules binary
+	$(MAKE) deb-install
+# nanox
+	$(MAKE) nanox
+	$(DEBENV) fakeroot $(MAKE) -C $(NANOX_DIR) -f debian/rules binary
+	$(MAKE) deb-install
+
+clean-deb: deb-destroy
+	$(DEBENV) fakeroot $(MAKE) -C $(EXTRAE_DIR) -f debian/rules clean
+	$(DEBENV) fakeroot $(MAKE) -C $(EVI_NIC_DIR) -f debian/rules clean
+	$(DEBENV) fakeroot $(MAKE) -C $(EVI_ALLOC_DRV_DIR) -f debian/rules clean
+	$(DEBENV) fakeroot $(MAKE) -C $(EVI_ALLOC_LIB_DIR) -f debian/rules  clean
+	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR)/axiom-init -f debian/rules clean
+	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR)/axiom-run -f debian/rules clean
+	$(DEBENV) fakeroot $(MAKE) -C $(ALLOCATOR_DIR) -f debian/rules clean
+	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR) -f debian/rules clean
+	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_DIR) -f debian/rules clean
+	$(DEBENV) fakeroot $(MAKE) -C $(NANOX_DIR) -f debian/rules clean
+
+distclean-deb: clean-deb distclean-extrae distclean-gasnet distclean-nanox
+	$(MAKE) -C $(EVI_NIC_DIR) distclean
+	$(MAKE) -C $(EVI_ALLOC_DRV_DIR) distclean
+	$(MAKE) -C $(EVI_ALLOC_LIB_DIR) distclean
+	$(MAKE) -C $(ALLOCATOR_DIR) distclean
+	$(MAKE) -C $(EVI_APPS_DIR) distclean
+
+endif
+
+help::
+	@echo "DEBIANization"
+	@echo "  deb            Build debian packages"
+	@echo " "
+	@echo "  clean-deb      Clean all deb build"
+	@echo "  distclean-deb  Clean all deb build and compilation"
+	@echo " "
+	@echo "This targets need P=1 on command line."

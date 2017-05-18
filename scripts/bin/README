@@ -1,0 +1,13 @@
+From: John Morris <john@zultron.com>
+
+I was able to patch in the `dpkg-shlibdeps --sysroot` argument. The attached patch monkey-patches the system directly (not the packages that provide the patched files).
+
+
+See the `README` file in the repo [1] that builds a Docker image containing the cross-build environment. I've successfully built (but not tested) packages, and regression tests pass on a manually-built source tree transferred to a native ARM host. In the next several days, I'll be able to do more testing, but the initial results look pretty promising.
+
+
+[1]: https://github.com/zultron/mk-builder-3
+
+	John
+
+Add `{dh_shlibdeps,dpkg-shlibdeps} --sysroot` arguments

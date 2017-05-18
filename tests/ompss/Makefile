@@ -1,16 +1,28 @@
 
+export P
+
 include ../common.mk
 include ../../scripts/locations.mk
 
-CFLAGS := -O3 -finline-functions -fomit-frame-pointer -Wall -Wno-unused -std=gnu11 -fPIC 
+CFLAGS := -g -finline-functions -fomit-frame-pointer -Wall -Wno-unused -std=gnu11 -fPIC
 LDFLAGS :=
 LDLIBS := -lm
 
-OMPSS_CFLAGS := $(CFLAGS) $(call PKG-CFLAGS, axiom_user_api axiom_init_api  axiom_run_api axiom_allocator evi_lmm)
+ifeq ($(P),1)
+EXTRA_OMPSS_CFLAGS := -I$(ROOTFS)/usr/include/aarch64-linux-gnu
+else
+EXTRA_OMPSS_CFLAGS :=
+endif
+
+OMPSS_CFLAGS := $(CFLAGS) $(EXTRA_OMPSS_CFLAGS) $(call PKG-CFLAGS, axiom_user_api axiom_init_api  axiom_run_api axiom_allocator evi_lmm)
 OMPSS_LDFLAGS := $(LDFLAGS) $(call PKG-LDFLAGS, axiom_user_api axiom_init_api  axiom_run_api axiom_allocator evi_lmm)
 OMPSS_LDLIBS := $(LDLIBS) $(call PKG-LDLIBS, axiom_user_api axiom_init_api  axiom_run_api axiom_allocator evi_lmm)
 
-MCCFLAGS= --cluster --ompss --instrument
+ifeq ($(P),1)
+MCCFLAGS= --cluster --ompss -k
+else
+MCCFLAGS= --cluster --ompss --instrument -k
+endif
 
 SOURCES:=$(wildcard src/ompss_*.c)
 OBJS:=$(SOURCES:.c=.o)
@@ -60,10 +72,10 @@ help:
 .PHONY: clean build install distclean
 
 install: build install-nbody
-	mkdir -p $(DESTDIR)
-	-cp $(EXECS) $(DESTDIR)
-	-cp $(LAUNCHER) $(DESTDIR)
-	-cp suite/* $(DESTDIR)
+	$(FAKEROOT) mkdir -p $(DESTDIR)
+	-$(FAKEROOT) cp $(EXECS) $(DESTDIR)
+	-$(FAKEROOT) cp $(LAUNCHER) $(DESTDIR)
+	-$(FAKEROOT) cp suite/* $(DESTDIR)
 
 build: $(OBJS) $(EXECS) build-nbody
 
@@ -82,10 +94,10 @@ NBODY_EXEC=$(NBODY_DIR)/nbody
 .PHONY: install-nbody build-nbody clean-nbody distclean-nbody
 
 install-nbody: build-nbody
-	mkdir -p $(DESTDIR)
-	cp -f $(NBODY_EXEC) $(DESTDIR)
-	cp -f $(NBODY_DIR)/../particles-*.in $(DESTDIR)
-	cp -f $(NBODY_DIR)/../particles-*.ref $(DESTDIR)
+	$(FAKEROOT) mkdir -p $(DESTDIR)
+	$(FAKEROOT) cp -f $(NBODY_EXEC) $(DESTDIR)
+	$(FAKEROOT) cp -f $(NBODY_DIR)/../particles-*.in $(DESTDIR)
+	$(FAKEROOT) cp -f $(NBODY_DIR)/../particles-*.ref $(DESTDIR)
 
 build-nbody: $(NBODY_EXEC)
 

@@ -112,7 +112,7 @@ elif [ "$BOARD" = "zynqmp" ]; then
     -device loader,addr=0xfd1a0104,data=0x8000000e,data-len=4           \
     -device loader,file=${ARM_FIRMWARE}/bl31.elf,cpu=0                  \
     -device loader,file=${IMAGES}/Image,addr=0x00080000                 \
-    -device loader,file=${IMAGES}/zynqmp-zcu102.dtb,addr=0x04080000     \
+    -device loader,file=${IMAGES}/zynqmp-zcu102.dtb,addr=0x06080000     \
     -device loader,file=${IMAGES}/u-boot.elf                            \
     -hw-dtb ${QEMU_DTS}/${AXIOM_DTB}                                    \
     -net nic,vlan=1 -net none,vlan=1                                    \
@@ -125,3 +125,6 @@ else
     echo "Board $BOARD not supported"
     usage
 fi
+
+#    -device loader,file=${IMAGES}/zynqmp-zcu102.dtb,addr=0x04815c00    
+

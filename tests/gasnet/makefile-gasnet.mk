@@ -1,4 +1,6 @@
 
+export P
+
 include ../common.mk
 
 # gasnet conduit selection
@@ -57,14 +59,16 @@ DESTDIR:=$(TARGET_DIR)/root/tests_gasnet_$(GASNET_TYPE)
 LAUNCHERS:=$(COMFILE_DIR)/utils/guest/run_test_gasnet.sh
 LAUNCHERS+=$(COMFILE_DIR)/utils/guest/run_suite.sh
 
-.PHONY: clean build install distclean
+.PHONY: clean build install distclean install-real
 
 install: build
+	$(FAKEROOT) $(MAKE) -f makefile-gasnet.mk install-real
+
+install-real:
 	mkdir -p $(DESTDIR)
 	for EXE in $(EXECS); do cp $${EXE} $(DESTDIR)/`echo $${EXE}|sed -e 's,.*/,,' -e 's,_$(GASNET_TYPE),,'`; done
 	cp $(LAUNCHERS) $(DESTDIR)
 	cp suite/* $(DESTDIR)
-
 
 -include $(DEPS)
 
