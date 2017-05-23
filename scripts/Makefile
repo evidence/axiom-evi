@@ -1,7 +1,19 @@
 
 export P
+export E
+
+# P=1 => Petalinux mode (compile NOT using buildroot but petalinux)
+# E=1 => if P=1 then Petalinux with emulation mode (as P=1 but NOT use the AxiomBSP kernel)
+
+# safe default if defined P
+ifdef P
+ifndef E
+E := 0
+endif
+endif
 
 include locations.mk
+export OUTPUT_DIR
 
 # safety
 ifeq ($(P),1)
@@ -828,14 +840,14 @@ help::
 # DEB
 #
 
-ifneq ($(P),1)
-
-.PHONY: deb clean-deb distclean-deb
-
-deb clean-deb distclean-deb:
-	$(error deb, clean-deb and distclean-deb makefile target need P=1 on commandline)
-
-else
+#ifneq ($(P),1)
+#
+#.PHONY: deb clean-deb distclean-deb
+#
+#deb clean-deb distclean-deb:
+#	$(error deb, clean-deb and distclean-deb makefile target need P=1 on commandline)
+#
+#else
 
 .PHONY: deb-prepare deb-destroy deb-install deb clean-deb distclean-deb
 
@@ -921,7 +933,7 @@ distclean-deb: clean-deb distclean-extrae distclean-gasnet distclean-nanox
 	$(MAKE) -C $(ALLOCATOR_DIR) distclean
 	$(MAKE) -C $(EVI_APPS_DIR) distclean
 
-endif
+#endif
 
 help::
 	@echo "DEBIANization"
