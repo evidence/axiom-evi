@@ -1,0 +1,14 @@
+Source: linux-modules
+Section: unknown
+Priority: optional
+Maintainer: Massimiliano <massy@unknown>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.5
+Homepage: <insert the upstream URL, if relevant>
+Vcs-Git: git://anonscm.debian.org/collab-maint/axiom-apps.git
+
+Package: linux-modules
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Linux kernel modules
+ Linux kernel modules

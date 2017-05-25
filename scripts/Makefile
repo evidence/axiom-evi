@@ -8,7 +8,7 @@ export E
 # safe default if defined P
 ifdef P
 ifndef E
-E := 0
+E := 1
 endif
 endif
 
@@ -49,9 +49,13 @@ VMS := 2
 # qemu
 
 QEMU := $(QEMU_BUILD_DIR)/aarch64-softmmu/qemu-system-aarch64
+QEMU-IMG := $(QEMU_BUILD_DIR)/qemu-img
 QEMU_PARAM := "-l"
 ifeq ($(LONG_ENQUEUE), 0)
 QEMU_PARAM := ""
+endif
+ifeq ($(P),1)
+QEMU_PARAM += "-p"
 endif
 
 # axiom switch
@@ -688,6 +692,63 @@ help::
 
 .PHONY: start run netup netdown setupnet stop switch log $(RUNS) sync $(SYNCS)
 
+ifeq ($(P),1)
+MASTERROOTFS_NAME := zynq-rootfs_seco
+MASTERROOTFS_SIZE := 4G
+ROOTFSARCH_FILE := $(ROOTFSARCH)
+UBOOT_FILE:=${IMAGES}/u-boot.sd.elf
+else
+MASTERROOTFS_NAME := zynq-rootfs_br
+MASTERROOTFS_SIZE := 2G
+ROOTFSARCH_FILE := $(IMAGES)/rootfs.cpio
+#UBOOT_FILE:=${IMAGES}/u-boot.elf
+UBOOT_FILE:=${IMAGES}/u-boot.sd.elf
+endif
+
+MASTERROOTFS:=$(IMAGES)/$(MASTERROOTFS_NAME).img
+TMPMOUNTPOINT:=$(IMAGES)/tmp
+BR_UBOOT_FILE:=${IMAGES}/u-boot.elf
+UBOOT_PATCH:=$(AXIOMHOME)/scripts/buildroot/uboot-petalinux.patch
+
+.PHONY: build-qemu-rootfs build-qemu-uboot
+
+# create rootfs for qemu
+$(MASTERROOTFS):
+	mkdir -p $(IMAGES)
+	fallocate -l $(MASTERROOTFS_SIZE) $(MASTERROOTFS)
+	/sbin/mkfs.ext4 $(MASTERROOTFS)
+	mkdir -p $(TMPMOUNTPOINT)
+	sudo mount -t auto -o loop,rw $(MASTERROOTFS) $(TMPMOUNTPOINT)
+ifeq ($(P),1)
+	sudo tar -C $(TMPMOUNTPOINT) -xvzf $(ROOTFSARCH_FILE)
+else
+	sudo /bin/sh -c 'cd $(TMPMOUNTPOINT); cpio -i <$(ROOTFSARCH_FILE);'
+endif
+	sudo umount $(TMPMOUNTPOINT)
+
+# create u-boot for SD image rootfs
+${IMAGES}/u-boot.sd.elf:
+	cp -f $(OUTPUT_DIR)/build/uboot-axiom/include/configs/xilinx_zynqmp.h /tmp/
+	cp -f $(BR_UBOOT_FILE) /tmp/
+	-patch -p1 -d $(OUTPUT_DIR) <$(UBOOT_PATCH)
+	-make -C $(OUTPUT_DIR) uboot-rebuild
+	-cp -f $(BR_UBOOT_FILE) ${IMAGES}/u-boot.sd.elf
+	cp -f /tmp/u-boot.elf $(BR_UBOOT_FILE)
+	cp -f /tmp/xilinx_zynqmp.h $(OUTPUT_DIR)/build/uboot-axiom/include/configs/xilinx_zynqmp.h 
+
+# create rootfs permanent snapshot for qemu
+$(IMAGES)/$(MASTERROOTFS_NAME)-snap-%.qcow2: $(MASTERROOTFS)
+	$(QEMU-IMG) create -f qcow2  $(IMAGES)/$(MASTERROOTFS_NAME)-snap-$*.qcow2 \
+		-o backing_file=$(MASTERROOTFS)
+
+.PHOBY: temp-change-rootfs
+
+temp-change-rootfs:
+	-mkdir -p $(TMPMOUNTPOINT)
+	-sudo mount -t auto -o loop,rw $(S_MASTERROOTFS) $(TMPMOUNTPOINT)
+	-(cd $(TMPMOUNTPOINT); sudo bash)
+	-sudo umount $(TMPMOUNTPOINT)
+
 start: run
 
 run: clean-log stop switch $(RUNS)
@@ -701,8 +762,8 @@ netdown:
 setupnet:
 	@./setup_network_on_nodes.sh
 
-$(RUNS): run%:
-	@echo "starting qemu[$*]: $(QEMU) param: $(QEMU_PARAM)" | tee -a $(LOG_FILE)
+$(RUNS): run%: $(UBOOT_FILE) $(IMAGES)/$(MASTERROOTFS_NAME)-snap-%.qcow2
+	@echo "starting qemu[$*]: rootfs: $(MASTERROOTFS_NAME)-snap-$*.qcow2 param: $(QEMU_PARAM)" | tee -a $(LOG_FILE)
 	@./start_qemu.sh --id $* --qemu ${QEMU} $(QEMU_PARAM) >> $(LOG_FILE) 2>&1 &
 
 stop:
@@ -849,7 +910,7 @@ help::
 #
 #else
 
-.PHONY: deb-prepare deb-destroy deb-install deb clean-deb distclean-deb
+.PHONY: deb-prepare deb-unprepare deb-install deb clean-deb distclean-deb
 
 ROOTFSTMP:=$(AXIOMHOME)/rootfs-tmp
 ROOTFSWRK:=$(AXIOMHOME)/rootfs-wrk
@@ -864,7 +925,7 @@ deb-prepare: qemu
 	sudo mount -t overlay overlay -olowerdir=$(ROOTFS),upperdir=$(ROOTFSTMP),workdir=$(ROOTFSWRK) $(ROOTFSTMP)
 	cp $(QEMU_STATIC_BUILD_DIR)/aarch64-linux-user/qemu-aarch64 $(ROOTFSTMP)/usr/bin
 
-deb-destroy:
+deb-unprepare:
 	-sudo umount $(ROOTFSTMP)
 	sudo rm -r -f $(ROOTFSTMP) $(ROOTFSWRK)
 
@@ -875,7 +936,11 @@ deb-install:
 	rm -f $(ROOTFSTMP)/*.deb
 	rm -f $(AXIOMHOME)/*.deb
 
+
 deb: deb-prepare
+# kernel modules
+	$(DEBENV) fakeroot $(MAKE) -C $(LOCFILE_DIR) -f debian/rules binary
+	$(MAKE) deb-install
 # extrae
 	$(MAKE) extrae
 	$(DEBENV) fakeroot $(MAKE) -C $(EXTRAE_DIR) -f debian/rules binary

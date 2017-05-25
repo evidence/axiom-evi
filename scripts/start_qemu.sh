@@ -8,7 +8,10 @@ BOARD="zynqmp"
 ARM_FIRMWARE="../arm-trusted-firmware/build/zynqmp/release/bl31"
 QEMU_DTS="./buildroot/qemu-dts"
 AXIOM_DTB="axiom-board.dtb"
-
+USEPETALINUX=0
+QEMU_DTB_FILE="${QEMU_DTS}/${AXIOM_DTB}"
+S_MASTERROOTFS=${S_MASTERROOTFS:-${IMAGES}/zynq-rootfs_seco-snap-${ID}.qcow2}
+B_MASTERROOTFS=${B_MASTERROOTFS:-${IMAGES}/zynq-rootfs_br-snap-${ID}.qcow2}
 SERIAL_VIDEO="-serial chardev:char1"
 SERIAL_CONSOLE="-serial mon:stdio -display none"
 
@@ -37,6 +40,7 @@ function usage
     echo -e " -c, --console               use stdio console"
     echo -e " -n, --network               create a tap network interface for guest comunication"
     echo -e " -l, --longenq               enqueue long message when there is no space left"
+    echo -e " -p, --petalinux             use petalinux images (kernel, uboot, tdb)"
     echo -e " -h, --help                  print this help"
 }
 
@@ -66,6 +70,9 @@ while [ "$1" != "" ]; do
             ;;
         -l | --longenq )
             LONG_ENQUEUE=1
+            ;;
+        -p | --petalinux )
+            USEPETALINUX=1
             ;;
         -h | --help )
             usage
@@ -98,6 +105,31 @@ fi
 
 set -x
 
+FIRMWARE_FILE=${ARM_FIRMWARE}/bl31.elf
+KERNEL_FILE=${IMAGES}/Image
+DTB_FILE=${IMAGES}/zynqmp-zcu102.dtb
+#UBOOT_FILE=${IMAGES}/u-boot.elf
+UBOOT_FILE=${IMAGES}/u-boot.sd.elf
+SD_LINE="-drive file=${B_MASTERROOTFS},if=sd,index=1"
+
+if [ X"$USEPETALINUX" = X"1" ]; then
+#    FIRMWARE_FILE=${AXIOMBSP}/images/linux/bl31.elf
+#    KERNEL_FILE=${AXIOMBSP}/images/linux/Image   
+#    DTB_FILE=${AXIOMBSP}/images/linux/system.dtb
+#    UBOOT_FILE=${AXIOMBSP}/images/linux/u-boot.elf
+    UBOOT_FILE=${IMAGES}/u-boot.sd.elf
+#    if [ ! -e ${KERNEL_FILE} ]; then
+#	echo "AXIOMBSP environment variable not set or petalinux build not done"
+#	exit 255
+#    fi
+    SD_LINE="-drive file=${S_MASTERROOTFS},if=sd,index=1"
+#    QEMU="${PETALINUX}/tools/hsm/bin/qemu-system-aarch64"
+#    QEMU_DTB_FILE="${PETALINUX}/tools/hsm/data/qemu/zynq/zed/system.dtb"
+fi
+
+# setenv bootargs root=/dev/mmcblk0 earlycon=cdns,mmio,0xff000000,115200n8 rw rootwait
+# booti 0x00080000 - 0x06080000
+
 if [ "$BOARD" = "zynq" ]; then
     eval ${QEMU} -M arm-generic-fdt-plnx -machine linux=on -m 256       \
     -serial /dev/null ${SERIAL} -kernel ${IMAGES}/uImage                \
@@ -110,11 +142,12 @@ elif [ "$BOARD" = "zynqmp" ]; then
     eval ${QEMU} -M arm-generic-fdt -m 1G ${SERIAL} -serial /dev/null \
     -rtc base=utc,clock=host -semihosting \
     -device loader,addr=0xfd1a0104,data=0x8000000e,data-len=4           \
-    -device loader,file=${ARM_FIRMWARE}/bl31.elf,cpu=0                  \
-    -device loader,file=${IMAGES}/Image,addr=0x00080000                 \
-    -device loader,file=${IMAGES}/zynqmp-zcu102.dtb,addr=0x06080000     \
-    -device loader,file=${IMAGES}/u-boot.elf                            \
-    -hw-dtb ${QEMU_DTS}/${AXIOM_DTB}                                    \
+    -device loader,file=${FIRMWARE_FILE},cpu=0                  \
+    -device loader,file=${KERNEL_FILE},addr=0x00080000                 \
+    -device loader,file=${DTB_FILE},addr=0x06080000     \
+    -device loader,file=${UBOOT_FILE}                            \
+    $SD_LINE \
+    -hw-dtb ${QEMU_DTB_FILE}                                    \
     -net nic,vlan=1 -net none,vlan=1                                    \
     -net nic,vlan=1 -net none,vlan=1                                    \
     -net nic,vlan=0 -net user,hostfwd=tcp::2220${ID}-:22,vlan=0         \
@@ -128,3 +161,4 @@ fi
 
 #    -device loader,file=${IMAGES}/zynqmp-zcu102.dtb,addr=0x04815c00    
 
+#    -drive file=sdcard/axiom_sd.img,if=sd,index=1 \
