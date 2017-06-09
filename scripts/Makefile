@@ -4,6 +4,7 @@ export E
 
 # P=1 => Petalinux mode (compile NOT using buildroot but petalinux)
 # E=1 => if P=1 then Petalinux with emulation mode (as P=1 but NOT use the AxiomBSP kernel)
+# S=1 => use a temporally qemu snapshot
 
 # safe default if defined P
 ifdef P
@@ -20,6 +21,20 @@ ifeq ($(P),1)
 ifeq ($(PETALINUX),)
 $(error You must set the environment to work with P=1 (see settings.sh))
 endif
+endif
+
+#
+#
+#
+
+ifeq ($(P),1)
+ifeq ($(E),1)
+$(info Configuration: Using petalinux/qemu (kernel from buildroot))
+else
+$(info Configuration: Using petalinux/board (petalinux kernel))
+endif
+else
+$(info Configuration: Using buildroot/qemu configuration)
 endif
 
 #
@@ -49,13 +64,22 @@ VMS := 2
 # qemu
 
 QEMU := $(QEMU_BUILD_DIR)/aarch64-softmmu/qemu-system-aarch64
+QEMU-STATIC := $(QEMU_STATIC_BUILD_DIR)/aarch64-linux-user/qemu-aarch64
 QEMU-IMG := $(QEMU_BUILD_DIR)/qemu-img
-QEMU_PARAM := "-l"
+QEMU-NBD := /usr/bin/qemu-nbd
+QEMU_PARAM := "--longenq"
 ifeq ($(LONG_ENQUEUE), 0)
 QEMU_PARAM := ""
 endif
 ifeq ($(P),1)
-QEMU_PARAM += "-p"
+QEMU_PARAM += "--petalinux"
+endif
+# default: usa a qemu temp snapshot image
+ifndef S
+S:=1
+endif
+ifeq ($(S),1)
+QEMU_PARAM += "--snapshot"
 endif
 
 # axiom switch
@@ -249,6 +273,10 @@ _buildroot:
 
 arm-firmware:
 	$(MAKE) -C $(ARM_FIRMWARE_DIR) CROSS_COMPILE=$(CCPREFIX) RESET_TO_BL31=1 PLAT=zynqmp all fip
+
+
+$(QEMU_DTS_DIR)/axiom-board.dtb $(QEMU_DTS_DIR)/axiom-board-long-enqueue.dtb:
+	$(MAKE) P=0 qemu-dts
 
 qemu-dts:
 ifneq ($(P),1)
@@ -705,7 +733,7 @@ ROOTFSARCH_FILE := $(IMAGES)/rootfs.cpio
 UBOOT_FILE:=${IMAGES}/u-boot.sd.elf
 endif
 
-MASTERROOTFS:=$(IMAGES)/$(MASTERROOTFS_NAME).img
+MASTERROOTFS:=$(IMAGES)/$(MASTERROOTFS_NAME).qcow2
 TMPMOUNTPOINT:=$(IMAGES)/tmp
 BR_UBOOT_FILE:=${IMAGES}/u-boot.elf
 UBOOT_PATCH:=$(AXIOMHOME)/scripts/buildroot/uboot-petalinux.patch
@@ -713,18 +741,43 @@ UBOOT_PATCH:=$(AXIOMHOME)/scripts/buildroot/uboot-petalinux.patch
 .PHONY: build-qemu-rootfs build-qemu-uboot
 
 # create rootfs for qemu
+#$(MASTERROOTFS):
+#	@if [ ! -e "$(ROOTFSARCH_FILE)" ]; then \
+#		echo "$(ROOTFSARCH_FILE) NOT FOUND!"; \
+#		/bin/false; \
+#	fi
+#	mkdir -p $(IMAGES)
+#	fallocate -l $(MASTERROOTFS_SIZE) $(MASTERROOTFS)
+#	/sbin/mkfs.ext4 $(MASTERROOTFS)
+#	mkdir -p $(TMPMOUNTPOINT)
+#	sudo mount -t auto -o loop,rw $(MASTERROOTFS) $(TMPMOUNTPOINT)
+#ifeq ($(P),1)
+#	sudo tar -C $(TMPMOUNTPOINT) -xvzf $(ROOTFSARCH_FILE)
+#else
+#	sudo /bin/sh -c 'cd $(TMPMOUNTPOINT); cpio -i <$(ROOTFSARCH_FILE);'
+#endif
+#	sudo umount $(TMPMOUNTPOINT)
+
+NBD:=/dev/nbd7
+
+# create rootfs for qemu
 $(MASTERROOTFS):
+	@if [ ! -e "$(ROOTFSARCH_FILE)" ]; then \
+		echo "$(ROOTFSARCH_FILE) NOT FOUND!"; \
+		/bin/false; \
+	fi
 	mkdir -p $(IMAGES)
-	fallocate -l $(MASTERROOTFS_SIZE) $(MASTERROOTFS)
-	/sbin/mkfs.ext4 $(MASTERROOTFS)
-	mkdir -p $(TMPMOUNTPOINT)
-	sudo mount -t auto -o loop,rw $(MASTERROOTFS) $(TMPMOUNTPOINT)
+	$(QEMU-IMG) create -f qcow2 $(MASTERROOTFS) $(MASTERROOTFS_SIZE)
+	sudo $(QEMU-NBD) -f qcow2 --connect=$(NBD) $(MASTERROOTFS)
+	sudo /sbin/mkfs.ext4 -E nodiscard $(NBD)
+	sudo mount -t auto -o defaults,rw $(NBD) $(TMPMOUNTPOINT)
 ifeq ($(P),1)
 	sudo tar -C $(TMPMOUNTPOINT) -xvzf $(ROOTFSARCH_FILE)
 else
 	sudo /bin/sh -c 'cd $(TMPMOUNTPOINT); cpio -i <$(ROOTFSARCH_FILE);'
 endif
 	sudo umount $(TMPMOUNTPOINT)
+	sudo $(QEMU-NBD) --disconnect $(NBD)
 
 # create u-boot for SD image rootfs
 ${IMAGES}/u-boot.sd.elf:
@@ -736,18 +789,31 @@ ${IMAGES}/u-boot.sd.elf:
 	cp -f /tmp/u-boot.elf $(BR_UBOOT_FILE)
 	cp -f /tmp/xilinx_zynqmp.h $(OUTPUT_DIR)/build/uboot-axiom/include/configs/xilinx_zynqmp.h 
 
-# create rootfs permanent snapshot for qemu
+# create permanent rootfs snapshot for qemu
 $(IMAGES)/$(MASTERROOTFS_NAME)-snap-%.qcow2: $(MASTERROOTFS)
 	$(QEMU-IMG) create -f qcow2  $(IMAGES)/$(MASTERROOTFS_NAME)-snap-$*.qcow2 \
 		-o backing_file=$(MASTERROOTFS)
 
-.PHOBY: temp-change-rootfs
+.PHONY: debug-chroot
 
-temp-change-rootfs:
+CHROOT_PROMPT = $(shell cat $(TMPMOUNTPOINT)/etc/hostname)
+CHROOT_PROMPT = CHROOT
+
+# chroot into a qcow2 image for qemu
+debug-chroot: $(IMAGES)/$(MASTERROOTFS_NAME)-snap-0.qcow2
 	-mkdir -p $(TMPMOUNTPOINT)
-	-sudo mount -t auto -o loop,rw $(S_MASTERROOTFS) $(TMPMOUNTPOINT)
-	-(cd $(TMPMOUNTPOINT); sudo bash)
-	-sudo umount $(TMPMOUNTPOINT)
+	sudo $(QEMU-NBD) -f qcow2 \
+		--connect=$(NBD) \
+		$(IMAGES)/$(MASTERROOTFS_NAME)-snap-0.qcow2
+	sudo mount -t auto -o defaults,rw $(NBD) $(TMPMOUNTPOINT)
+	-@sudo cp $(QEMU-STATIC) $(TMPMOUNTPOINT)/usr/bin
+	-@echo "Entering QEmu CHROOT on $(MASTERROOTFS_NAME)-snap-0.qcow2"
+	-@echo "Type 'exit' to terminate"
+	-@sudo debian_chroot="$(CHROOT_PROMPT)" chroot $(TMPMOUNTPOINT)
+	-@echo "Leving CHROOT"
+	-@sudo rm -f $(TMPMOUNTPOINT)/usr/bin/qemu-aarch64
+	sudo umount $(TMPMOUNTPOINT)
+	sudo $(QEMU-NBD) --disconnect $(NBD)
 
 start: run
 
@@ -762,7 +828,10 @@ netdown:
 setupnet:
 	@./setup_network_on_nodes.sh
 
-$(RUNS): run%: $(UBOOT_FILE) $(IMAGES)/$(MASTERROOTFS_NAME)-snap-%.qcow2
+$(RUNS): run%: $(UBOOT_FILE) \
+		$(IMAGES)/$(MASTERROOTFS_NAME)-snap-%.qcow2 \
+		$(QEMU_DTS_DIR)/axiom-board.dtb \
+		$(QEMU_DTS_DIR)/axiom-board-long-enqueue.dtb
 	@echo "starting qemu[$*]: rootfs: $(MASTERROOTFS_NAME)-snap-$*.qcow2 param: $(QEMU_PARAM)" | tee -a $(LOG_FILE)
 	@./start_qemu.sh --id $* --qemu ${QEMU} $(QEMU_PARAM) >> $(LOG_FILE) 2>&1 &
 
@@ -796,6 +865,9 @@ help::
 	@echo "    VMS=?             number of node to run (default: $(VMS))"
 	@echo "    NETWORK=0|1       enable TCP/IP network between nodes (default: 0)"
 	@echo "    LONG_ENQUEUE=0|1  ensure a strict FIFO policy on axiom queue (default: 1)"
+	@echo "	   P=0|1             run a 'petalinux' qemu machine, not a builroot machine (default: 0)"
+	@echo "    E=0|1             if P=1 run in emulated mode i.e. use the buildroot kernel/dtb (default: 1)"
+	@echo "    S=0|1             use a temp snapshot rootfs (default: 1)"
 	@echo "  stop             Stop nodes and axiom_switch"
 	@echo "  netup            Setup network on host (must run by root prior to run vms)"
 	@echo "  netdown          Clean network on host (can be run by root after shutdown vms)"
@@ -940,6 +1012,7 @@ deb-install:
 deb: deb-prepare
 # kernel modules
 	$(DEBENV) fakeroot $(MAKE) -C $(LOCFILE_DIR) -f debian/rules binary
+	mv -f $(AXIOMHOME)/axiom-dev_*deb $(AXIOMHOME)/axiom_*deb $(AXIOMHOME)/debs
 	$(MAKE) deb-install
 # extrae
 	$(MAKE) extrae

@@ -10,10 +10,15 @@ QEMU_DTS="./buildroot/qemu-dts"
 AXIOM_DTB="axiom-board.dtb"
 USEPETALINUX=0
 QEMU_DTB_FILE="${QEMU_DTS}/${AXIOM_DTB}"
-S_MASTERROOTFS=${S_MASTERROOTFS:-${IMAGES}/zynq-rootfs_seco-snap-${ID}.qcow2}
-B_MASTERROOTFS=${B_MASTERROOTFS:-${IMAGES}/zynq-rootfs_br-snap-${ID}.qcow2}
 SERIAL_VIDEO="-serial chardev:char1"
 SERIAL_CONSOLE="-serial mon:stdio -display none"
+
+# note on rootfs: (example using the seco rootfs)
+# the rootfs for the id-th is into zynq-rootfs_seco-snap-$(ID).qcow2
+# that is a persistent snapshot of zynq-rootfs_seco.img
+# the --snapshot command line option force to use a temp qcow2 image
+# on top of the supplied qcow2
+# (usually this images are built from the master Makefile)
 
 CONSOLE=0
 LONG_ENQUEUE=0
@@ -41,6 +46,7 @@ function usage
     echo -e " -n, --network               create a tap network interface for guest comunication"
     echo -e " -l, --longenq               enqueue long message when there is no space left"
     echo -e " -p, --petalinux             use petalinux images (kernel, uboot, tdb)"
+    echo -e " -s, --snapshot              use a temp snapshot of rootfs"
     echo -e " -h, --help                  print this help"
 }
 
@@ -74,6 +80,9 @@ while [ "$1" != "" ]; do
         -p | --petalinux )
             USEPETALINUX=1
             ;;
+        -s | --snapshot )
+            USETEMPSNAP=1
+            ;;
         -h | --help )
             usage
             exit
@@ -84,6 +93,9 @@ while [ "$1" != "" ]; do
     esac
     shift
 done
+
+S_MASTERROOTFS=${S_MASTERROOTFS:-${IMAGES}/zynq-rootfs_seco-snap-${ID}.qcow2}
+B_MASTERROOTFS=${B_MASTERROOTFS:-${IMAGES}/zynq-rootfs_br-snap-${ID}.qcow2}
 
 if [ "$CONSOLE" = "1" ]; then
     SERIAL=$SERIAL_CONSOLE
@@ -129,6 +141,10 @@ fi
 
 # setenv bootargs root=/dev/mmcblk0 earlycon=cdns,mmio,0xff000000,115200n8 rw rootwait
 # booti 0x00080000 - 0x06080000
+
+if [ X"$USETEMPSNAP" = X"1" ]; then
+    SD_LINE="$SD_LINE -snapshot"
+fi
 
 if [ "$BOARD" = "zynq" ]; then
     eval ${QEMU} -M arm-generic-fdt-plnx -machine linux=on -m 256       \

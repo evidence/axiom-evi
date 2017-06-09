@@ -101,6 +101,11 @@ binary-arch: make-changelog
 	mv $(DEBIAN_DIR)/linux-modules/usr/share/doc/linux-modules \
 		$(DEBIAN_DIR)/linux-modules/usr/share/doc/linux-modules-$(KVERSION)
 
+	echo "kversion=$(KVERSION)" >>$(DEBIAN_DIR)/axiom.substvars
+	dh_gencontrol -paxiom
+	echo "kversion=$(KVERSION)" >>$(DEBIAN_DIR)/axiom-dev.substvars
+	dh_gencontrol -paxiom-dev
+
 	dh_md5sums
 	dh_builddeb
 
@@ -118,7 +123,7 @@ VERSION := $(shell git describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/
 BDATE := $(shell date -R)
 
 define changelog
-linux-modules ($(VERSION)) unstable; urgency=low
+axiom-evi ($(VERSION)) unstable; urgency=low
 
   * Dummy changelog.
 

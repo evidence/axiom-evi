@@ -1,4 +1,4 @@
-Source: linux-modules
+Source: axiom-evi
 Section: unknown
 Priority: optional
 Maintainer: Massimiliano <massy@unknown>
@@ -12,3 +12,15 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Linux kernel modules
  Linux kernel modules
+
+Package: axiom
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, axiom-init, axiom-run, axiom-ethtap, axiom-apps, nanox, axiom-evi-nic-modules-${kversion}, axiom-evi-allocator-modules-${kversion}
+Description: Axiom meta-package
+ Axiom meta-package
+
+Package: axiom-dev
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, nanox-dev, axiom-evi-allocator-dev, gasnet-dev, libevi-lmm-dev, libaxiom-init-dev, libaxiom-run-dev, libaxiom-user-dev 
+Description: Axiom development meta-package
+ Axiom development meta-package
