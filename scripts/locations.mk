@@ -27,7 +27,9 @@ EVI_ALLOC_DRV_DIR := $(LOCFILE_DIR)/../axiom-evi-allocator-drv
 EVI_ALLOC_LIB_DIR := $(LOCFILE_DIR)/../axiom-evi-allocator-lib
 ALLOCATOR_DIR := $(LOCFILE_DIR)/../axiom-allocator
 OVERLAY_DIR := $(LOCFILE_DIR)/buildroot/overlay
+UBUNTU_OVERLAY_DIR := $(LOCFILE_DIR)/buildroot/overlay-ubuntu
 SCRIPTS_DIR := $(LOCFILE_DIR)
+XENIAL_DIR := $(LOCFILE_DIR)/buildroot/xenial
 
 OUTPUT_DIR := $(shell realpath $(LOCFILE_DIR)/../output)
 ifeq ($(P), 1)

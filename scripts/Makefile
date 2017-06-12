@@ -789,28 +789,66 @@ ${IMAGES}/u-boot.sd.elf:
 	cp -f /tmp/u-boot.elf $(BR_UBOOT_FILE)
 	cp -f /tmp/xilinx_zynqmp.h $(OUTPUT_DIR)/build/uboot-axiom/include/configs/xilinx_zynqmp.h 
 
+# create a Packages.gz to use with apt-get
+$(AXIOMHOME)/debs/Packages.gz: $(AXIOMHOME)/debs/*.deb
+	dpkg-scanpackages $(AXIOMHOME)/debs |\
+		sed 's,Filename:.*/,Filename: /debs/,' |\
+		gzip -9 >$(AXIOMHOME)/debs/Packages.gz
+
 # create permanent rootfs snapshot for qemu
-$(IMAGES)/$(MASTERROOTFS_NAME)-snap-%.qcow2: $(MASTERROOTFS)
+$(IMAGES)/$(MASTERROOTFS_NAME)-snap-%.qcow2: $(MASTERROOTFS) $(AXIOMHOME)/debs/Packages.gz
 	$(QEMU-IMG) create -f qcow2  $(IMAGES)/$(MASTERROOTFS_NAME)-snap-$*.qcow2 \
 		-o backing_file=$(MASTERROOTFS)
+# the image for petalinux/seco must be fixed!
+ifeq ($(P),1)
+# mount the image
+	-sudo $(QEMU-NBD) -f qcow2 --connect=$(NBD) \
+		$(IMAGES)/$(MASTERROOTFS_NAME)-snap-$*.qcow2
+	-sudo mount -t auto -o defaults,rw $(NBD) $(TMPMOUNTPOINT)
+	-sudo cp $(QEMU_STATIC_BUILD_DIR)/aarch64-linux-user/qemu-aarch64 \
+		$(TMPMOUNTPOINT)/usr/bin/
+# copy the overlay dir and the debs
+	-sudo cp -r $(UBUNTU_OVERLAY_DIR)/* $(TMPMOUNTPOINT)
+	-sudo mkdir $(TMPMOUNTPOINT)/debs
+	-sudo cp $(AXIOMHOME)/debs/* $(TMPMOUNTPOINT)/debs/
+# change hostname
+	-sudo sed -i "s/01/$(shell printf "%02d" $$(($* + 1)))/" \
+		$(TMPMOUNTPOINT)/etc/hostname
+# some xenial debian packages
+	-sudo cp $(XENIAL_DIR)/*.deb $(TMPMOUNTPOINT)/tmp/
+	-sudo chroot $(TMPMOUNTPOINT) /bin/bash -c "dpkg --install /tmp/*.deb"
+	-sudo rm -f $(TMPMOUNTPOINT)/tmp/*.deb
+# setup debian archive
+	-sudo /bin/bash -c \
+		'echo "deb file:/// debs/" >$(TMPMOUNTPOINT)/etc/apt/sources.list.d/axiom'
+# install debian packages
+#	-sudo chroot $(TMPMOUNTPOINT) /bin/bash -c "apt-get update; apt-get install axiom"
+	-sudo chroot $(TMPMOUNTPOINT) /bin/bash -c "dpkg --install /debs/*.deb"
+# umount the image
+	-sudo rm -f $(TMPMOUNTPOINT)/usr/bin/qemu-aarch64
+	-sudo umount $(TMPMOUNTPOINT)
+	-sudo $(QEMU-NBD) --disconnect $(NBD)
+endif
 
-.PHONY: debug-chroot
+
+CHROOTS := $(addprefix debug-chroot-,$(IDS))
+.PHONY: $(CHROOTS)
 
 CHROOT_PROMPT = $(shell cat $(TMPMOUNTPOINT)/etc/hostname)
 CHROOT_PROMPT = CHROOT
 
 # chroot into a qcow2 image for qemu
-debug-chroot: $(IMAGES)/$(MASTERROOTFS_NAME)-snap-0.qcow2
+$(CHROOTS): debug-chroot-%: $(IMAGES)/$(MASTERROOTFS_NAME)-snap-%.qcow2
 	-mkdir -p $(TMPMOUNTPOINT)
 	sudo $(QEMU-NBD) -f qcow2 \
 		--connect=$(NBD) \
-		$(IMAGES)/$(MASTERROOTFS_NAME)-snap-0.qcow2
+		$(IMAGES)/$(MASTERROOTFS_NAME)-snap-$*.qcow2
 	sudo mount -t auto -o defaults,rw $(NBD) $(TMPMOUNTPOINT)
 	-@sudo cp $(QEMU-STATIC) $(TMPMOUNTPOINT)/usr/bin
-	-@echo "Entering QEmu CHROOT on $(MASTERROOTFS_NAME)-snap-0.qcow2"
+	-@echo "Entering QEmu CHROOT on $(MASTERROOTFS_NAME)-snap-$*.qcow2"
 	-@echo "Type 'exit' to terminate"
 	-@sudo debian_chroot="$(CHROOT_PROMPT)" chroot $(TMPMOUNTPOINT)
-	-@echo "Leving CHROOT"
+	-@echo "Leaving CHROOT"
 	-@sudo rm -f $(TMPMOUNTPOINT)/usr/bin/qemu-aarch64
 	sudo umount $(TMPMOUNTPOINT)
 	sudo $(QEMU-NBD) --disconnect $(NBD)
@@ -877,6 +915,7 @@ help::
 	@echo "  run?             Run the ? virtual nodes"
 	@echo "  switch           Run the switch"
 	@echo "  log              Show qemu log"
+	@echo "  debug-chroot-?   Run a chroot into the ?-th qemu rootfs image"
 	@echo " "
 
 #
