@@ -1,4 +1,6 @@
 
+export P
+
 .PHONY: clean distclean build install
 
 SUBDIRS=axiom gasnet ompss

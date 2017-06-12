@@ -1,14 +1,24 @@
 
 include ../../scripts/locations.mk
 
-.PHONY: build install clean distclean
+.PHONY: build install clean distclean install-real
 
 GUESTDIR := $(TESTS_DIR)/utils/guest
 LAUNCHERS := $(GUESTDIR)/run_test_axiom.sh
 LAUNCHERS += $(GUESTDIR)/run_suite.sh
 
+FAKEROOT :=
+ifeq ($(P),1)
+ifndef FAKEROOTKEY
+FAKEROOT := fakeroot -i $(ROOTFS).faked -s $(ROOTFS).faked
+endif
+endif
+
 install:
 	$(MAKE) -C $(EVI_APPS_DIR)/tests $@
+	$(FAKEROOT) $(MAKE) install-real
+
+install-real:
 	for DESTDIR in $(TARGET_DIR); do \
 	    mkdir -p $${DESTDIR}/root/tests_axiom; \
 	    cp $(LAUNCHERS)  $${DESTDIR}/root/tests_axiom; \

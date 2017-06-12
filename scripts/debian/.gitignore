@@ -1,0 +1,11 @@
+axiomeu-dev.substvars
+axiomeu-dev/
+axiomeu.substvars
+axiomeu/
+changelog
+files
+linux-modules.postinst.debhelper
+linux-modules.postrm.debhelper
+linux-modules.substvars
+linux-modules/
+tmp/

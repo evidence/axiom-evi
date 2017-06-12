@@ -7,7 +7,7 @@ set -x
 
 rm -rf set-0
 
-NX_ARGS="--cluster --cluster-network=axiom --smp-workers=1 --instrumentation=extrae" \
+NX_ARGS="--cluster --cluster-network=axiom --smp-workers=1 --instrumentation=extrae --instrument-default=developer" \
        NX_CLUSTER_NODE_MEMORY=16777216 \
        NX_GASNET_SEGMENT_SIZE=67108864 \
        NX_EXTRAE_AVOID_MERGE=1 \

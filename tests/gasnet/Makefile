@@ -1,4 +1,6 @@
 
+export P
+
 include ../../scripts/locations.mk
 
 .PHONY: clean build install distclean
@@ -8,13 +10,23 @@ build: build-int build-ext
 clean: clean-int clean-ext
 distclean: distclean-int distclean-ext
 
+FAKEROOT :=
+ifeq ($(P),1)
+ifndef FAKEROOTKEY
+FAKEROOT := fakeroot -i $(ROOTFS).faked -s $(ROOTFS).faked
+endif
+endif
+
 #
 # external tests
 #
 
-.PHONY: install-ext build-ext clean-ext distclean-ext
+.PHONY: install-ext build-ext clean-ext distclean-ext install-ext-real
 
 install-ext: build-ext
+	$(FAKEROOT) $(MAKE) install-ext-real
+
+install-ext-real:
 	for DESTDIR in $(TARGET_DIR); do \
 		mkdir -p $${DESTDIR}/root/tests_gasnet_dbg ;\
 		cp $(GASNET_BUILD_DIR_DEBUG)/axiom-conduit/test* \

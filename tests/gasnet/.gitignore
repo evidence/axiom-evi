@@ -1,1 +1,4 @@
 tests_*.log
+tests_*.log.bz2
+risu_*/
+results_*/

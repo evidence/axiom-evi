@@ -1,0 +1,15 @@
+--- ./build/uboot-axiom/include/configs/xilinx_zynqmp.h	2017-05-24 10:26:29.079294255 +0200
++++ ./build/uboot-axiom/include/configs/xilinx_zynqmp_new.h	2017-05-24 10:28:00.072295056 +0200
+@@ -224,10 +224,10 @@
+ 		     "booti $kernel_addr - $fdt_addr\0" \
+ 	DFU_ALT_INFO
+ 
+ #define CONFIG_PREBOOT		"run setup"
+-#define CONFIG_BOOTCOMMAND	"booti 0x00080000 - 0x06080000"
+-#define CONFIG_BOOTDELAY	0
++#define CONFIG_BOOTCOMMAND	"setenv bootargs $bootargs root=/dev/mmcblk0 rw; booti 0x00080000 - 0x06080000"
++#define CONFIG_BOOTDELAY	1
+ 
+ #define CONFIG_BOARD_LATE_INIT
+ 
+ /* Do not preserve environment */

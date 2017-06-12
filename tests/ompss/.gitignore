@@ -1,1 +1,3 @@
 tests_*.log
+aarch64-buildroot-linux-gnu-mcc_*.c
+aarch64-linux-gnu-mcc_*.c
