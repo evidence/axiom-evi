@@ -1051,7 +1051,7 @@ deb-install:
 deb: deb-prepare
 # kernel modules
 	$(DEBENV) fakeroot $(MAKE) -C $(LOCFILE_DIR) -f debian/rules binary
-	mv -f $(AXIOMHOME)/axiom-dev_*deb $(AXIOMHOME)/axiom_*deb $(AXIOMHOME)/debs
+	mv -f $(AXIOMHOME)/axiomeu-dev_*deb $(AXIOMHOME)/axiomeu_*deb $(AXIOMHOME)/debs
 	$(MAKE) deb-install
 # extrae
 	$(MAKE) extrae
