@@ -4,10 +4,18 @@ IMAGES=${IMAGES:-./images}
 QEMU=${QEMU:-./qemu-system-aarch64}
 ID=${ID:-0}
 BOARD="zynqmp"
-AXIOM_DTB="axiom-board.dtb"
-
+ARM_FIRMWARE="./images"
+QEMU_DTS="./images"
+USEPETALINUX=0
 SERIAL_VIDEO="-serial chardev:char1"
 SERIAL_CONSOLE="-serial mon:stdio -display none"
+
+# note on rootfs: (example using the seco rootfs)
+# the rootfs for the id-th is into zynq-rootfs_seco-snap-$(ID).qcow2
+# that is a persistent snapshot of zynq-rootfs_seco.img
+# the --snapshot command line option force to use a temp qcow2 image
+# on top of the supplied qcow2
+# (usually this images are built from the master Makefile)
 
 CONSOLE=0
 LONG_ENQUEUE=0
@@ -23,7 +31,6 @@ function if2exist {
     [ -d $SYSNET/$1 ]
 }
 
-
 function usage
 {
     echo -e "usage: ./start_qemu.sh [OPTION...]"
@@ -34,6 +41,9 @@ function usage
     echo -e " -i, --images    img_dir     dir that contains kernel,initrd and dtb"
     echo -e " -c, --console               use stdio console"
     echo -e " -n, --network               create a tap network interface for guest comunication"
+    echo -e " -l, --longenq               enqueue long message when there is no space left"
+    echo -e " -p, --petalinux             use petalinux images (kernel, uboot, tdb)"
+    echo -e " -s, --snapshot              use a temp snapshot of rootfs"
     echo -e " -h, --help                  print this help"
 }
 
@@ -64,6 +74,12 @@ while [ "$1" != "" ]; do
         -l | --longenq )
             LONG_ENQUEUE=1
             ;;
+        -p | --petalinux )
+            USEPETALINUX=1
+            ;;
+        -s | --snapshot )
+            USETEMPSNAP=1
+            ;;
         -h | --help )
             usage
             exit
@@ -75,15 +91,20 @@ while [ "$1" != "" ]; do
     shift
 done
 
+S_MASTERROOTFS=${S_MASTERROOTFS:-${IMAGES}/zynq-rootfs_seco-snap-${ID}.qcow2}
+B_MASTERROOTFS=${B_MASTERROOTFS:-${IMAGES}/zynq-rootfs_br-snap-${ID}.qcow2}
+
 if [ "$CONSOLE" = "1" ]; then
     SERIAL=$SERIAL_CONSOLE
 else
     SERIAL=$SERIAL_VIDEO
 fi
 
+AXIOM_DTB="axiom-board.dtb"
 if [ "$LONG_ENQUEUE" = "1" ]; then
     AXIOM_DTB="axiom-board-long-enqueue.dtb"
 fi
+QEMU_DTB_FILE="${QEMU_DTS}/${AXIOM_DTB}"
 
 NETLINE="-net nic,vlan=1 -net none,vlan=1"
 if  [ $NETWORK -eq 1 ]; then
@@ -95,22 +116,50 @@ fi
 
 set -x
 
+FIRMWARE_FILE=${ARM_FIRMWARE}/bl31.elf
+KERNEL_FILE=${IMAGES}/Image
+DTB_FILE=${IMAGES}/zynqmp-zcu102.dtb
+#UBOOT_FILE=${IMAGES}/u-boot.elf
+UBOOT_FILE=${IMAGES}/u-boot.sd.elf
+SD_LINE="-drive file=${B_MASTERROOTFS},if=sd,index=1"
+
+if [ X"$USEPETALINUX" = X"1" ]; then
+#    FIRMWARE_FILE=${AXIOMBSP}/images/linux/bl31.elf
+#    KERNEL_FILE=${AXIOMBSP}/images/linux/Image   
+#    DTB_FILE=${AXIOMBSP}/images/linux/system.dtb
+#    UBOOT_FILE=${AXIOMBSP}/images/linux/u-boot.elf
+    UBOOT_FILE=${IMAGES}/u-boot.sd.elf
+#    if [ ! -e ${KERNEL_FILE} ]; then
+#	echo "AXIOMBSP environment variable not set or petalinux build not done"
+#	exit 255
+#    fi
+    SD_LINE="-drive file=${S_MASTERROOTFS},if=sd,index=1"
+#    QEMU="${PETALINUX}/tools/hsm/bin/qemu-system-aarch64"
+#    QEMU_DTB_FILE="${PETALINUX}/tools/hsm/data/qemu/zynq/zed/system.dtb"
+fi
+
+if [ X"$USETEMPSNAP" = X"1" ]; then
+    SD_LINE="$SD_LINE -snapshot"
+fi
+
 if [ "$BOARD" = "zynq" ]; then
-    eval ${QEMU} -M arm-generic-fdt-plnx -machine linux=on -m 256M      \
+    eval ${QEMU} -M arm-generic-fdt-plnx -machine linux=on -m 256       \
     -serial /dev/null ${SERIAL} -kernel ${IMAGES}/uImage                \
     -dtb ${IMAGES}/zynq-zc706.dtb --initrd ${IMAGES}/rootfs.cpio.uboot  \
     -net nic,vlan=0 -net user,hostfwd=tcp::2220${ID}-:22,vlan=0         \
     -net nic,vlan=1 -net none,vlan=1                                    \
     -net nic,vlan=2 -net socket,vlan=2,connect=localhost:3330${ID}      \
-    -append "mem=256M" -chardev vc,id=char1
+    -append "mem=256M" -chardev vc,id=char1 -redir tcp:1234{ID}::1234
 elif [ "$BOARD" = "zynqmp" ]; then
-    eval ${QEMU} -M arm-generic-fdt -m 256M ${SERIAL} -serial /dev/null \
+    eval ${QEMU} -M arm-generic-fdt -m 1G ${SERIAL} -serial /dev/null \
+    -rtc base=utc,clock=host -semihosting \
     -device loader,addr=0xfd1a0104,data=0x8000000e,data-len=4           \
-    -device loader,file=${IMAGES}/bl31.elf,cpu=0                        \
-    -device loader,file=${IMAGES}/Image,addr=0x00080000                 \
-    -device loader,file=${IMAGES}/zynqmp-zcu102.dtb,addr=0x04080000     \
-    -device loader,file=${IMAGES}/u-boot.elf                            \
-    -hw-dtb ${IMAGES}/${AXIOM_DTB}                                      \
+    -device loader,file=${FIRMWARE_FILE},cpu=0                  \
+    -device loader,file=${KERNEL_FILE},addr=0x00080000                 \
+    -device loader,file=${DTB_FILE},addr=0x06080000     \
+    -device loader,file=${UBOOT_FILE}                            \
+    $SD_LINE \
+    -hw-dtb ${QEMU_DTB_FILE}                                    \
     -net nic,vlan=1 -net none,vlan=1                                    \
     -net nic,vlan=1 -net none,vlan=1                                    \
     -net nic,vlan=0 -net user,hostfwd=tcp::2220${ID}-:22,vlan=0         \

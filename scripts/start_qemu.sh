@@ -7,9 +7,7 @@ ID=${ID:-0}
 BOARD="zynqmp"
 ARM_FIRMWARE="../arm-trusted-firmware/build/zynqmp/release/bl31"
 QEMU_DTS="./buildroot/qemu-dts"
-AXIOM_DTB="axiom-board.dtb"
 USEPETALINUX=0
-QEMU_DTB_FILE="${QEMU_DTS}/${AXIOM_DTB}"
 SERIAL_VIDEO="-serial chardev:char1"
 SERIAL_CONSOLE="-serial mon:stdio -display none"
 
@@ -103,9 +101,12 @@ else
     SERIAL=$SERIAL_VIDEO
 fi
 
+AXIOM_DTB="axiom-board.dtb"
 if [ "$LONG_ENQUEUE" = "1" ]; then
     AXIOM_DTB="axiom-board-long-enqueue.dtb"
 fi
+QEMU_DTB_FILE="${QEMU_DTS}/${AXIOM_DTB}"
+
 
 NETLINE="-net nic,vlan=1 -net none,vlan=1"
 if  [ $NETWORK -eq 1 ]; then
@@ -139,9 +140,6 @@ if [ X"$USEPETALINUX" = X"1" ]; then
 #    QEMU_DTB_FILE="${PETALINUX}/tools/hsm/data/qemu/zynq/zed/system.dtb"
 fi
 
-# setenv bootargs root=/dev/mmcblk0 earlycon=cdns,mmio,0xff000000,115200n8 rw rootwait
-# booti 0x00080000 - 0x06080000
-
 if [ X"$USETEMPSNAP" = X"1" ]; then
     SD_LINE="$SD_LINE -snapshot"
 fi
@@ -174,7 +172,3 @@ else
     echo "Board $BOARD not supported"
     usage
 fi
-
-#    -device loader,file=${IMAGES}/zynqmp-zcu102.dtb,addr=0x04815c00    
-
-#    -drive file=sdcard/axiom_sd.img,if=sd,index=1 \

@@ -671,6 +671,11 @@ archive-vms: clean-archive-vms
 	cp $(IMAGES)/*dtb $(ARCHIVE_VMS_DIR)/images/
 	cp $(IMAGES)/*elf $(ARCHIVE_VMS_DIR)/images/
 	cp $(IMAGES)/*Image $(ARCHIVE_VMS_DIR)/images/
+	cp $(IMAGES)/zynq-rootfs*qcow2 $(ARCHIVE_VMS_DIR)/images/
+	cd $(ARCHIVE_VMS_DIR)/images ;\
+		for f in *snap*.qcow2; do \
+		$(QEMU-IMG) rebase -u -b $$(echo $$f | sed 's/-snap-[0-9]*//') $$f;\
+		done;
 	cp $(QEMU_DTS_DIR)/*dtb $(ARCHIVE_VMS_DIR)/images/
 	cp $(ARM_FIRMWARE_DIR)/build/zynqmp/release/bl31/bl31.elf $(ARCHIVE_VMS_DIR)/images/
 	cp $(AXIOMHOME)/CHANGELOG $(ARCHIVE_VMS_DIR)/CHANGELOG
@@ -681,9 +686,9 @@ archive-vms: clean-archive-vms
 	cp $(OMPSS_TESTS_DIR)/README $(ARCHIVE_VMS_DIR)/README.tests.ompss
 	cp $(EVI_APPS_DIR)/tests/README $(ARCHIVE_VMS_DIR)/README.tests.axiom
 	cp $(GASNET_TESTS_DIR)/README $(ARCHIVE_VMS_DIR)/README.tests.gasnet
-	tar -zcvf $(ARCHIVE_VMS_TGZ).tgz $(ARCHIVE_VMS_DIR) --transform s/$(ARCHIVE_VMS_DIR)/$(ARCHIVE_VMS_TGZ)/
+	tar -zcvf $(ARCHIVE_VMS_TGZ).tar.gz $(ARCHIVE_VMS_DIR) --transform s/$(ARCHIVE_VMS_DIR)/$(ARCHIVE_VMS_TGZ)/
 	mkdir -p $(ARCHIVE_DIR)
-	mv $(ARCHIVE_VMS_TGZ).tgz $(ARCHIVE_DIR)
+	mv $(ARCHIVE_VMS_TGZ).tar.gz $(ARCHIVE_DIR)
 
 
 archive-toolchain: clean-archive-toolchain clean-tests
