@@ -3,6 +3,12 @@
 
 The following is the list of the main tags of the repository:
 
+## axiom-v0.13          (13/06/2017)
+* All sub-projects
+    + add PetaLinux/Linaro compilation support
+    + add DEB packages generation support
+* QEMU
+    + replace buildroot FS with Ubuntu FS from real AXIOM board
 ## axiom-v0.12          (11/05/2017)
 * QEMU
     + remove LOOPBACK bit in the status register
