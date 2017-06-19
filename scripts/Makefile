@@ -1,6 +1,32 @@
 
 export P
 export E
+export S
+
+_ccred:="\033[0;31m"
+ccred:=$(shell echo -e $(_ccred))
+ccgreen:=$(shell echo -e "\033[0;32m")
+ccblue:=$(shell echo -e "\033[0;34m")
+_ccend:="\033[0m"
+ccend:=$(shell echo -e $(_ccend))
+
+define ENV_HELP =
+$(ccred)Command line enviroment variables not defined!$(ccend)
+You must define some variable on the command line (for example "make P=1 E=0 run"):
+* P ($(ccgreen)required$(ccend))
+    0: use buildroot environment 
+    1: use Petalinux/Linaro (with SECO rootfs) environment
+* E ($(ccgreen)optional$(ccend), used only if P=1)
+    0: use buildroot kernel for QEMU (default if non specified)
+    1: use bsp kernel for QEMU (actually does not work)
+* S ($(ccgreen)optional$(ccend), used only during qemu run)
+    0: the rootfs in on a static qcow2 (one for every machine)
+    1: the rootfs in on a temp qcow2 snapshot (default)
+endef
+
+ifndef P
+$(error $(ENV_HELP))
+endif
 
 # P=1 => Petalinux mode (compile NOT using buildroot but petalinux)
 # E=1 => if P=1 then Petalinux with emulation mode (as P=1 but NOT use the AxiomBSP kernel)
@@ -19,7 +45,7 @@ export OUTPUT_DIR
 # safety
 ifeq ($(P),1)
 ifeq ($(PETALINUX),)
-$(error You must set the environment to work with P=1 (see settings.sh))
+$(error $(ccred)You must set the environment to work with P=1 (see settings.sh)$(ccend))
 endif
 endif
 
@@ -137,7 +163,7 @@ BUILDCPUS := $(shell getconf _NPROCESSORS_ONLN)
 # MAIN targets
 #
 
-.PHONY: all debug target help
+.PHONY: all debug target
 
 ifeq ($(P),1)
 all: axiom-nic axiom-apps qemu gasnet ompss tests
@@ -658,80 +684,21 @@ help::
 	@echo " "
 
 #
-# ARCHIVE
-#
-
-.PHONY: archive-vms archive-toolchain archive release
-
-archive-vms: clean-archive-vms
-	mkdir -p $(ARCHIVE_VMS_DIR)/images
-	mkdir -p $(ARCHIVE_VMS_DIR)/extrae
-	cp $(QEMU) $(ARCHIVE_VMS_DIR)/
-	cp $(SWITCH) $(ARCHIVE_VMS_DIR)/
-	cp $(IMAGES)/*dtb $(ARCHIVE_VMS_DIR)/images/
-	cp $(IMAGES)/*elf $(ARCHIVE_VMS_DIR)/images/
-	cp $(IMAGES)/*Image $(ARCHIVE_VMS_DIR)/images/
-	cp $(IMAGES)/zynq-rootfs*qcow2 $(ARCHIVE_VMS_DIR)/images/
-	cd $(ARCHIVE_VMS_DIR)/images ;\
-		for f in *snap*.qcow2; do \
-		$(QEMU-IMG) rebase -u -b $$(echo $$f | sed 's/-snap-[0-9]*//') $$f;\
-		done;
-	cp $(QEMU_DTS_DIR)/*dtb $(ARCHIVE_VMS_DIR)/images/
-	cp $(ARM_FIRMWARE_DIR)/build/zynqmp/release/bl31/bl31.elf $(ARCHIVE_VMS_DIR)/images/
-	cp $(AXIOMHOME)/CHANGELOG $(ARCHIVE_VMS_DIR)/CHANGELOG
-	cp -r ./vms.archive/* $(ARCHIVE_VMS_DIR)/
-	cp $(TESTS_DIR)/utils/host/extrae_merge.sh $(ARCHIVE_VMS_DIR)/extrae
-	cp $(TESTS_DIR)/utils/host/mpi2prv $(ARCHIVE_VMS_DIR)/extrae
-	cp -r $(TESTS_DIR)/utils/host/paraver_cfg $(ARCHIVE_VMS_DIR)/extrae
-	cp $(OMPSS_TESTS_DIR)/README $(ARCHIVE_VMS_DIR)/README.tests.ompss
-	cp $(EVI_APPS_DIR)/tests/README $(ARCHIVE_VMS_DIR)/README.tests.axiom
-	cp $(GASNET_TESTS_DIR)/README $(ARCHIVE_VMS_DIR)/README.tests.gasnet
-	tar -zcvf $(ARCHIVE_VMS_TGZ).tar.gz $(ARCHIVE_VMS_DIR) --transform s/$(ARCHIVE_VMS_DIR)/$(ARCHIVE_VMS_TGZ)/
-	mkdir -p $(ARCHIVE_DIR)
-	mv $(ARCHIVE_VMS_TGZ).tar.gz $(ARCHIVE_DIR)
-
-
-archive-toolchain: clean-archive-toolchain clean-tests
-	mkdir -p $(ARCHIVE_TOOLCHAIN_DIR)/toolchain
-	mkdir -p $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
-	cp -r ./toolchain.archive/* $(ARCHIVE_TOOLCHAIN_DIR)/
-	cp -r $(TESTS_DIR)/utils $(ARCHIVE_TOOLCHAIN_DIR)/examples
-	cp -r $(TESTS_DIR)/ompss/N-body $(ARCHIVE_TOOLCHAIN_DIR)/examples
-	cp -r $(OMPSS_TESTS_DIR)/src/*.c $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
-	cp -r $(OMPSS_TESTS_DIR)/src/*.h $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
-	cp -r $(OUTPUT_DIR)/host $(ARCHIVE_TOOLCHAIN_DIR)/toolchain/host
-	cd $(ARCHIVE_TOOLCHAIN_DIR)/toolchain && ln -s host/usr/aarch64-buildroot-linux-gnu/sysroot sysroot
-	cd $(ARCHIVE_TOOLCHAIN_DIR)/toolchain/host/usr/share/mcxx/config.d && \
-		sed -i s,$(OUTPUT_DIR)/host,\__AXIOM_TOOLCHAIN__,g *
-	tar -zcf $(ARCHIVE_TOOLCHAIN_TGZ).tgz $(ARCHIVE_TOOLCHAIN_DIR) --transform s/$(ARCHIVE_TOOLCHAIN_DIR)/$(ARCHIVE_TOOLCHAIN_TGZ)/
-	mkdir -p $(ARCHIVE_DIR)
-	mv $(ARCHIVE_TOOLCHAIN_TGZ).tgz $(ARCHIVE_DIR)
-
-archive: archive-vms archive-toolchain
-
-release: clean all archive
-
-help::
-	@echo "ARCHIVING"
-	@echo "  archive-vms        Build an archive containing VMS"
-	@echo "  archive-toolchain  Build an archive containing the toolchain"
-	@echo "  archive            Build an archive containing VMS and toolchain"
-	@echo "  release            As 'archive' for a point release"
-	@echo " "
-
-#
 # RUNNING
 #
 
 .PHONY: start run netup netdown setupnet stop switch log $(RUNS) sync $(SYNCS)
 
+MASTERROOTFS_SECO_NAME := zynq-rootfs_seco
+MASTERROOTFS_BR_NAME := zynq-rootfs_br
+
 ifeq ($(P),1)
-MASTERROOTFS_NAME := zynq-rootfs_seco
+MASTERROOTFS_NAME := $(MASTERROOTFS_SECO_NAME)
 MASTERROOTFS_SIZE := 4G
 ROOTFSARCH_FILE := $(ROOTFSARCH)
 UBOOT_FILE:=${IMAGES}/u-boot.sd.elf
 else
-MASTERROOTFS_NAME := zynq-rootfs_br
+MASTERROOTFS_NAME := $(MASTERROOTFS_BR_NAME)
 MASTERROOTFS_SIZE := 2G
 ROOTFSARCH_FILE := $(IMAGES)/rootfs.cpio
 #UBOOT_FILE:=${IMAGES}/u-boot.elf
@@ -772,15 +739,40 @@ $(MASTERROOTFS):
 		/bin/false; \
 	fi
 	mkdir -p $(IMAGES)
+# create the image file
 	$(QEMU-IMG) create -f qcow2 $(MASTERROOTFS) $(MASTERROOTFS_SIZE)
+# mount the image
 	sudo $(QEMU-NBD) -f qcow2 --connect=$(NBD) $(MASTERROOTFS)
 	sudo /sbin/mkfs.ext4 -E nodiscard $(NBD)
 	sudo mount -t auto -o defaults,rw $(NBD) $(TMPMOUNTPOINT)
+# fill the image
 ifeq ($(P),1)
 	sudo tar -C $(TMPMOUNTPOINT) -xvzf $(ROOTFSARCH_FILE)
 else
 	sudo /bin/sh -c 'cd $(TMPMOUNTPOINT); cpio -i <$(ROOTFSARCH_FILE);'
 endif
+# copy qemu static interpreter
+	-sudo cp $(QEMU_STATIC_BUILD_DIR)/aarch64-linux-user/qemu-aarch64 \
+		$(TMPMOUNTPOINT)/usr/bin/
+ifeq ($(P),1)
+# copy the overlay dir and the debs
+	-sudo cp -r $(UBUNTU_OVERLAY_DIR)/* $(TMPMOUNTPOINT)
+	-sudo mkdir $(TMPMOUNTPOINT)/debs
+	-sudo cp $(AXIOMHOME)/debs/* $(TMPMOUNTPOINT)/debs/
+# some xenial debian packages
+	-sudo cp $(XENIAL_DIR)/*.deb $(TMPMOUNTPOINT)/tmp/
+	-sudo chroot $(TMPMOUNTPOINT) /bin/bash -c "dpkg --install /tmp/*.deb"
+	-sudo rm -f $(TMPMOUNTPOINT)/tmp/*.deb
+# setup debian archive
+	-sudo /bin/bash -c \
+		'echo "deb file:/// debs/" >$(TMPMOUNTPOINT)/etc/apt/sources.list.d/axiom'
+# install debian packages
+#	-sudo chroot $(TMPMOUNTPOINT) /bin/bash -c "apt-get update; apt-get install axiom"
+	-sudo chroot $(TMPMOUNTPOINT) /bin/bash -c "dpkg --install /debs/*.deb"
+endif
+# remove qemu static interpreter
+	-sudo rm -f $(TMPMOUNTPOINT)/usr/bin/qemu-aarch64
+# umount the image
 	sudo umount $(TMPMOUNTPOINT)
 	sudo $(QEMU-NBD) --disconnect $(NBD)
 
@@ -792,7 +784,8 @@ ${IMAGES}/u-boot.sd.elf:
 	-make -C $(OUTPUT_DIR) uboot-rebuild
 	-cp -f $(BR_UBOOT_FILE) ${IMAGES}/u-boot.sd.elf
 	cp -f /tmp/u-boot.elf $(BR_UBOOT_FILE)
-	cp -f /tmp/xilinx_zynqmp.h $(OUTPUT_DIR)/build/uboot-axiom/include/configs/xilinx_zynqmp.h 
+	cp -f /tmp/xilinx_zynqmp.h \
+		$(OUTPUT_DIR)/build/uboot-axiom/include/configs/xilinx_zynqmp.h 
 
 # create a Packages.gz to use with apt-get
 $(AXIOMHOME)/debs/Packages.gz: $(AXIOMHOME)/debs/*.deb
@@ -812,23 +805,9 @@ ifeq ($(P),1)
 	-sudo mount -t auto -o defaults,rw $(NBD) $(TMPMOUNTPOINT)
 	-sudo cp $(QEMU_STATIC_BUILD_DIR)/aarch64-linux-user/qemu-aarch64 \
 		$(TMPMOUNTPOINT)/usr/bin/
-# copy the overlay dir and the debs
-	-sudo cp -r $(UBUNTU_OVERLAY_DIR)/* $(TMPMOUNTPOINT)
-	-sudo mkdir $(TMPMOUNTPOINT)/debs
-	-sudo cp $(AXIOMHOME)/debs/* $(TMPMOUNTPOINT)/debs/
 # change hostname
 	-sudo sed -i "s/01/$(shell printf "%02d" $$(($* + 1)))/" \
 		$(TMPMOUNTPOINT)/etc/hostname
-# some xenial debian packages
-	-sudo cp $(XENIAL_DIR)/*.deb $(TMPMOUNTPOINT)/tmp/
-	-sudo chroot $(TMPMOUNTPOINT) /bin/bash -c "dpkg --install /tmp/*.deb"
-	-sudo rm -f $(TMPMOUNTPOINT)/tmp/*.deb
-# setup debian archive
-	-sudo /bin/bash -c \
-		'echo "deb file:/// debs/" >$(TMPMOUNTPOINT)/etc/apt/sources.list.d/axiom'
-# install debian packages
-#	-sudo chroot $(TMPMOUNTPOINT) /bin/bash -c "apt-get update; apt-get install axiom"
-	-sudo chroot $(TMPMOUNTPOINT) /bin/bash -c "dpkg --install /debs/*.deb"
 # umount the image
 	-sudo rm -f $(TMPMOUNTPOINT)/usr/bin/qemu-aarch64
 	-sudo umount $(TMPMOUNTPOINT)
@@ -852,11 +831,21 @@ $(CHROOTS): debug-chroot-%: $(IMAGES)/$(MASTERROOTFS_NAME)-snap-%.qcow2
 	-@sudo cp $(QEMU-STATIC) $(TMPMOUNTPOINT)/usr/bin
 	-@echo "Entering QEmu CHROOT on $(MASTERROOTFS_NAME)-snap-$*.qcow2"
 	-@echo "Type 'exit' to terminate"
+ifeq ($(P),1)
 	-@sudo debian_chroot="$(CHROOT_PROMPT)" chroot $(TMPMOUNTPOINT)
+else
+	-@sudo debian_chroot="$(CHROOT_PROMPT)" chroot $(TMPMOUNTPOINT) /bin/sh
+endif
 	-@echo "Leaving CHROOT"
 	-@sudo rm -f $(TMPMOUNTPOINT)/usr/bin/qemu-aarch64
 	sudo umount $(TMPMOUNTPOINT)
 	sudo $(QEMU-NBD) --disconnect $(NBD)
+
+.PHONY: debug-chroot-umount
+
+debug-chroot-umount:
+	-sudo umount $(TMPMOUNTPOINT)
+	-sudo $(QEMU-NBD) --disconnect $(NBD)
 
 start: run
 
@@ -921,6 +910,74 @@ help::
 	@echo "  switch           Run the switch"
 	@echo "  log              Show qemu log"
 	@echo "  debug-chroot-?   Run a chroot into the ?-th qemu rootfs image"
+	@echo " "
+
+#
+# ARCHIVE
+#
+
+.PHONY: archive-vms archive-toolchain archive release
+
+ALL_BR_ROOTFS := $(addsuffix .qcow2,$(addprefix $(IMAGES)/$(MASTERROOTFS_BR_NAME)-snap-,$(IDS)))
+ALL_SECO_ROOTFS := $(addsuffix .qcow2,$(addprefix $(IMAGES)/$(MASTERROOTFS_SECO_NAME)-snap-,$(IDS)))
+
+archive-vms: clean-archive-vms ${IMAGES}/u-boot.sd.elf ${IMAGES}/u-boot.elf
+	@if [ $(VMS) -lt 4 ]; then echo -e $(_ccred)Warning: VMS \< 4! The archive will contain only rootfs for $(VMS) machines \(used VMS=? to chaneg this\).$(_ccend); fi
+	@make P=0 $(ALL_BR_ROOTFS)
+	@make P=1 $(ALL_SECO_ROOTFS)
+	mkdir -p $(ARCHIVE_VMS_DIR)/images
+	mkdir -p $(ARCHIVE_VMS_DIR)/extrae
+	cp $(QEMU) $(ARCHIVE_VMS_DIR)/
+	cp $(SWITCH) $(ARCHIVE_VMS_DIR)/
+	cp $(IMAGES)/*dtb $(ARCHIVE_VMS_DIR)/images/
+	cp $(IMAGES)/*elf $(ARCHIVE_VMS_DIR)/images/
+	cp $(IMAGES)/*Image $(ARCHIVE_VMS_DIR)/images/
+	cp $(IMAGES)/zynq-rootfs*qcow2 $(ARCHIVE_VMS_DIR)/images/
+	cd $(ARCHIVE_VMS_DIR)/images ;\
+		for f in *snap*.qcow2; do \
+		$(QEMU-IMG) rebase -u -b $$(echo $$f | sed 's/-snap-[0-9]*//') $$f;\
+		done;
+	cp $(QEMU_DTS_DIR)/*dtb $(ARCHIVE_VMS_DIR)/images/
+	cp $(ARM_FIRMWARE_DIR)/build/zynqmp/release/bl31/bl31.elf $(ARCHIVE_VMS_DIR)/images/
+	cp $(AXIOMHOME)/CHANGELOG $(ARCHIVE_VMS_DIR)/CHANGELOG
+	cp -r ./vms.archive/* $(ARCHIVE_VMS_DIR)/
+	cp $(TESTS_DIR)/utils/host/extrae_merge.sh $(ARCHIVE_VMS_DIR)/extrae
+	cp $(TESTS_DIR)/utils/host/mpi2prv $(ARCHIVE_VMS_DIR)/extrae
+	cp -r $(TESTS_DIR)/utils/host/paraver_cfg $(ARCHIVE_VMS_DIR)/extrae
+	cp $(OMPSS_TESTS_DIR)/README $(ARCHIVE_VMS_DIR)/README.tests.ompss
+	cp $(EVI_APPS_DIR)/tests/README $(ARCHIVE_VMS_DIR)/README.tests.axiom
+	cp $(GASNET_TESTS_DIR)/README $(ARCHIVE_VMS_DIR)/README.tests.gasnet
+	tar -zcvf $(ARCHIVE_VMS_TGZ).tar.gz $(ARCHIVE_VMS_DIR) --transform s/$(ARCHIVE_VMS_DIR)/$(ARCHIVE_VMS_TGZ)/
+	mkdir -p $(ARCHIVE_DIR)
+	mv $(ARCHIVE_VMS_TGZ).tar.gz $(ARCHIVE_DIR)
+
+
+archive-toolchain: clean-archive-toolchain clean-tests
+	mkdir -p $(ARCHIVE_TOOLCHAIN_DIR)/toolchain
+	mkdir -p $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
+	cp -r ./toolchain.archive/* $(ARCHIVE_TOOLCHAIN_DIR)/
+	cp -r $(TESTS_DIR)/utils $(ARCHIVE_TOOLCHAIN_DIR)/examples
+	cp -r $(TESTS_DIR)/ompss/N-body $(ARCHIVE_TOOLCHAIN_DIR)/examples
+	cp -r $(OMPSS_TESTS_DIR)/src/*.c $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
+	cp -r $(OMPSS_TESTS_DIR)/src/*.h $(ARCHIVE_TOOLCHAIN_DIR)/examples/src
+	cp -r $(OUTPUT_DIR)/host $(ARCHIVE_TOOLCHAIN_DIR)/toolchain/host
+	cd $(ARCHIVE_TOOLCHAIN_DIR)/toolchain && ln -s host/usr/aarch64-buildroot-linux-gnu/sysroot sysroot
+	cd $(ARCHIVE_TOOLCHAIN_DIR)/toolchain/host/usr/share/mcxx/config.d && \
+		sed -i s,$(OUTPUT_DIR)/host,\__AXIOM_TOOLCHAIN__,g *
+	tar -zcf $(ARCHIVE_TOOLCHAIN_TGZ).tgz $(ARCHIVE_TOOLCHAIN_DIR) --transform s/$(ARCHIVE_TOOLCHAIN_DIR)/$(ARCHIVE_TOOLCHAIN_TGZ)/
+	mkdir -p $(ARCHIVE_DIR)
+	mv $(ARCHIVE_TOOLCHAIN_TGZ).tgz $(ARCHIVE_DIR)
+
+archive: archive-vms archive-toolchain
+
+release: clean all archive
+
+help::
+	@echo "ARCHIVING"
+	@echo "  archive-vms        Build an archive containing VMS"
+	@echo "  archive-toolchain  Build an archive containing the toolchain"
+	@echo "  archive            Build an archive containing VMS and toolchain"
+	@echo "  release            As 'archive' for a point release"
 	@echo " "
 
 #

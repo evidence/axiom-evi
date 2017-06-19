@@ -1,5 +1,31 @@
 export P
 export E
+export S
+
+_ccred:="\033[0;31m"
+ccred:=$(shell echo -e $(_ccred))
+ccgreen:=$(shell echo -e "\033[0;32m")
+ccblue:=$(shell echo -e "\033[0;34m")
+_ccend:="\033[0m"
+ccend:=$(shell echo -e $(_ccend))
+
+define ENV_HELP =
+$(ccred)Command line enviroment variables not defined!$(ccend)
+You must define some variable on the command line (for example "make P=1 E=0 run"):
+* P ($(ccgreen)required$(ccend))
+    0: use buildroot environment 
+    1: use Petalinux/Linaro (with SECO rootfs) environment
+* E ($(ccgreen)optional$(ccend), used only if P=1)
+    0: use buildroot kernel for QEMU (default if non specified)
+    1: use bsp kernel for QEMU (actually does not work)
+* S ($(ccgreen)optional$(ccend), used only during qemu run)
+    0: the rootfs in on a static qcow2 (one for every machine)
+    1: the rootfs in on a temp qcow2 snapshot (default)
+endef
+
+ifndef P
+$(error $(ENV_HELP))
+endif
 
 # P=1 => Petalinux mode (compile NOT using buildroot but petalinux)
 # E=1 => if P=1 then Petalinux with emulation mode (as P=1 but NOT use the AxiomBSP kernel)
@@ -39,6 +65,15 @@ endif
 
 IDS := $(shell seq 0 $$(( $(VMS) - 1 )))
 RUNS := $(addprefix run,$(IDS))
+
+
+MASTERROOTFS_SECO_NAME := zynq-rootfs_seco
+MASTERROOTFS_BR_NAME := zynq-rootfs_br
+ifeq ($(P),1)
+MASTERROOTFS_NAME := $(MASTERROOTFS_SECO_NAME)
+else
+MASTERROOTFS_NAME := $(MASTERROOTFS_BR_NAME)
+endif
 
 
 .PHONY: $(RUNS) run switch stop clean clean-log
