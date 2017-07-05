@@ -311,7 +311,13 @@ endif
 		       $${LIB} ;\
 	done
 
-allocator-config-force:
+allocator-bootstrap:
+	@if [ ! -r $(ALLOCATOR_DIR)/configure ]; then \
+		cd $(ALLOCATOR_DIR);\
+		autoreconf -fiv ;\
+	fi
+
+allocator-config-force: allocator-bootstrap
 ifeq ($(FS),seco)
 	cd $(ALLOCATOR_DIR) && PATH=$(LINPATH) ./configure \
 		--host=$(HOSTID) --prefix=/usr --with-axiom-sysroot=$(ROOTFS)
