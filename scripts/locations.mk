@@ -32,7 +32,7 @@ SCRIPTS_DIR := $(LOCFILE_DIR)
 XENIAL_DIR := $(LOCFILE_DIR)/buildroot/xenial
 
 OUTPUT_DIR := $(shell realpath $(LOCFILE_DIR)/../output)
-ifeq ($(P), 1)
+ifeq ($(FS),seco)
 TARGET_DIR=$(shell realpath ${ROOTFS})
 #SYSROOT_DIR=$(shell realpath ${LINARO}/sysroot)
 SYSROOT_DIR=$(shell realpath ${ROOTFS})

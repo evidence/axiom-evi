@@ -1,7 +1,8 @@
 
-export P
-export E
-export S
+export KERN
+export FS
+export QEMU_SNAP
+export DISABLE_INSTR
 
 _ccred:="\033[0;31m"
 ccred:=$(shell echo -e $(_ccred))
@@ -13,35 +14,56 @@ ccend:=$(shell echo -e $(_ccend))
 define ENV_HELP =
 $(ccred)Command line enviroment variables not defined!$(ccend)
 You must define some variable on the command line (for example "make P=1 E=0 run"):
-* P ($(ccgreen)required$(ccend))
-    0: use buildroot environment 
-    1: use Petalinux/Linaro (with SECO rootfs) environment
-* E ($(ccgreen)optional$(ccend), used only if P=1)
-    0: use buildroot kernel for QEMU (default if non specified)
-    1: use bsp kernel for QEMU (actually does not work)
-* S ($(ccgreen)optional$(ccend), used only during qemu run)
+* KERN ($(ccgreen)required$(ccend))
+    br: use buildroot kernel
+    seco: use seco bsp kernel (actually qemu does not work with this kernel)
+* FS ($(ccgreen)optional$(ccend))
+    br: use buildroot root fs
+    seco: use seco (ubuntu xenial) root fs (default)
+* QEMU_SNAP ($(ccgreen)optional$(ccend), used only during qemu run)
     0: the rootfs in on a static qcow2 (one for every machine)
     1: the rootfs in on a temp qcow2 snapshot (default)
-* DISABLE_INSTR ($(ccgreen)optional$(ccend), used during compilation)
+* DISABLE_INSTR ($(ccgreen)optional$(ccend), used during libraries compilation)
     0: compile EXTRAE and nic user library with instrumentation support (default)
     1: disable EXTRAE compilation and nic user library instrumentation
 )
 endef
 
-ifndef P
+ifndef KERN
 $(error $(ENV_HELP))
 endif
 
-export DISABLE_INSTR
+# safe defaults
+ifndef FS
+FS := seco
+endif
+ifndef QEMU_SNAP
+QEMU_SNAP := 1
+endif
+ifndef DISABLE_INSTR
+DISABLE_INSTR := 0
+endif
 
-# P=1 => Petalinux mode (compile NOT using buildroot but petalinux)
-# E=1 => if P=1 then Petalinux with emulation mode (as P=1 but NOT use the AxiomBSP kernel)
-# S=1 => use a temporally qemu snapshot
+# check vars
+ifneq ($(KERN),br)
+ifneq ($(KERN),seco)
+$(error KERN must be 'seco' or 'br')
 
-# safe default if defined P
-ifdef P
-ifndef E
-E := 1
+endif
+endif
+ifneq ($(FS),br)
+ifneq ($(FS),seco)
+$(error FS must be 'seco' or 'br')
+endif
+endif
+ifneq ($(QEMU_SNAP),0)
+ifneq ($(QEMU_SNAP),1)
+$(error QEMU_SNAP must be '0' or '1')
+endif
+endif
+ifneq ($(DISABLE_INSTR),0)
+ifneq ($(DISABLE_INSTR),1)
+$(error DISABLE_INSTR must be '0' or '1')
 endif
 endif
 
@@ -49,9 +71,14 @@ include locations.mk
 export OUTPUT_DIR
 
 # safety
-ifeq ($(P),1)
+ifeq ($(KERN),seco)
 ifeq ($(PETALINUX),)
-$(error $(ccred)You must set the environment to work with P=1 (see settings.sh)$(ccend))
+$(error $(ccred)You must set the environment to work with KERN=seco (see settings.sh)$(ccend))
+endif
+endif
+ifeq ($(FS),seco)
+ifeq ($(ROOTFS),)
+$(error $(ccred)You must set the environment to work with FS=seco (see settings.sh)$(ccend))
 endif
 endif
 
@@ -59,14 +86,26 @@ endif
 #
 #
 
-ifeq ($(P),1)
-ifeq ($(E),1)
-$(info Configuration: Using petalinux/qemu (kernel from buildroot))
+$(info Configuration:)
+ifeq ($(KERN),seco)
+$(info $(ccgreen)KERN$(ccend)=seco (using seco bsp kernel))
 else
-$(info Configuration: Using petalinux/board (petalinux kernel))
+$(info $(ccgreen)KERN$(ccend)=br (using buildroot kernel))
 endif
+ifeq ($(FS),seco)
+$(info $(ccgreen)FS$(ccend)=seco (using seco ubunto xenial rootfs))
 else
-$(info Configuration: Using buildroot/qemu configuration)
+$(info $(ccgreen)FS$(ccend)=br (using buildroot rootfs))
+endif
+ifeq ($(QEMU_SNAP),0)
+$(info $(ccgreen)QEMU_SNAP$(ccend)=0 (using static qcow2 image for qemu run))
+else
+$(info $(ccgreen)QEMU_SNAP$(ccend)=1 (using temp qcow2 image for qemu run))
+endif
+ifeq ($(DISABLE_INSTR),0)
+$(info $(ccgreen)DISABLE_INSTR$(ccend)=0 (using EXTRAE instrumentation))
+else
+$(info $(ccgreen)DISABLE_INSTR$(ccend)=1 (disable EXTRAE compilation and integration))
 endif
 
 #
@@ -103,14 +142,10 @@ QEMU_PARAM := "--longenq"
 ifeq ($(LONG_ENQUEUE), 0)
 QEMU_PARAM := ""
 endif
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 QEMU_PARAM += "--petalinux"
 endif
-# default: usa a qemu temp snapshot image
-ifndef S
-S:=1
-endif
-ifeq ($(S),1)
+ifeq ($(QEMU_SNAP),1)
 QEMU_PARAM += "--snapshot"
 endif
 
@@ -135,7 +170,7 @@ export DFLAGS
 
 #CCARCH := arm
 CCARCH := aarch64
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 CCPREFIX := ${LINARO}/host/usr/bin/$(CCARCH)-linux-gnu-
 HOSTID:=aarch64-linux-gnu
 LINPATH:=$(LINARO)/host/usr/bin:$(PATH)
@@ -149,7 +184,7 @@ endif
 # fakeroot
 
 FAKEROOT :=
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 ifndef FAKEROOTKEY
 FAKEROOT := fakeroot -i $(ROOTFS).faked -s $(ROOTFS).faked
 endif
@@ -171,7 +206,7 @@ BUILDCPUS := $(shell getconf _NPROCESSORS_ONLN)
 
 .PHONY: all debug target
 
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 all: axiom-nic axiom-apps qemu gasnet ompss tests
 else
 all: axiom-nic axiom-apps arm-firmware qemu gasnet ompss tests target
@@ -200,7 +235,7 @@ help::
 .PHONY: configure config-alloc config-buildroot
 
 configure: config-alloc
-ifeq ($(P), 1)
+ifeq ($(FS),seco)
 	mkdir -p $(QEMU_STATIC_BUILD_DIR)
 	cd $(QEMU_STATIC_BUILD_DIR) && ../axiom_configure_static.sh
 endif
@@ -212,7 +247,7 @@ config-alloc: config-buildroot
 	cd $(ALLOCATOR_DIR) && autoreconf -fi
 
 config-buildroot:
-ifneq ($(P), 1)
+ifneq ($(FS),seco)
 	cd $(BUILDROOT_DIR) && $(MAKE) O=$(OUTPUT_DIR) evi_ultrascale_defconfig && $(MAKE) O=$(OUTPUT_DIR)
 endif
 
@@ -241,12 +276,12 @@ endif
 allocator-driver: libs
 	$(MAKE) -C $(EVI_ALLOC_DRV_DIR)
 	$(FAKEROOT) $(MAKE) DESTDIR=$(TARGET_DIR) -C $(EVI_ALLOC_DRV_DIR) install
-ifneq ($(P),1)
+ifneq ($(FS),seco)
 	$(MAKE) DESTDIR=$(SYSROOT_DIR) -C $(EVI_ALLOC_DRV_DIR) install
 endif
 
 allocator-lib-config-force:
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 	cd $(EVI_ALLOC_LIB_DIR) && PATH=$(LINPATH) ./configure \
 		--host=$(HOSTID) --prefix=/usr --disable-debug --enable-extld
 else
@@ -260,7 +295,7 @@ allocator-lib-config: libs
 allocator-lib: allocator-lib-config
 	PATH=$(LINPATH) $(MAKE) -C $(EVI_ALLOC_LIB_DIR)
 	$(FAKEROOT) $(MAKE) DESTDIR=$(TARGET_DIR) -C $(EVI_ALLOC_LIB_DIR) install
-ifneq ($(P),1)
+ifneq ($(FS),seco)
 	$(MAKE) DESTDIR=$(SYSROOT_DIR) -C $(EVI_ALLOC_LIB_DIR) install
 endif
         # libtool fix :-(
@@ -271,7 +306,7 @@ endif
 	done
 
 allocator-config-force:
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 	cd $(ALLOCATOR_DIR) && PATH=$(LINPATH) ./configure \
 		--host=$(HOSTID) --prefix=/usr --with-axiom-sysroot=$(ROOTFS)
 else
@@ -285,7 +320,7 @@ allocator-config: allocator-driver allocator-lib
 allocator: allocator-config
 	PATH=$(LINPATH) $(MAKE) -C $(ALLOCATOR_DIR)
 	PATH=$(LINPATH) $(FAKEROOT) $(MAKE) DESTDIR=$(TARGET_DIR) -C $(ALLOCATOR_DIR) install
-ifneq ($(P),1)
+ifneq ($(FS),seco)
 	$(MAKE) DESTDIR=$(SYSROOT_DIR) -C $(ALLOCATOR_DIR) install
 endif
         # libtools fix :-(
@@ -312,15 +347,15 @@ arm-firmware:
 
 
 $(QEMU_DTS_DIR)/axiom-board.dtb $(QEMU_DTS_DIR)/axiom-board-long-enqueue.dtb:
-	$(MAKE) P=0 qemu-dts
+	$(MAKE) KERN=br qemu-dts
 
 qemu-dts:
-ifneq ($(P),1)
+ifneq ($(KERN),seco)
 	$(MAKE) -C $(QEMU_DTS_DIR) DTC=$(HOST_DIR)/usr/bin/linux-dtc
 endif
 
 qemu: qemu-dts
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 	$(MAKE) -C $(QEMU_STATIC_BUILD_DIR) -j$(BUILDCPUS)
 endif
 	$(MAKE) -C $(QEMU_BUILD_DIR) -j$(BUILDCPUS)
@@ -373,7 +408,7 @@ gasnet-config-debug: gasnet-bootstrap libs
 
 gasnet-debug: gasnet-config-debug
 	@$(MAKE) -C $(GASNET_BUILD_DIR_DEBUG)
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 	$(FAKEROOT) $(MAKE) -C $(GASNET_BUILD_DIR_DEBUG) DESTDIR=$(TARGET_DIR) install
 else
 	@$(MAKE) -C $(GASNET_BUILD_DIR_DEBUG) DESTDIR=$(SYSROOT_DIR) install
@@ -394,7 +429,7 @@ gasnet-config-perf: gasnet-bootstrap libs
 
 gasnet-perf: gasnet-config-perf
 	@$(MAKE) -C $(GASNET_BUILD_DIR_PERF)
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 	$(FAKEROOT) $(MAKE) -C $(GASNET_BUILD_DIR_PERF) DESTDIR=$(TARGET_DIR) install
 else
 	@$(MAKE) -C $(GASNET_BUILD_DIR_PERF) DESTDIR=$(SYSROOT_DIR) install
@@ -456,7 +491,7 @@ nanox-config-debug:
 nanox-debug: nanox-config-debug
 	@PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_DEBUG)
 	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=$(TARGET_DIR) install
-ifneq ($(P),1)
+ifneq ($(FS),seco)
 	@$(MAKE) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=$(SYSROOT_DIR) install
 endif
 
@@ -471,7 +506,7 @@ nanox-config-perf:
 nanox-perf: nanox-config-perf
 	@PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_PERF)
 	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=$(TARGET_DIR) install
-ifneq ($(P),1)
+ifneq ($(FS),seco)
 	@$(MAKE) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=$(SYSROOT_DIR) install
 endif
 
@@ -486,7 +521,7 @@ nanox-config-instr:
 nanox-instr: nanox-config-instr
 	PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS_INSTR) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_INSTR)
 	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(NANOX_BUILD_DIR_INSTR) DESTDIR=$(TARGET_DIR) install
-ifneq ($(P),1)
+ifneq ($(FS),seco)
 	@$(MAKE) -C $(NANOX_BUILD_DIR_INSTR) DESTDIR=$(SYSROOT_DIR) install
 endif
 
@@ -501,7 +536,7 @@ nanox-config-instr-debug:
 nanox-instr-debug: nanox-config-instr-debug
 	@PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_INSTR_DEBUG)
 	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(NANOX_BUILD_DIR_INSTR_DEBUG) DESTDIR=$(TARGET_DIR) install
-ifneq ($(P),1)
+ifneq ($(FS),seco)
 	@$(MAKE) -C $(NANOX_BUILD_DIR_INSTR_DEBUG) DESTDIR=$(SYSROOT_DIR) install
 endif
 
@@ -559,7 +594,7 @@ mcxx: mcxx-config
 	@make -j$(BUILDCPUS) PATH=$(PATH):$(HOST_DIR)/usr/bin -C $(MCXX_BUILD_DIR)
 #	@make -C $(MCXX_BUILD_DIR) DESTDIR=$(HOST_DIR) install
 	@make -C $(MCXX_BUILD_DIR) install
-ifneq ($(P),1)
+ifneq ($(FS),seco)
 	@cp $(HOST_DIR)/usr/lib/pkgconfig/mcxx.pc $(SYSROOT_DIR)/usr/lib/pkgconfig/mcxx.pc
 endif
 
@@ -637,7 +672,7 @@ extrae-config:
 	@if [ ! -r "$(EXTRAE_BUILD_DIR)/config.status" ]; then $(MAKE) extrae-config-force; fi
 
 extrae: extrae-config
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 	@PATH=$(LINPATH) $(MAKE) -j$(BUILDCPUS) -C $(EXTRAE_BUILD_DIR) \
 	  CFLAGS="--sysroot=$(ROOTFS) \
 		-I${ROOTFS}/usr/include/aarch64-linux-gnu \
@@ -702,7 +737,7 @@ help::
 MASTERROOTFS_SECO_NAME := zynq-rootfs_seco
 MASTERROOTFS_BR_NAME := zynq-rootfs_br
 
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 MASTERROOTFS_NAME := $(MASTERROOTFS_SECO_NAME)
 MASTERROOTFS_SIZE := 4G
 ROOTFSARCH_FILE := $(ROOTFSARCH)
@@ -756,7 +791,7 @@ $(MASTERROOTFS):
 	sudo /sbin/mkfs.ext4 -E nodiscard $(NBD)
 	sudo mount -t auto -o defaults,rw $(NBD) $(TMPMOUNTPOINT)
 # fill the image
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 	sudo tar -C $(TMPMOUNTPOINT) -xvzf $(ROOTFSARCH_FILE)
 else
 	sudo /bin/sh -c 'cd $(TMPMOUNTPOINT); cpio -i <$(ROOTFSARCH_FILE);'
@@ -764,7 +799,7 @@ endif
 # copy qemu static interpreter
 	-sudo cp $(QEMU_STATIC_BUILD_DIR)/aarch64-linux-user/qemu-aarch64 \
 		$(TMPMOUNTPOINT)/usr/bin/
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 # copy the overlay dir and the debs
 	-sudo cp -r $(UBUNTU_OVERLAY_DIR)/* $(TMPMOUNTPOINT)
 	-sudo mkdir $(TMPMOUNTPOINT)/debs
@@ -808,7 +843,7 @@ $(IMAGES)/$(MASTERROOTFS_NAME)-snap-%.qcow2: $(MASTERROOTFS) $(AXIOMHOME)/debs/P
 	$(QEMU-IMG) create -f qcow2  $(IMAGES)/$(MASTERROOTFS_NAME)-snap-$*.qcow2 \
 		-o backing_file=$(MASTERROOTFS)
 # the image for petalinux/seco must be fixed!
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 # mount the image
 	-sudo $(QEMU-NBD) -f qcow2 --connect=$(NBD) \
 		$(IMAGES)/$(MASTERROOTFS_NAME)-snap-$*.qcow2
@@ -841,7 +876,7 @@ $(CHROOTS): debug-chroot-%: $(IMAGES)/$(MASTERROOTFS_NAME)-snap-%.qcow2
 	-@sudo cp $(QEMU-STATIC) $(TMPMOUNTPOINT)/usr/bin
 	-@echo "Entering QEmu CHROOT on $(MASTERROOTFS_NAME)-snap-$*.qcow2"
 	-@echo "Type 'exit' to terminate"
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 	-@sudo debian_chroot="$(CHROOT_PROMPT)" chroot $(TMPMOUNTPOINT)
 else
 	-@sudo debian_chroot="$(CHROOT_PROMPT)" chroot $(TMPMOUNTPOINT) /bin/sh
