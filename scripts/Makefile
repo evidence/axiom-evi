@@ -280,7 +280,13 @@ ifneq ($(FS),seco)
 	$(MAKE) DESTDIR=$(SYSROOT_DIR) -C $(EVI_ALLOC_DRV_DIR) install
 endif
 
-allocator-lib-config-force:
+allocator-lib-bootstrap:
+	@if [ ! -r $(EVI_ALLOC_LIB_DIR)/configure ]; then \
+		cd $(EVI_ALLOC_LIB_DIR);\
+		autoreconf -fiv ;\
+	fi
+
+allocator-lib-config-force: allocator-lib-bootstrap
 ifeq ($(FS),seco)
 	cd $(EVI_ALLOC_LIB_DIR) && PATH=$(LINPATH) ./configure \
 		--host=$(HOSTID) --prefix=/usr --disable-debug --enable-extld
