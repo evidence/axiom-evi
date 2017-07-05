@@ -22,11 +22,17 @@ You must define some variable on the command line (for example "make P=1 E=0 run
 * S ($(ccgreen)optional$(ccend), used only during qemu run)
     0: the rootfs in on a static qcow2 (one for every machine)
     1: the rootfs in on a temp qcow2 snapshot (default)
+* DISABLE_INSTR ($(ccgreen)optional$(ccend), used during compilation)
+    0: compile EXTRAE and nic user library with instrumentation support (default)
+    1: disable EXTRAE compilation and nic user library instrumentation
+)
 endef
 
 ifndef P
 $(error $(ENV_HELP))
 endif
+
+export DISABLE_INSTR
 
 # P=1 => Petalinux mode (compile NOT using buildroot but petalinux)
 # E=1 => if P=1 then Petalinux with emulation mode (as P=1 but NOT use the AxiomBSP kernel)
@@ -224,7 +230,11 @@ help::
 
 .PHONY: libs allocator-driver allocator-lib allocator-lib-config allocator-lib-config-force allocator axiom-nic axiom-apps _buildroot buildroot arm-firmware qemu-dts qemu allocator allocator-config-force allocator-config
 
-libs: extrae
+ifeq ($(DISABLE_INSTR),1)
+libs: 
+else
+libs: extrae 
+endif
 	$(MAKE) -C $(EVI_NIC_DIR) libs
 	$(MAKE) -C $(EVI_APPS_DIR) libs
 
@@ -646,10 +656,10 @@ else
 endif
 
 clean-extrae:
-	@[ -d $(EXTRAE_BUILD_DIR) ] && make -C $(EXTRAE_BUILD_DIR) clean
+	[ -d $(EXTRAE_BUILD_DIR) ] && make -C $(EXTRAE_BUILD_DIR) clean
 
 distclean-extrae:
-	@[ -d $(EXTRAE_BUILD_DIR) ] && rm -rf $(EXTRAE_BUILD_DIR) || true
+	[ -d $(EXTRAE_BUILD_DIR) ] && rm -rf $(EXTRAE_BUILD_DIR) || true
 
 #endif
 
