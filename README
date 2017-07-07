@@ -304,3 +304,97 @@ configure an ethernet device for intra-node comunication (assigning an IP addres
         # fill the size specified (add -v to see the dump)
         axiom-run -P all -n 1,2 axiom-rdma -m r -s 1k 5 0 1
 ```
+## 5. New system compilation
+
+### 5.1 Prepare the system
+
+Change the environent variables into $(AXIOM_HOME)/settings.sh
+
+* PETALINUX
+You must have installed PetaLinux; this must point to the installation directory
+(default $HOME/petalinux)
+
+* AXIOMBSP
+You must have installed Seco BSP; this must point to the installation directory
+(default $HOME/bsp/AXIOM-ZU9EG-2016.3)
+
+* LINARO
+You must have installed a linaro toolchains; this must point to the installation directory
+(default $HOME/linaro)
+
+Seco Ubunto image use
+gcc-linaro-5.3.1-2016.05-x86_64_aarch64-linux-gnu.tar.xz
+runtime-gcc-linaro-5.3.1-2016.05-aarch64-linux-gnu.tar.xz
+sysroot-glibc-linaro-2.21-2016.05-aarch64-linux-gnu.tar.xz
+
+the linaro installation directory must have the followinf layout
+
+linaro/
+linaro/runtime-gcc-linaro-5.3.1-2016.05-aarch64-linux-gnu
+linaro/sysroot-glibc-linaro-2.21-2016.05-aarch64-linux-gnu
+linaro/gcc-linaro-5.3.1-2016.05-x86_64_aarch64-linux-gnu
+linaro/host (link to gcc-linaro-5.3.1-2016.05-x86_64_aarch64-linux-gnu)
+lunaro/sysroot (link to sysroot-glibc-linaro-2.21-2016.05-aarch64-linux-gnu)
+
+After the installation you must create a  symbolic link from usr to . into the host directory:
+cd ~/linaro/host
+ln -s . usr
+
+Then you must create a link from pkg-config to aarcha64-linux-pkg-config:
+cd ~/linaro/host/usr/bin
+ln -s /usr/bin/pkg-config aarcha64-linux-pkg-config
+
+* ROOTFS
+
+Yout must have installed the Seco Ubunto filesystem image; this must point to the installation directory
+(default $HOME/zynq-rootfs)
+
+Usually $HOME/zynq-rootfs is a link to $HOME/zynq-ubuntu-minimal_16.04-xenial_v1.2
+
+* ROOTFSARCH
+
+You must have a copy of the rootfs archive
+(default $HOME/zynq-ubuntu-minimal_16.04-xenial_v1.2.tar.gz)
+
+### 5.2 Compile the system
+
+#### 5.2.1 Include settings
+
+To compile the system you must include the settings.sh into ypur enviroment
+
+bash$ source axiom-evi/settings.sh
+
+#### 5.2.2 The enviroment
+
+If you go into the scripts directory and do the command "make" a help will be show
+
+bash:~$ cd ~/axiom-evi/scripts
+bash:~/axiom-evi/scripts$ make
+
+Makefile:33: *** Command line enviroment variables not defined!
+You must define some variable on the command line (for example "make P=1 E=0 run"):
+* KERN (required)
+    br: use buildroot kernel
+    seco: use seco bsp kernel (actually qemu does not work with this kernel)
+* FS (optional)
+    br: use buildroot root fs
+    seco: use seco (ubuntu xenial) root fs (default)
+* QEMU_SNAP (optional, used only during qemu run)
+    0: the rootfs in on a static qcow2 (one for every machine)
+    1: the rootfs in on a temp qcow2 snapshot (default)
+* DISABLE_INSTR (optional, used during libraries compilation)
+    0: compile EXTRAE and nic user library with instrumentation support (default)
+    1: disable EXTRAE compilation and nic user library instrumentation
+).  Stop.
+
+#### 5.2.3 configure the system
+
+bash:~/axiom-evi/scripts$ make KERN=XXX FS=XXX DISABLE_INSTR=XXX configure
+
+where XXX is the values specified from 5.2.2
+
+#### 5.2.4 compile the system
+
+bash:~/axiom-evi/scripts$ make KERN=XXX FS=XXX DISABLE_INSTR=XXX
+
+where XXX is the values specified from 5.2.2
