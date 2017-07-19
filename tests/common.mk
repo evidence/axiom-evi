@@ -4,16 +4,15 @@
 #
 
 COMFILE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-ifeq ($(P),1)
-TARGET_DIR=$(shell realpath ${ROOTFS})
-#SYSROOT_DIR=$(shell realpath ${LINARO}/sysroot)
-SYSROOT_DIR=$(shell realpath ${ROOTFS})
-HOST_DIR=$(shell realpath ${LINARO}/host)
+ifeq ($(FS),seco)
+	TARGET_DIR := $(shell realpath ${ROOTFS})
+	SYSROOT_DIR := $(shell realpath ${ROOTFS})
+	HOST_DIR := $(shell realpath ${LINARO}/host)
 else
-OUTPUT_DIR := ${COMFILE_DIR}/../output
-TARGET_DIR := $(realpath ${OUTPUT_DIR}/target)
-SYSROOT_DIR := $(realpath ${OUTPUT_DIR}/staging)
-HOST_DIR := $(realpath ${OUTPUT_DIR}/host)
+	OUTPUT_DIR := ${COMFILE_DIR}/../output
+	TARGET_DIR := $(realpath ${OUTPUT_DIR}/target)
+	SYSROOT_DIR := $(realpath ${OUTPUT_DIR}/staging)
+	HOST_DIR := $(realpath ${OUTPUT_DIR}/host)
 endif
 
 #
@@ -43,13 +42,13 @@ PKG-VARIABLE = $(shell $(PKG-CONFIG) --variable=${1} ${2})
 #
 
 FAKEROOT :=
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 ifndef FAKEROOTKEY
 FAKEROOT := fakeroot -i $(ROOTFS).faked -s $(ROOTFS).faked
 endif
 endif
 
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 ARCH:=aarch64-linux-gnu
 else
 ARCH:=aarch64-buildroot-linux-gnu

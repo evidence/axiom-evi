@@ -1,5 +1,13 @@
 
-export P
+export KERN
+export FS
+export DISABLE_INSTR
+
+include ../../scripts/params.mk
+
+KERN:=$(_KERN)
+FS:=$(_FS)
+DISABLE_INSTR:=$(_DISABLE_INSTR)
 
 include ../common.mk
 include ../../scripts/locations.mk
@@ -8,7 +16,7 @@ CFLAGS := -g -finline-functions -fomit-frame-pointer -Wall -Wno-unused -std=gnu1
 LDFLAGS :=
 LDLIBS := -lm
 
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 EXTRA_OMPSS_CFLAGS := -I$(ROOTFS)/usr/include/aarch64-linux-gnu
 else
 EXTRA_OMPSS_CFLAGS :=
@@ -18,7 +26,7 @@ OMPSS_CFLAGS := $(CFLAGS) $(EXTRA_OMPSS_CFLAGS) $(call PKG-CFLAGS, axiom_user_ap
 OMPSS_LDFLAGS := $(LDFLAGS) $(call PKG-LDFLAGS, axiom_user_api axiom_init_api  axiom_run_api axiom_allocator evi_lmm)
 OMPSS_LDLIBS := $(LDLIBS) $(call PKG-LDLIBS, axiom_user_api axiom_init_api  axiom_run_api axiom_allocator evi_lmm)
 
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 MCCFLAGS= --cluster --ompss -k
 else
 MCCFLAGS= --cluster --ompss --instrument -k

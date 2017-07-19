@@ -1,5 +1,13 @@
 
-export P
+export KERN
+export FS
+export DISABLE_INSTR
+
+include ../../scripts/params.mk
+
+KERN:=$(_KERN)
+FS:=$(_FS)
+DISABLE_INSTR:=$(_DISABLE_INSTR)
 
 include ../common.mk
 

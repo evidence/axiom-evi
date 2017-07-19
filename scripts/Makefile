@@ -1,8 +1,37 @@
 
+-include params.mk
+
 export KERN
 export FS
 export QEMU_SNAP
 export DISABLE_INSTR
+
+ifdef _FS
+ifdef FS
+ifneq ($(FS),$(_FS))
+$(error ciao ciao)
+endif
+endif
+FS:=$(_FS)
+endif
+
+ifdef _KERN
+ifdef KERN
+ifneq ($(KERN),$(_KERN))
+$(error ciao ciao 2)
+endif
+endif
+KERN:=$(_KERN)
+endif
+
+ifdef _DISABLE_INSTR
+ifdef DISABLE_INSTR
+ifneq ($(DISABLE_INSTR),$(_DISABLE_INSTR))
+$(error ciao ciao 2)
+endif
+endif
+DISABLE_INSTR:=$(_DISABLE_INSTR)
+endif
 
 _ccred:="\033[0;31m"
 ccred:=$(shell echo -e $(_ccred))
@@ -48,7 +77,6 @@ endif
 ifneq ($(KERN),br)
 ifneq ($(KERN),seco)
 $(error KERN must be 'seco' or 'br')
-
 endif
 endif
 ifneq ($(FS),br)
@@ -246,10 +274,18 @@ config-alloc: config-buildroot
 	cd $(EVI_ALLOC_LIB_DIR) &&  autoreconf -fi
 	cd $(ALLOCATOR_DIR) && autoreconf -fi
 
-config-buildroot:
+config-buildroot: config-save
 ifneq ($(FS),seco)
 	cd $(BUILDROOT_DIR) && $(MAKE) O=$(OUTPUT_DIR) evi_ultrascale_defconfig && $(MAKE) O=$(OUTPUT_DIR)
 endif
+
+config-save:
+	@echo "export _KERN" >params.mk
+	@echo "export _FS" >>params.mk
+	@echo "export _DISABLE_INSTR" >>params.mk
+	@echo "_KERN:=$(KERN)" >>params.mk
+	@echo "_FS:=$(FS)" >>params.mk
+	@echo "_DISABLE_INSTR:=$(DISABLE_INSTR)" >>params.mk
 
 help::
 	@echo "CONFIGURE"
@@ -482,7 +518,7 @@ help::
 
 NANOXFLAGS := CXXFLAGS="-std=c++11"
 NANOXFLAGS_INSTR := $(NANOXFLAGS)
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 NANOXFLAGS_INSTR := CXXFLAGS="-std=c++11 --sysroot=$(ROOTFS) -I$(ROOTFS)/usr/include/aarch64-linux-gnu"
 endif
 
@@ -552,17 +588,34 @@ ifneq ($(FS),seco)
 	@$(MAKE) -C $(NANOX_BUILD_DIR_INSTR_DEBUG) DESTDIR=$(SYSROOT_DIR) install
 endif
 
-nanox: nanox-debug nanox-perf nanox-instr
+ifeq ($(DISABLE_INSTR),1)
+nanox: nanox-debug nanox-perf
+else
+# WARN::::: da rimettere il nanox-instr
+nanox: nanox-debug nanox-perf 
+endif
 
-clean-nanox:
-	@[ -d $(NANOX_BUILD_DIR_DEBUG) ] && make -C $(NANOX_BUILD_DIR_DEBUG) clean
-	@[ -d $(NANOX_BUILD_DIR_PERF) ] && make -C $(NANOX_BUILD_DIR_PERF) clean
+clean-nanox-instr:
 	@[ -d $(NANOX_BUILD_DIR_INSTR) ] && make -C $(NANOX_BUILD_DIR_INSTR) clean
 
-distclean-nanox:
-	@[ -d $(NANOX_BUILD_DIR_DEBUG) ] && rm -rf $(NANOX_BUILD_DIR_DEBUG) || true
-	@[ -d $(NANOX_BUILD_DIR_PERF) ] && rm -rf $(NANOX_BUILD_DIR_PERF) || true
+clean-nanox-debug:
+	@[ -d $(NANOX_BUILD_DIR_DEBUG) ] && make -C $(NANOX_BUILD_DIR_DEBUG) clean
+
+clean-nanox-perf:
+	@[ -d $(NANOX_BUILD_DIR_PERF) ] && make -C $(NANOX_BUILD_DIR_PERF) clean
+
+clean-nanox: clean-nanox-perf clean-nanox-debug clean-nanox-instr
+
+distclean-nanox-instr:
 	@[ -d $(NANOX_BUILD_DIR_INSTR) ] && rm -rf $(NANOX_BUILD_DIR_INSTR) || true
+
+distclean-nanox-debug:
+	@[ -d $(NANOX_BUILD_DIR_DEBUG) ] && rm -rf $(NANOX_BUILD_DIR_DEBUG) || true
+
+distclean-nanox-perf:
+	@[ -d $(NANOX_BUILD_DIR_PERF) ] && rm -rf $(NANOX_BUILD_DIR_PERF) || true
+
+distclean-nanox: distclean-nanox-instr distclean-nanox-perf distclean-nanox-debug
 
 help::
 	@echo "NANOX (OMPSS)"
@@ -1041,7 +1094,7 @@ help::
 # CLEAN
 #
 
-.PHONY: clean-log clean-evi clean-archive-vms clean-archive-toolchain clean distclean-evi distclean clean-tests-axiom clean-tests clean-tests-gasnet clean-tests-ompss
+.PHONY: clean-log clean-evi clean-archive-vms clean-archive-toolchain clean distclean-evi distclean clean-tests-axiom clean-tests clean-tests-gasnet clean-tests-ompss mrproper
 
 clean-log:
 	-@rm $(LOG_FILE)
@@ -1066,11 +1119,15 @@ distclean: clean-log distclean-evi clean-archive-vms clean-archive-toolchain
 clean-toolchain: distclean
 	[ -d "$(OUTPUT_DIR)" -a -n "$(OUTPUT_DIR)" ] && rm -rf $(OUTPUT_DIR) || true
 
+mrproper: distclean clean-toolchain distclean-ompss distclean-gasnet distclean-nanox distclean-mcxx distclean-extrae 
+	@rm -f params.mk
+
 help::
 	@echo "CLEANING"
 	@echo "  clean                    Clean subprojects"
-	@echo "  distclean                Clean subprojects including configuration AND PARTIAL TARGET ROOT FILESYSTEM"
+	@echo "  distclean                Clean subprojects including configuration"
 	@echo "  clean-toolchain          As 'distclean' including BUILDROOT TOOLCHAIN"
+	@echo "  mrproper                 A distclean of all projects"
 	@echo " "
 	@echo "  clean-log                Clean qemu log file"
 	@echo "  clean-evi                Clean subproject (libs,nic,apps,allocator)"

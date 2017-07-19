@@ -1,5 +1,13 @@
 
-export P
+export KERN
+export FS
+export DISABLE_INSTR
+
+include ../../scripts/params.mk
+
+KERN:=$(_KERN)
+FS:=$(_FS)
+DISABLE_INSTR:=$(_DISABLE_INSTR)
 
 include ../../scripts/locations.mk
 
@@ -11,7 +19,7 @@ clean: clean-int clean-ext
 distclean: distclean-int distclean-ext
 
 FAKEROOT :=
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 ifndef FAKEROOTKEY
 FAKEROOT := fakeroot -i $(ROOTFS).faked -s $(ROOTFS).faked
 endif

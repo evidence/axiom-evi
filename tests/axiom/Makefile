@@ -1,4 +1,14 @@
 
+export KERN
+export FS
+export DISABLE_INSTR
+
+include ../../scripts/params.mk
+
+KERN:=$(_KERN)
+FS:=$(_FS)
+DISABLE_INSTR:=$(_DISABLE_INSTR)
+
 include ../../scripts/locations.mk
 
 .PHONY: build install clean distclean install-real
@@ -8,7 +18,7 @@ LAUNCHERS := $(GUESTDIR)/run_test_axiom.sh
 LAUNCHERS += $(GUESTDIR)/run_suite.sh
 
 FAKEROOT :=
-ifeq ($(P),1)
+ifeq ($(FS),seco)
 ifndef FAKEROOTKEY
 FAKEROOT := fakeroot -i $(ROOTFS).faked -s $(ROOTFS).faked
 endif
