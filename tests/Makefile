@@ -1,5 +1,8 @@
 
-export P
+export KERN
+export FS
+export QEMU_SNAP
+export DISABLE_INSTR
 
 .PHONY: clean distclean build install
 

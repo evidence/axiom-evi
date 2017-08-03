@@ -13,10 +13,21 @@ include ../../scripts/locations.mk
 
 .PHONY: clean build install distclean
 
+ifeq ($(FS),x86)
+install:
+	@echo "GASNET tests will not be build on X86 NATIVE"
+build:
+	@echo "GASNET tests will not be build on X86 NATIVE"
+clean:
+	@echo "GASNET tests will not be build on X86 NATIVE"
+distclean:
+	@echo "GASNET tests will not be build on X86 NATIVE"
+else
 install: install-int install-ext
 build: build-int build-ext
 clean: clean-int clean-ext
 distclean: distclean-int distclean-ext
+endif
 
 FAKEROOT :=
 ifeq ($(FS),seco)
@@ -36,11 +47,11 @@ install-ext: build-ext
 
 install-ext-real:
 	for DESTDIR in $(TARGET_DIR); do \
-		mkdir -p $${DESTDIR}/root/tests_gasnet_dbg ;\
-		cp $(GASNET_BUILD_DIR_DEBUG)/axiom-conduit/test* \
+		$(SUDO) mkdir -p $${DESTDIR}/root/tests_gasnet_dbg ;\
+		$(SUDO) cp $(GASNET_BUILD_DIR_DEBUG)/axiom-conduit/test* \
 			$${DESTDIR}/root/tests_gasnet_dbg ;\
-		mkdir -p $${DESTDIR}/root/tests_gasnet_per ;\
-		cp $(GASNET_BUILD_DIR_PERF)/axiom-conduit/test* \
+		$(SUDO) mkdir -p $${DESTDIR}/root/tests_gasnet_per ;\
+		$(SUDO) cp $(GASNET_BUILD_DIR_PERF)/axiom-conduit/test* \
 			$${DESTDIR}/root/tests_gasnet_per ;\
 	done
 

@@ -9,7 +9,7 @@ export DISABLE_INSTR
 ifdef _FS
 ifdef FS
 ifneq ($(FS),$(_FS))
-$(error ciao ciao)
+$(error FS variable on command line different from config values)
 endif
 endif
 FS:=$(_FS)
@@ -18,7 +18,7 @@ endif
 ifdef _KERN
 ifdef KERN
 ifneq ($(KERN),$(_KERN))
-$(error ciao ciao 2)
+$(error KERN variable on command line different from config values)
 endif
 endif
 KERN:=$(_KERN)
@@ -27,7 +27,7 @@ endif
 ifdef _DISABLE_INSTR
 ifdef DISABLE_INSTR
 ifneq ($(DISABLE_INSTR),$(_DISABLE_INSTR))
-$(error ciao ciao 2)
+$(error DISABLE_INSTR variable on command line different from config values)
 endif
 endif
 DISABLE_INSTR:=$(_DISABLE_INSTR)
@@ -46,9 +46,11 @@ You must define some variable on the command line (for example "make P=1 E=0 run
 * KERN ($(ccgreen)required$(ccend))
     br: use buildroot kernel
     seco: use seco bsp kernel (actually qemu does not work with this kernel)
+    x86: use native x86 kernel on rootfs
 * FS ($(ccgreen)optional$(ccend))
     br: use buildroot root fs
     seco: use seco (ubuntu xenial) root fs (default)
+    x86: use native x86 rootfs
 * QEMU_SNAP ($(ccgreen)optional$(ccend), used only during qemu run)
     0: the rootfs in on a static qcow2 (one for every machine)
     1: the rootfs in on a temp qcow2 snapshot (default)
@@ -76,12 +78,16 @@ endif
 # check vars
 ifneq ($(KERN),br)
 ifneq ($(KERN),seco)
-$(error KERN must be 'seco' or 'br')
+ifneq ($(KERN),x86)
+$(error KERN must be 'seco', 'br' or 'x86')
+endif
 endif
 endif
 ifneq ($(FS),br)
 ifneq ($(FS),seco)
-$(error FS must be 'seco' or 'br')
+ifneq ($(FS),x86)
+$(error FS must be 'seco', 'br' or 'x86')
+endif
 endif
 endif
 ifneq ($(QEMU_SNAP),0)
@@ -118,12 +124,20 @@ $(info Configuration:)
 ifeq ($(KERN),seco)
 $(info $(ccgreen)KERN$(ccend)=seco (using seco bsp kernel))
 else
+ifeq ($(KERN),br)
 $(info $(ccgreen)KERN$(ccend)=br (using buildroot kernel))
+else
+$(info $(ccgreen)KERN$(ccend)=x86 (native x86 kernel))
+endif
 endif
 ifeq ($(FS),seco)
 $(info $(ccgreen)FS$(ccend)=seco (using seco ubunto xenial rootfs))
 else
+ifeq ($(FS),br)
 $(info $(ccgreen)FS$(ccend)=br (using buildroot rootfs))
+else
+$(info $(ccgreen)FS$(ccend)=x86 (native x86 rootfs))
+endif
 endif
 ifeq ($(QEMU_SNAP),0)
 $(info $(ccgreen)QEMU_SNAP$(ccend)=0 (using static qcow2 image for qemu run))
@@ -235,9 +249,16 @@ BUILDCPUS := $(shell getconf _NPROCESSORS_ONLN)
 .PHONY: all debug target
 
 ifeq ($(FS),seco)
+# SECO rootfs
 all: axiom-nic axiom-apps qemu gasnet ompss tests
 else
+ifeq ($(FS),x86)
+# NATIVE X86 rootfs
+all: axiom-nic axiom-apps gasnet ompss
+else
+# BUILDROOT rootfs
 all: axiom-nic axiom-apps arm-firmware qemu gasnet ompss tests target
+endif
 endif
 
 debug: all
@@ -267,15 +288,17 @@ ifeq ($(FS),seco)
 	mkdir -p $(QEMU_STATIC_BUILD_DIR)
 	cd $(QEMU_STATIC_BUILD_DIR) && ../axiom_configure_static.sh
 endif
+ifneq ($(FS),x86)
 	mkdir -p $(QEMU_BUILD_DIR)
 	cd $(QEMU_BUILD_DIR) && ../axiom_configure.sh
+endif
 
 config-alloc: config-buildroot
 	cd $(EVI_ALLOC_LIB_DIR) &&  autoreconf -fi
 	cd $(ALLOCATOR_DIR) && autoreconf -fi
 
 config-buildroot: config-save
-ifneq ($(FS),seco)
+ifeq ($(FS),br)
 	cd $(BUILDROOT_DIR) && $(MAKE) O=$(OUTPUT_DIR) evi_ultrascale_defconfig && $(MAKE) O=$(OUTPUT_DIR)
 endif
 
@@ -311,8 +334,15 @@ endif
 
 allocator-driver: libs
 	$(MAKE) -C $(EVI_ALLOC_DRV_DIR)
+ifeq ($(FS),x86)
+	sudo $(MAKE) FS=$(FS) KERN=$(KERN) DESTDIR=/ -C $(EVI_ALLOC_DRV_DIR) install
+#	sudo mkdir -p /usr/local/include/linux
+#	sudo cp $(EVI_ALLOC_DRV_DIR)/axiom_mem_dev_user.h /usr/local/include/
+#	sudo cp $(EVI_ALLOC_DRV_DIR)/axiom_mem_dev.h /usr/local/include/linux/
+else
 	$(FAKEROOT) $(MAKE) DESTDIR=$(TARGET_DIR) -C $(EVI_ALLOC_DRV_DIR) install
-ifneq ($(FS),seco)
+endif
+ifeq ($(FS),br)
 	$(MAKE) DESTDIR=$(SYSROOT_DIR) -C $(EVI_ALLOC_DRV_DIR) install
 endif
 
@@ -327,8 +357,13 @@ ifeq ($(FS),seco)
 	cd $(EVI_ALLOC_LIB_DIR) && PATH=$(LINPATH) ./configure \
 		--host=$(HOSTID) --prefix=/usr --disable-debug --enable-extld
 else
+ifeq ($(FS),br)
 	cd $(EVI_ALLOC_LIB_DIR) && CC=$(CCPREFIX)gcc ./configure \
 		--host=$(HOSTID) --prefix=/usr --disable-debug --enable-extld
+else
+	cd $(EVI_ALLOC_LIB_DIR) && PATH=$(LINPATH) ./configure \
+		--prefix=/usr/local --disable-debug --enable-extld_x86
+endif
 endif
 
 allocator-lib-config: libs
@@ -336,16 +371,24 @@ allocator-lib-config: libs
 
 allocator-lib: allocator-lib-config
 	PATH=$(LINPATH) $(MAKE) -C $(EVI_ALLOC_LIB_DIR)
+ifeq ($(FS),x86)
+	sudo $(MAKE) -C $(EVI_ALLOC_LIB_DIR) install
+	sudo mkdir -p /usr/local/axiom-evi-allocator-lib
+	sudo cp $(EVI_ALLOC_LIB_DIR)/ldscript/x86/xs_map64.lds /usr/local/axiom-evi-allocator-lib
+else
 	$(FAKEROOT) $(MAKE) DESTDIR=$(TARGET_DIR) -C $(EVI_ALLOC_LIB_DIR) install
-ifneq ($(FS),seco)
+endif
+ifeq ($(FS),br)
 	$(MAKE) DESTDIR=$(SYSROOT_DIR) -C $(EVI_ALLOC_LIB_DIR) install
 endif
+ifneq ($(FS),x86)
         # libtool fix :-(
 	for LIB in $(SYSROOT_DIR)/usr/lib/libevi_lmm.la $(TARGET_DIR)/usr/lib/libevi_lmm.la; do \
 		$(FAKEROOT) sed -i -e "s,libdir='/usr/lib',libdir='$(SYSROOT_DIR)/usr/lib'," \
 		       -e "s, /usr/lib, $(SYSROOT_DIR)/usr/lib," \
 		       $${LIB} ;\
 	done
+endif
 
 allocator-bootstrap:
 	@if [ ! -r $(ALLOCATOR_DIR)/configure ]; then \
@@ -358,8 +401,12 @@ ifeq ($(FS),seco)
 	cd $(ALLOCATOR_DIR) && PATH=$(LINPATH) ./configure \
 		--host=$(HOSTID) --prefix=/usr --with-axiom-sysroot=$(ROOTFS)
 else
+ifeq ($(FS),x86)
+	cd $(ALLOCATOR_DIR) && ./configure --prefix=/usr/local --with-axiom-sysroot=/ --with-allocator-lds=allocator_x86.lds
+else
 	cd $(ALLOCATOR_DIR) && CC=$(CCPREFIX)gcc ./configure \
 		--host=$(HOSTID) --prefix=/usr
+endif
 endif
 
 allocator-config: allocator-driver allocator-lib
@@ -367,22 +414,38 @@ allocator-config: allocator-driver allocator-lib
 
 allocator: allocator-config
 	PATH=$(LINPATH) $(MAKE) -C $(ALLOCATOR_DIR)
+ifeq ($(FS),x86)
+	sudo  $(MAKE) DESTDIR=/ -C $(ALLOCATOR_DIR) install
+else
 	PATH=$(LINPATH) $(FAKEROOT) $(MAKE) DESTDIR=$(TARGET_DIR) -C $(ALLOCATOR_DIR) install
-ifneq ($(FS),seco)
+endif
+ifeq ($(FS),br)
 	$(MAKE) DESTDIR=$(SYSROOT_DIR) -C $(ALLOCATOR_DIR) install
 endif
+ifneq ($(FS),x86)
         # libtools fix :-(
 	for LIB in $(SYSROOT_DIR)/usr/lib/libaxiom_allocator*.la; do \
 		$(FAKEROOT) sed -i -e "s,libdir='/usr/lib',libdir='$(SYSROOT_DIR)/usr/lib'," \
 		       -e "s, /usr/lib, $(SYSROOT_DIR)/usr/lib," \
 		       $${LIB} ;\
 	done
+endif
 
 axiom-nic: libs allocator
+ifeq ($(FS),x86)
+	$(MAKE) -C $(EVI_NIC_DIR)
+	$(MAKE) FS=$(FS) KERN=$(KERN) -C $(EVI_NIC_DIR) install
+else
 	$(MAKE) -C $(EVI_NIC_DIR) install
+endif
 
 axiom-apps: libs allocator
+ifeq ($(FS),x86)
+	$(MAKE) -C $(EVI_APPS_DIR)
+	sudo $(MAKE) FS=$(FS) KERN=$(KERN) -C $(EVI_APPS_DIR) install
+else
 	$(MAKE) -C $(EVI_APPS_DIR) install
+endif
 
 _buildroot:
 	$(MAKE) -C $(OUTPUT_DIR)
@@ -442,6 +505,15 @@ gasnet-bootstrap:
 
 gasnet-config-debug: gasnet-bootstrap libs
 	mkdir -p $(GASNET_BUILD_DIR_DEBUG)
+ifeq ($(FS),x86)
+	@if [ ! -r "$(GASNET_BUILD_DIR_DEBUG)/config.status" ]; then \
+		cd $(GASNET_BUILD_DIR_DEBUG); ../configure-axiom \
+		--with-axiom-sysroot=$(SYSROOT_DIR) \
+		--enable-udp \
+		--enable-debug \
+		--enable-trace --enable-backtrace;\
+	fi
+else
 	@if [ ! -r "$(GASNET_BUILD_DIR_DEBUG)/config.status" ]; then \
 		cd $(GASNET_BUILD_DIR_DEBUG); ../cross-configure-axiom \
 		--with-axiom-host=$(HOST_DIR) \
@@ -453,17 +525,30 @@ gasnet-config-debug: gasnet-bootstrap libs
 		--enable-debug \
 		--enable-trace --enable-backtrace;\
 	fi
+endif
 
 gasnet-debug: gasnet-config-debug
 	@$(MAKE) -C $(GASNET_BUILD_DIR_DEBUG)
 ifeq ($(FS),seco)
 	$(FAKEROOT) $(MAKE) -C $(GASNET_BUILD_DIR_DEBUG) DESTDIR=$(TARGET_DIR) install
 else
+ifeq ($(FS),x86)
+	@sudo $(MAKE) -C $(GASNET_BUILD_DIR_DEBUG) DESTDIR=/ install
+else
 	@$(MAKE) -C $(GASNET_BUILD_DIR_DEBUG) DESTDIR=$(SYSROOT_DIR) install
+endif
 endif
 
 gasnet-config-perf: gasnet-bootstrap libs
 	mkdir -p $(GASNET_BUILD_DIR_PERF)
+ifeq ($(FS),x86)
+	if [ ! -r "$(GASNET_BUILD_DIR_PERF)/config.status" ]; then \
+		cd $(GASNET_BUILD_DIR_PERF); ../configure-axiom \
+		--with-axiom-sysroot=$(SYSROOT_DIR) \
+		--enable-udp \
+		--disable-debug ;\
+	fi
+else
 	if [ ! -r "$(GASNET_BUILD_DIR_PERF)/config.status" ]; then \
 		cd $(GASNET_BUILD_DIR_PERF); ../cross-configure-axiom \
 		--with-axiom-host=$(HOST_DIR) \
@@ -474,13 +559,18 @@ gasnet-config-perf: gasnet-bootstrap libs
 		--enable-udp \
 		--disable-debug ;\
 	fi
+endif
 
 gasnet-perf: gasnet-config-perf
 	@$(MAKE) -C $(GASNET_BUILD_DIR_PERF)
 ifeq ($(FS),seco)
 	$(FAKEROOT) $(MAKE) -C $(GASNET_BUILD_DIR_PERF) DESTDIR=$(TARGET_DIR) install
 else
+ifeq ($(FS),x86)
+	@sudo $(MAKE) -C $(GASNET_BUILD_DIR_PERF) DESTDIR=/ install
+else
 	@$(MAKE) -C $(GASNET_BUILD_DIR_PERF) DESTDIR=$(SYSROOT_DIR) install
+endif
 endif
 
 gasnet: gasnet-debug gasnet-perf
@@ -530,46 +620,73 @@ nanox-bootstrap:
 
 nanox-config-debug-force: nanox-bootstrap
 	@mkdir -p $(NANOX_BUILD_DIR_DEBUG)
+ifeq ($(FS),x86)
+	@cd $(NANOX_BUILD_DIR_DEBUG); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr/local $(NANOXFLAGS) \
+		../scripts/configure-axiom_debug.sh
+else
 	@cd $(NANOX_BUILD_DIR_DEBUG); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr $(NANOXFLAGS) \
 		../scripts/cross-configure-axiom_debug.sh
+endif
 
 nanox-config-debug:
 	@if [ ! -r "$(NANOX_BUILD_DIR_DEBUG)/config.status" ]; then $(MAKE) nanox-config-debug-force; fi
 
 nanox-debug: nanox-config-debug
 	@PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_DEBUG)
+ifeq ($(FS),x86)
+	@sudo $(MAKE) PATH=$(LINPATH) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=/ install
+else
 	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=$(TARGET_DIR) install
-ifneq ($(FS),seco)
+endif
+ifeq ($(FS),br)
 	@$(MAKE) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=$(SYSROOT_DIR) install
 endif
 
 nanox-config-perf-force: nanox-bootstrap
 	@mkdir -p $(NANOX_BUILD_DIR_PERF)
+ifeq ($(FS),x86)
+	@cd $(NANOX_BUILD_DIR_PERF); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr/local $(NANOXFLAGS) \
+		../scripts/configure-axiom_performance.sh
+else
 	@cd $(NANOX_BUILD_DIR_PERF); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr $(NANOXFLAGS) \
 		../scripts/cross-configure-axiom_performance.sh
+endif
 
 nanox-config-perf:
 	@if [ ! -r "$(NANOX_BUILD_DIR_PERF)/config.status" ]; then $(MAKE) nanox-config-perf-force; fi
 
 nanox-perf: nanox-config-perf
 	@PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_PERF)
+ifeq ($(FS),x86)
+	@sudo $(MAKE) PATH=$(LINPATH) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=/ install
+else
 	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=$(TARGET_DIR) install
-ifneq ($(FS),seco)
+endif
+ifeq ($(FS),br)
 	@$(MAKE) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=$(SYSROOT_DIR) install
 endif
 
 nanox-config-instr-force: extrae nanox-bootstrap
 	@mkdir -p $(NANOX_BUILD_DIR_INSTR)
+ifeq ($(FS),x86)
+	@cd $(NANOX_BUILD_DIR_INSTR); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr/local $(NANOXFLAGS) \
+		../scripts/configure-axiom_instrumentation.sh
+else
 	@cd $(NANOX_BUILD_DIR_INSTR); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr $(NANOXFLAGS) \
 		../scripts/cross-configure-axiom_instrumentation.sh
+endif
 
 nanox-config-instr:
 	@if [ ! -r "$(NANOX_BUILD_DIR_INSTR)/config.status" ]; then $(MAKE) nanox-config-instr-force; fi
 
 nanox-instr: nanox-config-instr
-	PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS_INSTR) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_INSTR)
+	@PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS_INSTR) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_INSTR)
+ifeq ($(FS),x86)
+	@sudo $(MAKE) PATH=$(LINPATH) -C $(NANOX_BUILD_DIR_INSTR) DESTDIR=/ install
+else
 	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(NANOX_BUILD_DIR_INSTR) DESTDIR=$(TARGET_DIR) install
-ifneq ($(FS),seco)
+endif
+ifeq ($(FS),br)
 	@$(MAKE) -C $(NANOX_BUILD_DIR_INSTR) DESTDIR=$(SYSROOT_DIR) install
 endif
 
@@ -591,8 +708,7 @@ endif
 ifeq ($(DISABLE_INSTR),1)
 nanox: nanox-debug nanox-perf
 else
-# WARN::::: da rimettere il nanox-instr
-nanox: nanox-debug nanox-perf 
+nanox: nanox-debug nanox-perf nanox-instr
 endif
 
 clean-nanox-instr:
@@ -647,19 +763,31 @@ mcxx-bootstrap:
 		autoreconf -fiv;\
 	fi
 
-mcxx-config-force: nanox mcxx-bootstrap
+#mcxx-config-force: nanox mcxx-bootstrap
+mcxx-config-force: 
 	@mkdir -p $(MCXX_BUILD_DIR)
+ifeq ($(FS),x86)
+	cd $(MCXX_BUILD_DIR); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr/local \
+		../scripts/configure-axiom.sh
+else
 	cd $(MCXX_BUILD_DIR); AXIOMHOME=$(AXIOMHOME) PREFIX=$(HOST_DIR)/usr \
 		../scripts/cross-configure-axiom.sh
+endif
 
 mcxx-config:
 	@if [ ! -r "$(MCXX_BUILD_DIR)/config.status" ]; then $(MAKE) mcxx-config-force; fi
 
 mcxx: mcxx-config
+ifeq ($(FS),x86)
+	@make -j$(BUILDCPUS) -C $(MCXX_BUILD_DIR)
+#	@sudo make -C $(MCXX_BUILD_DIR) DESTDIR=$(HOST_DIR) install
+	@sudo make -C $(MCXX_BUILD_DIR) install
+else
 	@make -j$(BUILDCPUS) PATH=$(PATH):$(HOST_DIR)/usr/bin -C $(MCXX_BUILD_DIR)
 #	@make -C $(MCXX_BUILD_DIR) DESTDIR=$(HOST_DIR) install
 	@make -C $(MCXX_BUILD_DIR) install
-ifneq ($(FS),seco)
+endif
+ifeq ($(FS),br)
 	@cp $(HOST_DIR)/usr/lib/pkgconfig/mcxx.pc $(SYSROOT_DIR)/usr/lib/pkgconfig/mcxx.pc
 endif
 
@@ -730,14 +858,22 @@ extrae-bootstrap:
 
 extrae-config-force: extrae-bootstrap
 	@mkdir -p $(EXTRAE_BUILD_DIR)
+ifeq ($(FS),x86)
+	cd $(EXTRAE_BUILD_DIR); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr/local \
+		../scripts/x86-configure-axiom.sh
+else
 	cd $(EXTRAE_BUILD_DIR); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr \
 		../scripts/cross-configure-axiom.sh
+endif
 
 extrae-config:
 	@if [ ! -r "$(EXTRAE_BUILD_DIR)/config.status" ]; then $(MAKE) extrae-config-force; fi
 
 extrae: extrae-config
 ifeq ($(FS),seco)
+#
+# FS = seco
+#
 	@PATH=$(LINPATH) $(MAKE) -j$(BUILDCPUS) -C $(EXTRAE_BUILD_DIR) \
 	  CFLAGS="--sysroot=$(ROOTFS) \
 		-I${ROOTFS}/usr/include/aarch64-linux-gnu \
@@ -750,9 +886,16 @@ ifeq ($(FS),seco)
 		-Wl,-rpath-link -Wl,$(ROOTFS)/lib/aarch64-linux-gnu"
 	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(EXTRAE_BUILD_DIR) DESTDIR=$(TARGET_DIR) install
 else
+#
+# FS = seco or FS = x86
+#
 	@$(MAKE) -j$(BUILDCPUS) -C $(EXTRAE_BUILD_DIR)
+ifeq ($(FS),x86)
+	@sudo $(MAKE) -C $(EXTRAE_BUILD_DIR) install
+else
 	@$(MAKE) -C $(EXTRAE_BUILD_DIR) DESTDIR=$(TARGET_DIR) install
 	@$(MAKE) -C $(EXTRAE_BUILD_DIR) DESTDIR=$(SYSROOT_DIR) install
+endif
 endif
 
 clean-extrae:

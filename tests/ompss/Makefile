@@ -26,7 +26,7 @@ OMPSS_CFLAGS := $(CFLAGS) $(EXTRA_OMPSS_CFLAGS) $(call PKG-CFLAGS, axiom_user_ap
 OMPSS_LDFLAGS := $(LDFLAGS) $(call PKG-LDFLAGS, axiom_user_api axiom_init_api  axiom_run_api axiom_allocator evi_lmm)
 OMPSS_LDLIBS := $(LDLIBS) $(call PKG-LDLIBS, axiom_user_api axiom_init_api  axiom_run_api axiom_allocator evi_lmm)
 
-ifeq ($(FS),seco)
+ifneq ($(FS),br)
 MCCFLAGS= --cluster --ompss -k
 else
 MCCFLAGS= --cluster --ompss --instrument -k
@@ -80,10 +80,10 @@ help:
 .PHONY: clean build install distclean
 
 install: build install-nbody
-	$(FAKEROOT) mkdir -p $(DESTDIR)
-	-$(FAKEROOT) cp $(EXECS) $(DESTDIR)
-	-$(FAKEROOT) cp $(LAUNCHER) $(DESTDIR)
-	-$(FAKEROOT) cp suite/* $(DESTDIR)
+	$(FAKEROOT) $(SUDO) mkdir -p $(DESTDIR)
+	-$(FAKEROOT) $(SUDO) cp $(EXECS) $(DESTDIR)
+	-$(FAKEROOT) $(SUDO) cp $(LAUNCHER) $(DESTDIR)
+	-$(FAKEROOT) $(SUDO) cp suite/* $(DESTDIR)
 
 build: $(OBJS) $(EXECS) build-nbody
 
@@ -102,10 +102,10 @@ NBODY_EXEC=$(NBODY_DIR)/nbody
 .PHONY: install-nbody build-nbody clean-nbody distclean-nbody
 
 install-nbody: build-nbody
-	$(FAKEROOT) mkdir -p $(DESTDIR)
-	$(FAKEROOT) cp -f $(NBODY_EXEC) $(DESTDIR)
-	$(FAKEROOT) cp -f $(NBODY_DIR)/../particles-*.in $(DESTDIR)
-	$(FAKEROOT) cp -f $(NBODY_DIR)/../particles-*.ref $(DESTDIR)
+	$(FAKEROOT) $(SUDO) mkdir -p $(DESTDIR)
+	$(FAKEROOT) $(SUDO) cp -f $(NBODY_EXEC) $(DESTDIR)
+	$(FAKEROOT) $(SUDO) cp -f $(NBODY_DIR)/../particles-*.in $(DESTDIR)
+	$(FAKEROOT) $(SUDO) cp -f $(NBODY_DIR)/../particles-*.ref $(DESTDIR)
 
 build-nbody: $(NBODY_EXEC)
 

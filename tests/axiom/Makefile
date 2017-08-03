@@ -28,11 +28,17 @@ install:
 	$(MAKE) -C $(EVI_APPS_DIR)/tests $@
 	$(FAKEROOT) $(MAKE) install-real
 
+ifeq ($(FS),x86)
+SUDO := sudo
+else
+SUDO :=
+endif
+
 install-real:
 	for DESTDIR in $(TARGET_DIR); do \
-	    mkdir -p $${DESTDIR}/root/tests_axiom; \
-	    cp $(LAUNCHERS)  $${DESTDIR}/root/tests_axiom; \
-	    cp suite/*  $${DESTDIR}/root/tests_axiom; \
+	    sudo mkdir -p $${DESTDIR}/root/tests_axiom; \
+	    sudo cp $(LAUNCHERS)  $${DESTDIR}/root/tests_axiom; \
+	    sudo cp suite/*  $${DESTDIR}/root/tests_axiom; \
 	done
 
 build clean distclean:

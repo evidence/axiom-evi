@@ -46,9 +46,19 @@ ifeq ($(GASNET_CONDUIT),udp)
 GASNET_LDFLAGS+=-lstdc++
 endif
 
+ifeq ($(FS),x86)
+GASNET_CFLAGS+=-I$(SYSROOT_DIR)/$(shell $(PKG-CONFIG) --variable=includedir $(GASNET))
+GASNET_CFLAGS+=-I$(SYSROOT_DIR)/$(shell $(PKG-CONFIG) --variable=includedir $(GASNET))/axiom-conduit
+GASNET_CFLAGS+=$(call PKG-CFLAGS, $(GASNET))
+endif
+
 # link rules
 
 %: %.o
+
+	@echo MY LDFL=$(LDFLAGS)
+	@echo MY_LFLIBS=$(LDLIBS)
+
 	$(CC) $(LDFLAGS) $(GASNET_LDFLAGS) -o $@ $? $(LDLIBS) $(GASNET_LIBS) 
 
 # compile rules
@@ -69,14 +79,17 @@ LAUNCHERS+=$(COMFILE_DIR)/utils/guest/run_suite.sh
 
 .PHONY: clean build install distclean install-real
 
+#install: build
 install: build
+
+cccc:
 	$(FAKEROOT) $(MAKE) -f makefile-gasnet.mk install-real
 
 install-real:
-	mkdir -p $(DESTDIR)
-	for EXE in $(EXECS); do cp $${EXE} $(DESTDIR)/`echo $${EXE}|sed -e 's,.*/,,' -e 's,_$(GASNET_TYPE),,'`; done
-	cp $(LAUNCHERS) $(DESTDIR)
-	cp suite/* $(DESTDIR)
+	$(SUDO) mkdir -p $(DESTDIR)
+	for EXE in $(EXECS); do $(SUDO) cp $${EXE} $(DESTDIR)/`echo $${EXE}|sed -e 's,.*/,,' -e 's,_$(GASNET_TYPE),,'`; done
+	$(SUDO) cp $(LAUNCHERS) $(DESTDIR)
+	$(SUDO) cp suite/* $(DESTDIR)
 
 -include $(DEPS)
 

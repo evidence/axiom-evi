@@ -5,23 +5,52 @@
 
 COMFILE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 ifeq ($(FS),seco)
+# SECO rootfs
 	TARGET_DIR := $(shell realpath ${ROOTFS})
 	SYSROOT_DIR := $(shell realpath ${ROOTFS})
 	HOST_DIR := $(shell realpath ${LINARO}/host)
 else
+ifeq ($(FS),x86)
+# NATIVE X86 rootfs
+	TARGET_DIR := /
+	SYSROOT_DIR := /
+	HOST_DIR := /
+else
+# BUILDROOT rootfs
 	OUTPUT_DIR := ${COMFILE_DIR}/../output
 	TARGET_DIR := $(realpath ${OUTPUT_DIR}/target)
 	SYSROOT_DIR := $(realpath ${OUTPUT_DIR}/staging)
 	HOST_DIR := $(realpath ${OUTPUT_DIR}/host)
 endif
+endif
 
 #
-# pkg-config configuration
+# common parameters
+#
+
+-include ${COMFILE_DIR}/../scripts/params.mk
+# warning: no values check!
+ifdef _FS
+FS := $(_FS)
+endif
+ifdef _KERN
+KERN := $(_KERN)
+endif
+ifdef _DISABLE_INSTR
+DISABLE_INSTR := $(_DISABLE_INSTR)
+endif
+
+export KERN
+export FS
+export DISABLE_INSTR
+
+#
+# Pkg -config configuration
 #
 
 #PKG-CONFIG_SILENCE:=--silence-errors
 
-PKG-CONFIG := PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1 PKG_CONFIG_ALLOW_SYSTEM_LIBS=1 PKG_CONFIG_DIR= PKG_CONFIG_LIBDIR=$(SYSROOT_DIR)/usr/lib/pkgconfig:$(SYSROOT_DIR)/usr/share/pkgconfig PKG_CONFIG_SYSROOT_DIR=$(SYSROOT_DIR) pkg-config $(PKG-CONFIG_SILENCE)
+PKG-CONFIG := PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1 PKG_CONFIG_ALLOW_SYSTEM_LIBS=1 PKG_CONFIG_DIR= PKG_CONFIG_LIBDIR=$(SYSROOT_DIR)/usr/lib/pkgconfig:$(SYSROOT_DIR)/usr/local/lib/pkgconfig:$(SYSROOT_DIR)/usr/share/pkgconfig PKG_CONFIG_SYSROOT_DIR=$(SYSROOT_DIR) pkg-config $(PKG-CONFIG_SILENCE)
 ifeq ($(shell $(PKG-CONFIG) axiom_user_api >/dev/null || echo fail),fail)
     # GNU make bug 10593: an environment variale can not be inject into sub-shell (only in sub-make)
     # so a default for PKG_CONFIG_PATH can not be set into a makefile (and used by sub-shell)
@@ -48,15 +77,26 @@ FAKEROOT := fakeroot -i $(ROOTFS).faked -s $(ROOTFS).faked
 endif
 endif
 
+SUDO :=
+ifeq ($(FS),x86)
+SUDO := sudo
+endif
+
+ifeq ($(FS),x86)
+# native tools
+MCC=mcc
+CC=gcc
+else
+# cross tools
 ifeq ($(FS),seco)
 ARCH:=aarch64-linux-gnu
 else
 ARCH:=aarch64-buildroot-linux-gnu
 endif
-
 BINDIR:=$(HOST_DIR)/usr/bin
 MCC:=PATH=$(PATH):$(BINDIR) $(ARCH)-mcc
 CC:=PATH=$(PATH):$(BINDIR) $(ARCH)-gcc
+endif
 
 #
 # source file dependencies management
