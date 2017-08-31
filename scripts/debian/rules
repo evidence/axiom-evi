@@ -12,14 +12,14 @@ DEBIAN_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 #DEB_TARGET_GNU_TYPE=aarch64-linux-gnu
 #DEB_TARGET_MULTIARCH=aarch64-linux-gnu
 
-export P
-export E
+export KERN
+export FS
 
 ifndef OUTPUT_DIR
 OUTPUT_DIR := $(DEBIAN_DIR)/../../output
 endif
 
-ifeq ($(P)$(E),10)
+ifeq ($(KERN),seco)
 KERNELDIR := $(AXIOMBSP)/build/linux/kernel/link-to-kernel-build
 ROOTFSDIR := $(AXIOMBSP)/build/linux/rootfs/targetroot
 else

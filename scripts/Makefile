@@ -1,4 +1,9 @@
 
+#
+# management of parameters
+#
+
+# predefined/old parameters
 -include params.mk
 
 export KERN
@@ -6,10 +11,12 @@ export FS
 export QEMU_SNAP
 export DISABLE_INSTR
 
+# test for parameters change
+
 ifdef _FS
 ifdef FS
 ifneq ($(FS),$(_FS))
-$(error FS variable on command line different from config values)
+$(error You have redefined FS. To do this you must do a "make mrproper" followed by a "make FS=???? configure" with the new parameters)
 endif
 endif
 FS:=$(_FS)
@@ -18,7 +25,7 @@ endif
 ifdef _KERN
 ifdef KERN
 ifneq ($(KERN),$(_KERN))
-$(error KERN variable on command line different from config values)
+$(error You have redefined KERN. To do this you must do a "make mrproper" followed by a "make KERN=???? configure" with the new parameters)
 endif
 endif
 KERN:=$(_KERN)
@@ -27,11 +34,13 @@ endif
 ifdef _DISABLE_INSTR
 ifdef DISABLE_INSTR
 ifneq ($(DISABLE_INSTR),$(_DISABLE_INSTR))
-$(error DISABLE_INSTR variable on command line different from config values)
+$(error You have redefined DISABLE_INSTR. To do this you must do a "make mrproper" followed by a "make DISABLE_INSTR=???? configure" with the new parameters)
 endif
 endif
 DISABLE_INSTR:=$(_DISABLE_INSTR)
 endif
+
+# test parameters definition
 
 _ccred:="\033[0;31m"
 ccred:=$(shell echo -e $(_ccred))
@@ -42,7 +51,7 @@ ccend:=$(shell echo -e $(_ccend))
 
 define ENV_HELP =
 $(ccred)Command line enviroment variables not defined!$(ccend)
-You must define some variable on the command line (for example "make P=1 E=0 run"):
+You must define some variable on the command line (for example "make KERN=br FS=seco"):
 * KERN ($(ccgreen)required$(ccend))
     br: use buildroot kernel
     seco: use seco bsp kernel (actually qemu does not work with this kernel)
@@ -57,14 +66,24 @@ You must define some variable on the command line (for example "make P=1 E=0 run
 * DISABLE_INSTR ($(ccgreen)optional$(ccend), used during libraries compilation)
     0: compile EXTRAE and nic user library with instrumentation support (default)
     1: disable EXTRAE compilation and nic user library instrumentation
+Note that:
+KERN, FS and DISABLE_INSTR must defined during "make configure" and never changed.
+QEMU_SNAP can be redefined on every invocation.
 )
 endef
 
 ifndef KERN
 $(error $(ENV_HELP))
 endif
+ifndef FS
+$(error $(ENV_HELP))
+endif
+ifndef DISABLE_INSTR
+$(error $(ENV_HELP))
+endif
 
-# safe defaults
+# safe parameters defaults
+
 ifndef FS
 FS := seco
 endif
@@ -75,7 +94,8 @@ ifndef DISABLE_INSTR
 DISABLE_INSTR := 0
 endif
 
-# check vars
+# check parameters values
+
 ifneq ($(KERN),br)
 ifneq ($(KERN),seco)
 ifneq ($(KERN),x86)
@@ -101,10 +121,13 @@ $(error DISABLE_INSTR must be '0' or '1')
 endif
 endif
 
+# include directories location
+
 include locations.mk
 export OUTPUT_DIR
 
-# safety
+# che environment variables for using Seco (kernel or rootfs)
+
 ifeq ($(KERN),seco)
 ifeq ($(PETALINUX),)
 $(error $(ccred)You must set the environment to work with KERN=seco (see settings.sh)$(ccend))
@@ -117,7 +140,7 @@ endif
 endif
 
 #
-#
+# Show configurated variables
 #
 
 $(info Configuration:)
@@ -316,7 +339,7 @@ help::
 	@echo "  "
 	@echo "  config-alloc       Configure memory allocator"
 	@echo "  config-buildroot   Build buildroot toolchain"
-	@echo " "
+	@echo "  config-save        Save current cmdline variabled into params.mk"
 
 #
 # BUILD target filesystem
@@ -336,9 +359,6 @@ allocator-driver: libs
 	$(MAKE) -C $(EVI_ALLOC_DRV_DIR)
 ifeq ($(FS),x86)
 	sudo $(MAKE) FS=$(FS) KERN=$(KERN) DESTDIR=/ -C $(EVI_ALLOC_DRV_DIR) install
-#	sudo mkdir -p /usr/local/include/linux
-#	sudo cp $(EVI_ALLOC_DRV_DIR)/axiom_mem_dev_user.h /usr/local/include/
-#	sudo cp $(EVI_ALLOC_DRV_DIR)/axiom_mem_dev.h /usr/local/include/linux/
 else
 	$(FAKEROOT) $(MAKE) DESTDIR=$(TARGET_DIR) -C $(EVI_ALLOC_DRV_DIR) install
 endif
@@ -609,7 +629,7 @@ help::
 NANOXFLAGS := CXXFLAGS="-std=c++11"
 NANOXFLAGS_INSTR := $(NANOXFLAGS)
 ifeq ($(FS),seco)
-NANOXFLAGS_INSTR := CXXFLAGS="-std=c++11 --sysroot=$(ROOTFS) -I$(ROOTFS)/usr/include/aarch64-linux-gnu"
+NANOXFLAGS_INSTR := CXXFLAGS="-std=c++11 -Wno-error -I$(LINARO)/sysroot/usr/include -I$(ROOTFS)/usr/include/aarch64-linux-gnu"
 endif
 
 nanox-bootstrap:
@@ -763,8 +783,7 @@ mcxx-bootstrap:
 		autoreconf -fiv;\
 	fi
 
-#mcxx-config-force: nanox mcxx-bootstrap
-mcxx-config-force: 
+mcxx-config-force: nanox mcxx-bootstrap
 	@mkdir -p $(MCXX_BUILD_DIR)
 ifeq ($(FS),x86)
 	cd $(MCXX_BUILD_DIR); AXIOMHOME=$(AXIOMHOME) PREFIX=/usr/local \
@@ -838,18 +857,6 @@ help::
 
 .PHONY: extrae-boostrap extrae-config-force extrae-config extrae clean-extrae distclean-extrae
 
-#ifeq ($(P), 1)
-#
-#extrae-bootstrap:
-#extrae-config-force: extrae-bootstrap
-#extrae-config:
-#extrae: extrae-config
-#clean-extrae:
-#distclean-extrae:
-#	@[ -d $(EXTRAE_BUILD_DIR) ] && rm -rf $(EXTRAE_BUILD_DIR) || true
-#
-#else
-
 extrae-bootstrap:
 	@if [ ! -r $(EXTRAE_DIR)/configure ]; then \
 		cd $(EXTRAE_DIR);\
@@ -878,16 +885,18 @@ ifeq ($(FS),seco)
 	  CFLAGS="--sysroot=$(ROOTFS) \
 		-I${ROOTFS}/usr/include/aarch64-linux-gnu \
 		-L${ROOTFS}/usr/lib/aarch64-linux-gnu \
-		-L${ROOTFS}/lib/aarch64-linux-gnu" \
+		-L${ROOTFS}/lib/aarch64-linux-gnu \
+		-fPIE" \
 	  LDFLAGS="--sysroot=$(ROOTFS) \
 		-L${ROOTFS}/usr/lib/aarch64-linux-gnu \
 		-L${ROOTFS}/lib/aarch64-linux-gnu \
 		-Wl,-rpath-link -Wl,$(ROOTFS)/usr/lib/aarch64-linux-gnu \
-		-Wl,-rpath-link -Wl,$(ROOTFS)/lib/aarch64-linux-gnu"
+		-Wl,-rpath-link -Wl,$(ROOTFS)/lib/aarch64-linux-gnu \
+		--shared"
 	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(EXTRAE_BUILD_DIR) DESTDIR=$(TARGET_DIR) install
 else
 #
-# FS = seco or FS = x86
+# FS = br or FS = x86
 #
 	@$(MAKE) -j$(BUILDCPUS) -C $(EXTRAE_BUILD_DIR)
 ifeq ($(FS),x86)
@@ -965,7 +974,7 @@ UBOOT_PATCH:=$(AXIOMHOME)/scripts/buildroot/uboot-petalinux.patch
 
 .PHONY: build-qemu-rootfs build-qemu-uboot
 
-# create rootfs for qemu
+# create rootfs for qemu (do not delete!)
 #$(MASTERROOTFS):
 #	@if [ ! -e "$(ROOTFSARCH_FILE)" ]; then \
 #		echo "$(ROOTFSARCH_FILE) NOT FOUND!"; \
@@ -1331,15 +1340,6 @@ help::
 # DEB
 #
 
-#ifneq ($(P),1)
-#
-#.PHONY: deb clean-deb distclean-deb
-#
-#deb clean-deb distclean-deb:
-#	$(error deb, clean-deb and distclean-deb makefile target need P=1 on commandline)
-#
-#else
-
 .PHONY: deb-prepare deb-unprepare deb-install deb clean-deb distclean-deb
 
 ROOTFSTMP:=$(AXIOMHOME)/rootfs-tmp
@@ -1366,51 +1366,62 @@ deb-install:
 	rm -f $(ROOTFSTMP)/*.deb
 	rm -f $(AXIOMHOME)/*.deb
 
-
 deb: deb-prepare
 # kernel modules
+	@echo "===DEBs for metapackages and kernel modules"
 	$(DEBENV) fakeroot $(MAKE) -C $(LOCFILE_DIR) -f debian/rules binary
 	mv -f $(AXIOMHOME)/axiomeu-dev_*deb $(AXIOMHOME)/axiomeu_*deb $(AXIOMHOME)/debs
 	$(MAKE) deb-install
 # extrae
+	@echo "===DEBs for extrae"
 	$(MAKE) extrae
 	$(DEBENV) fakeroot $(MAKE) -C $(EXTRAE_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 # axiom user library & kernel module
+	@echo "===DEBs for axiom user library (and kernel module)"
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_NIC_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 # axiom allocator kernel module
+	@echo "===DEBs for allocator kernel module"
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_ALLOC_DRV_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 # axiom allocator library
+	@echo "===DEBs for allocator library"
 	$(MAKE) allocator-lib
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_ALLOC_LIB_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 # axiom init library
+	@echo "===DEBs for axiom init library"
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR)/axiom-init -f debian/rules binary
 	mv $(EVI_APPS_DIR)/*.deb $(AXIOMHOME)
 	$(MAKE) deb-install
 # axiom run library
+	@echo "===DEBs for axiom run library"
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR)/axiom-run -f debian/rules binary
 	mv $(EVI_APPS_DIR)/*.deb $(AXIOMHOME)
 	$(MAKE) deb-install
 # memory allocator
+	@echo "===DEBs for axiom allocator"
 	$(MAKE) allocator
 	$(DEBENV) fakeroot $(MAKE) -C $(ALLOCATOR_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 # axiom apps
+	@echo "===DEBs for axiom system applications"
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 # gasnet
+	@echo "===DEBs for gasnet"
 	$(MAKE) gasnet
 	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 # nanox
+	@echo "===DEBs for nanox"
 	$(MAKE) nanox
 	$(DEBENV) fakeroot $(MAKE) -C $(NANOX_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 
-clean-deb: deb-destroy
+clean-deb: deb-unprepare
+	$(DEBENV) fakeroot $(MAKE) -C $(LOCFILE_DIR) -f debian/rules clean
 	$(DEBENV) fakeroot $(MAKE) -C $(EXTRAE_DIR) -f debian/rules clean
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_NIC_DIR) -f debian/rules clean
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_ALLOC_DRV_DIR) -f debian/rules clean
@@ -1421,6 +1432,7 @@ clean-deb: deb-destroy
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR) -f debian/rules clean
 	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_DIR) -f debian/rules clean
 	$(DEBENV) fakeroot $(MAKE) -C $(NANOX_DIR) -f debian/rules clean
+	-rm -f $(AXIOMHOME)/*.deb
 
 distclean-deb: clean-deb distclean-extrae distclean-gasnet distclean-nanox
 	$(MAKE) -C $(EVI_NIC_DIR) distclean
