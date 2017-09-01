@@ -1,0 +1,20 @@
+Source: axiom-tests-ompss
+Section: unknown
+Priority: optional
+Maintainer: Massimiliano Giorgi <m.giorgi@evidence.eu.com>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.5
+Homepage: <insert the upstream URL, if relevant>
+Vcs-Git: git://anonscm.debian.org/collab-maint/axiom-apps.git
+
+Package: axiom-tests-ompss
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, nanox-performance | nanox-instrumentation | nanox-debug
+Description: Axiom ompss tests
+ Axiom ompss tests
+
+Package: axiom-tests-ompss-dbg
+Architecture: any
+Depends: axiom-test-ompss (= ${binary:Version}), ${misc:Depends}
+Description: Axiom ompss tests debug symbols
+ Axiom ompss tests debug symbol

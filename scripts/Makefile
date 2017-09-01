@@ -1464,6 +1464,14 @@ deb: deb-prepare           \
 	_deb-gasnet        \
 	_deb-nanox
 
+_deb-tests-ompss:
+# ompss axiom tests
+	@echo "$(ccgreen)===DEBs for ompss test$(ccend)"
+	$(DEBENV) fakeroot $(MAKE) -C $(OMPSS_TESTS_DIR) -f debian/rules binary
+	mv $(OMPSS_TESTS_DIR)/../axiom-tests-ompss*deb $(AXIOMHOME)/debs
+	$(DEBENV) fakeroot $(MAKE) -C $(OMPSS_TESTS_DIR) -f debian/rules clean
+deb-tests-ompss: deb-prepare _deb-tests-ompss
+
 clean-deb: deb-unprepare
 	$(DEBENV) fakeroot $(MAKE) -C $(LOCFILE_DIR) -f debian/rules clean
 	$(DEBENV) fakeroot $(MAKE) -C $(EXTRAE_DIR) -f debian/rules clean
