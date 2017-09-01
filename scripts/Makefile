@@ -1345,7 +1345,7 @@ help::
 ROOTFSTMP:=$(AXIOMHOME)/rootfs-tmp
 ROOTFSWRK:=$(AXIOMHOME)/rootfs-wrk
 
-DEBENV := ROOTFS=$(ROOTFSTMP) GCC_TARGET=arm64 CC=$(LINARO)/host/usr/bin/aarch64-linux-gnu-gcc
+DEBENV := ROOTFS=$(ROOTFSTMP) GCC_TARGET=arm64 CC=$(LINARO)/host/usr/bin/aarch64-linux-gnu-gcc PATH=$(PATH):$(LINARO)/host/bin
 
 deb-prepare: qemu
 	mkdir -p $(AXIOMHOME)/debs
@@ -1354,71 +1354,115 @@ deb-prepare: qemu
 	mkdir -p $(ROOTFSWRK)
 	sudo mount -t overlay overlay -olowerdir=$(ROOTFS),upperdir=$(ROOTFSTMP),workdir=$(ROOTFSWRK) $(ROOTFSTMP)
 	cp $(QEMU_STATIC_BUILD_DIR)/aarch64-linux-user/qemu-aarch64 $(ROOTFSTMP)/usr/bin
+	rm -f $(ROOTFSTMP)/*.deb
+	rm -f $(AXIOMHOME)/*.deb
 
 deb-unprepare:
+	rm -f $(ROOTFSTMP)/*.deb
+	rm -f $(AXIOMHOME)/*.deb
 	-sudo umount $(ROOTFSTMP)
 	sudo rm -r -f $(ROOTFSTMP) $(ROOTFSWRK)
 
 deb-install:
 	cp $(AXIOMHOME)/*deb $(ROOTFSTMP)
-	sudo chroot $(ROOTFSTMP) /bin/bash -c "/usr/bin/dpkg --install /*.deb"
 	cp $(AXIOMHOME)/*deb $(AXIOMHOME)/debs
+	sudo chroot $(ROOTFSTMP) /bin/bash -c "/usr/bin/dpkg --install /*.deb"
 	rm -f $(ROOTFSTMP)/*.deb
 	rm -f $(AXIOMHOME)/*.deb
 
-deb: deb-prepare
+.PHONY: _deb-kernel _deb-extrae _deb-evinic _deb_allocator-drv _deb-allocato-lib
+.PHONY: _deb_init-lib _deb-run-lib _deb_allocator _deb-apps _deb-gasnet _deb-nanox
+
+_deb-kernel:
 # kernel modules
-	@echo "===DEBs for metapackages and kernel modules"
+	@echo "$(ccgreen)===DEBs for metapackages and kernel modules$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(LOCFILE_DIR) -f debian/rules binary
 	mv -f $(AXIOMHOME)/axiomeu-dev_*deb $(AXIOMHOME)/axiomeu_*deb $(AXIOMHOME)/debs
 	$(MAKE) deb-install
+deb-kernel: deb-prepare _deb-kernel
+_deb-extrae:
 # extrae
-	@echo "===DEBs for extrae"
+	@echo "$(ccgreen)===DEBs for extrae$(ccend)"
 	$(MAKE) extrae
 	$(DEBENV) fakeroot $(MAKE) -C $(EXTRAE_DIR) -f debian/rules binary
 	$(MAKE) deb-install
+deb-extrae: deb-prepare _deb-extrae
+_deb-evinic:
 # axiom user library & kernel module
-	@echo "===DEBs for axiom user library (and kernel module)"
+	@echo "$(ccgreen)===DEBs for axiom user library (and kernel module)$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_NIC_DIR) -f debian/rules binary
 	$(MAKE) deb-install
+deb-evinic: deb-prepare _deb-evinic
+_deb-allocator-drv:
 # axiom allocator kernel module
-	@echo "===DEBs for allocator kernel module"
+	@echo "$(ccgreen)===DEBs for allocator kernel module$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_ALLOC_DRV_DIR) -f debian/rules binary
 	$(MAKE) deb-install
+deb-allocator-drv: deb-prepare _deb-allocator-drv
+_deb-allocator-lib:
 # axiom allocator library
-	@echo "===DEBs for allocator library"
+	@echo "$(ccgreen)===DEBs for allocator library$(ccend)"
 	$(MAKE) allocator-lib
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_ALLOC_LIB_DIR) -f debian/rules binary
 	$(MAKE) deb-install
+deb-allocator-lib: deb-prepare _deb-allocator-lib
+_deb-init-lib:
 # axiom init library
-	@echo "===DEBs for axiom init library"
+	@echo "$(ccgreen)===DEBs for axiom init library$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR)/axiom-init -f debian/rules binary
 	mv $(EVI_APPS_DIR)/*.deb $(AXIOMHOME)
 	$(MAKE) deb-install
+deb-init-lib: deb-prepare _deb-init-lib
+_deb-run-lib:
 # axiom run library
-	@echo "===DEBs for axiom run library"
+	@echo "$(ccgreen)===DEBs for axiom run library$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR)/axiom-run -f debian/rules binary
 	mv $(EVI_APPS_DIR)/*.deb $(AXIOMHOME)
 	$(MAKE) deb-install
+deb-run-lib: deb-prepare _deb-run-lib
+_deb-allocator:
 # memory allocator
-	@echo "===DEBs for axiom allocator"
+	@echo "$(ccgreen)===DEBs for axiom allocator$(ccend)"
 	$(MAKE) allocator
 	$(DEBENV) fakeroot $(MAKE) -C $(ALLOCATOR_DIR) -f debian/rules binary
 	$(MAKE) deb-install
+deb-allocator: deb-prepare _deb-allocator
+_deb-eviapps:
 # axiom apps
-	@echo "===DEBs for axiom system applications"
+	@echo "$(ccgreen)===DEBs for axiom system applications$(ccend) "
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR) -f debian/rules binary
 	$(MAKE) deb-install
+deb-eviapps: deb-prepare _deb-eviapps
+_deb-gasnet:
 # gasnet
-	@echo "===DEBs for gasnet"
+	@echo "$(ccgreen)===DEBs for gasnet$(ccend)"
 	$(MAKE) gasnet
 	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_DIR) -f debian/rules binary
 	$(MAKE) deb-install
+deb-gasnet: deb-prepare _deb-gasnet
+_deb-nanox:
 # nanox
-	@echo "===DEBs for nanox"
+	@echo "$(ccgreen)===DEBs for nanox$(ccend)"
 	$(MAKE) nanox
 	$(DEBENV) fakeroot $(MAKE) -C $(NANOX_DIR) -f debian/rules binary
 	$(MAKE) deb-install
+deb-nanox: deb-prepare _deb-nanox
+
+.PHONY: deb-kernel deb-extrae deb-evinic deb_allocator-drv deb-allocato-lib
+.PHONY: deb_init-lib deb-run-lib deb_allocator deb-apps deb-gasnet deb-nanox
+
+deb: deb-prepare           \
+	_deb-kernel        \
+	_deb-extrae        \
+	_deb-evinic        \
+	_deb-allocator-drv \
+	_deb-allocator-lib \
+	_deb-init-lib      \
+	_deb-run-lib       \
+	_deb-allocator     \
+	_deb-eviapps       \
+	_deb-gasnet        \
+	_deb-nanox
 
 clean-deb: deb-unprepare
 	$(DEBENV) fakeroot $(MAKE) -C $(LOCFILE_DIR) -f debian/rules clean
