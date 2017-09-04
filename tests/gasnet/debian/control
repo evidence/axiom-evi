@@ -1,0 +1,20 @@
+Source: axiom-tests-gasnet
+Section: unknown
+Priority: optional
+Maintainer: Massimiliano Giorgi <m.giorgi@evidence.eu.com>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.5
+Homepage: <insert the upstream URL, if relevant>
+Vcs-Git: git://anonscm.debian.org/collab-maint/axiom-apps.git
+
+Package: axiom-tests-gasnet
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, axiom-init, axiom-run, axiom-apps
+Description: Axiom gasnet tests
+ Axiom gasnet tests
+
+Package: axiom-tests-gasnet-dbg
+Architecture: any
+Depends: axiom-tests-gasnet (= ${binary:Version}), ${misc:Depends}
+Description: Axiom gasnet tests debug symbols
+ Axiom gasnet tests debug symbol
