@@ -79,10 +79,10 @@ LAUNCHERS+=$(COMFILE_DIR)/utils/guest/run_suite.sh
 
 .PHONY: clean build install distclean install-real
 
-#install: build
-install: build
+# default (if not already defined)
+DESTDIR:=/opt/axiom/tests_gasnet
 
-cccc:
+install: build
 	$(FAKEROOT) $(MAKE) -f makefile-gasnet.mk install-real
 
 install-real:

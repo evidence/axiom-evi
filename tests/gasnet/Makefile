@@ -36,6 +36,10 @@ FAKEROOT := fakeroot -i $(ROOTFS).faked -s $(ROOTFS).faked
 endif
 endif
 
+# default (if not already defined)
+DESTDIR:=$(TARGET_DIR)
+export DESTDIR
+
 #
 # external tests
 #
@@ -46,14 +50,12 @@ install-ext: build-ext
 	$(FAKEROOT) $(MAKE) install-ext-real
 
 install-ext-real:
-	for DESTDIR in $(TARGET_DIR); do \
-		$(SUDO) mkdir -p $${DESTDIR}/root/tests_gasnet_dbg ;\
-		$(SUDO) cp $(GASNET_BUILD_DIR_DEBUG)/axiom-conduit/test* \
-			$${DESTDIR}/root/tests_gasnet_dbg ;\
-		$(SUDO) mkdir -p $${DESTDIR}/root/tests_gasnet_per ;\
-		$(SUDO) cp $(GASNET_BUILD_DIR_PERF)/axiom-conduit/test* \
-			$${DESTDIR}/root/tests_gasnet_per ;\
-	done
+	$(SUDO) mkdir -p $(DESTDIR)/opt/axiom/tests_gasnet_dbg
+	$(SUDO) cp $(GASNET_BUILD_DIR_DEBUG)/axiom-conduit/test* \
+		$(DESTDIR)/opt/axiom/tests_gasnet_dbg
+	$(SUDO) mkdir -p $(DESTDIR)/opt/axiom/tests_gasnet_per
+	$(SUDO) cp $(GASNET_BUILD_DIR_PERF)/axiom-conduit/test* \
+		$(DESTDIR)/opt/axiom/tests_gasnet_per
 
 build-ext:
 	@$(MAKE) -j$(BUILDCPUS) -C $(GASNET_BUILD_DIR_DEBUG) tests-par
@@ -71,8 +73,12 @@ clean-ext distclean-ext:
 .PHONY: install-int build-int clean-int distclean-int
 
 install-int build-int clean-int distclean-int:
-	@$(MAKE) -f makefile-gasnet.mk GASNET:=gasnet-debug $(subst -int,,$@)
-	@$(MAKE) -f makefile-gasnet.mk GASNET:=gasnet-performance $(subst -int,,$@)
+	@$(MAKE) -f makefile-gasnet.mk \
+		DESTDIR=$(DESTDIR)/opt/axiom/tests_gasnet/dbg \
+		GASNET:=gasnet-debug $(subst -int,,$@)
+	@$(MAKE) -f makefile-gasnet.mk \
+		DESTDIR=$(DESTDIR)/opt/axiom/tests_gasnet_per \
+		GASNET:=gasnet-performance $(subst -int,,$@)
 
 #
 # utility
