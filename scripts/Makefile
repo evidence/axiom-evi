@@ -1340,7 +1340,7 @@ help::
 # DEB
 #
 
-.PHONY: deb-prepare deb-unprepare deb-install deb clean-deb distclean-deb
+.PHONY: deb-prepare deb-unprepare deb-install deb deb-tests clean-deb distclean-deb
 
 ROOTFSTMP:=$(AXIOMHOME)/rootfs-tmp
 ROOTFSWRK:=$(AXIOMHOME)/rootfs-wrk
@@ -1464,6 +1464,8 @@ deb: deb-prepare           \
 	_deb-gasnet        \
 	_deb-nanox
 
+.PHONY: _deb-tests-ompss _deb-tests-gasnet _deb-tests-axiom
+
 _deb-tests-ompss:
 # ompss axiom tests
 	@echo "$(ccgreen)===DEBs for ompss test$(ccend)"
@@ -1471,6 +1473,29 @@ _deb-tests-ompss:
 	mv $(OMPSS_TESTS_DIR)/../axiom-tests-ompss*deb $(AXIOMHOME)/debs
 	$(DEBENV) fakeroot $(MAKE) -C $(OMPSS_TESTS_DIR) -f debian/rules clean
 deb-tests-ompss: deb-prepare _deb-tests-ompss
+
+_deb-tests-gasnet:
+# gasnet axiom tests
+	@echo "$(ccgreen)===DEBs for gasnet test$(ccend)"
+	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_TESTS_DIR) -f debian/rules binary
+	mv $(GASNET_TESTS_DIR)/../axiom-tests-*deb $(AXIOMHOME)/debs
+	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_TESTS_DIR) -f debian/rules clean
+deb-tests-gasnet: deb-prepare _deb-tests-gasnet
+
+_deb-tests-axiom:
+# axiom tests
+	@echo "$(ccgreen)===DEBs for axiom test$(ccend)"
+	$(DEBENV) fakeroot $(MAKE) -C $(AXIOM_TESTS_DIR) -f debian/rules binary
+	mv $(AXIOM_TESTS_DIR)/../axiom-*deb $(AXIOMHOME)/debs
+	$(DEBENV) fakeroot $(MAKE) -C $(AXIOM_TESTS_DIR) -f debian/rules clean
+deb-tests-axiom: deb-prepare _deb-tests-axiom
+
+.PHONY: deb-tests-ompss deb-tests-gasnet deb-tests-axiom
+
+deb-tests: deb-prepare \
+	deb-tests-ompss \
+	deb-tests-gasnet \
+	deb-tests-axiom
 
 clean-deb: deb-unprepare
 	$(DEBENV) fakeroot $(MAKE) -C $(LOCFILE_DIR) -f debian/rules clean
@@ -1484,6 +1509,9 @@ clean-deb: deb-unprepare
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR) -f debian/rules clean
 	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_DIR) -f debian/rules clean
 	$(DEBENV) fakeroot $(MAKE) -C $(NANOX_DIR) -f debian/rules clean
+	$(DEBENV) fakeroot $(MAKE) -C $(AXIOM_TESTS_DIR) -f debian/rules clean
+	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_TESTS_DIR) -f debian/rules clean
+	$(DEBENV) fakeroot $(MAKE) -C $(OMPSS_TESTS_DIR) -f debian/rules clean
 	-rm -f $(AXIOMHOME)/*.deb
 
 distclean-deb: clean-deb distclean-extrae distclean-gasnet distclean-nanox
@@ -1493,13 +1521,12 @@ distclean-deb: clean-deb distclean-extrae distclean-gasnet distclean-nanox
 	$(MAKE) -C $(ALLOCATOR_DIR) distclean
 	$(MAKE) -C $(EVI_APPS_DIR) distclean
 
-#endif
-
 help::
 	@echo "DEBIANization"
 	@echo "  deb            Build debian packages"
+	@echo "  deb-test       Build test debian packages"
 	@echo " "
-	@echo "  clean-deb      Clean all deb build"
+	@echo "  clean-deb      Clean all deb build (including tests packages)"
 	@echo "  distclean-deb  Clean all deb build and compilation"
 	@echo " "
 	@echo "This targets need P=1 on command line."
