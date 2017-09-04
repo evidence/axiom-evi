@@ -34,12 +34,13 @@ else
 SUDO :=
 endif
 
+# default (if not already defined)
+DESTDIR:=$(TARGET_DIR)
+
 install-real:
-	for DESTDIR in $(TARGET_DIR); do \
-	    sudo mkdir -p $${DESTDIR}/root/tests_axiom; \
-	    sudo cp $(LAUNCHERS)  $${DESTDIR}/root/tests_axiom; \
-	    sudo cp suite/*  $${DESTDIR}/root/tests_axiom; \
-	done
+	$(SUDO) mkdir -p $(DESTDIR)/opt/axiom/tests_axiom
+	$(SUDO) cp $(LAUNCHERS)  $(DESTDIR)/opt/axiom/tests_axiom
+	$(SUDO) cp suite/*  $(DESTDIR)/opt/axiom/tests_axiom
 
 build clean distclean:
 	$(MAKE) -C $(EVI_APPS_DIR)/tests $@
