@@ -85,7 +85,8 @@ clean: clean-changelog
 # changelog
 #
 
-VERSION := $(shell git describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
+# NB: no --dirty
+VERSION := $(shell git describe --tags | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
 
 define changelog
 axiom-tests ($(VERSION)) unstable; urgency=low
