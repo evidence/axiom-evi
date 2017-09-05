@@ -818,6 +818,8 @@ mcxx-native-config-force: nanox mcxx-bootstrap
 mcxx-native-config:
 	@if [ ! -r "$(MCXX_BUILD_NATIVE_DIR)/config.status" ]; then $(MAKE) mcxx-native-config-force; fi
 
+# mcxx-native -> to cross-compile a native compile
+# actually it is not used!!!
 # does not WORK!!!!!
 mcxx-native: mcxx-native-config
 	@make -j$(BUILDCPUS) \
