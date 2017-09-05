@@ -401,3 +401,13 @@ where XXX is the values specified in the 5.2.2 section
 bash:~/axiom-evi/scripts$ make KERN=XXX FS=XXX DISABLE_INSTR=XXX
 
 where XXX is the values specified in the 5.2.2 section
+
+### 5.3 Note for X86 compilation
+
+* the user that compile the software must be into the sudoers file
+  (but it is not necessary to use a "sudo make .....")
+
+* the system shell should be bash
+  so there must be a link from /bin/sh to bash
+
+* the linux-tools-generic and linux-headers-generic packages must be installed
