@@ -229,7 +229,7 @@ endif
 # compile/build definitions/parameters
 #
 
-DFLAGS := -g
+DFLAGS := -g -O3
 debug: DFLAGS := -g -DPDEBUG
 export DFLAGS
 

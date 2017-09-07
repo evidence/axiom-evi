@@ -354,6 +354,12 @@ Yout must have extracted the Seco Ubuntu filesystem image; this must point to th
 
 Usually $HOME/zynq-rootfs is a link to $HOME/zynq-ubuntu-minimal_16.04-xenial_v1.2
 
+NOTE: in zynq-rootfs/usr/lib/aarch64-linux-gnu there are .so with absolute link.
+Extrae try to use libdl.so (linkt to /lib/aarch64-linux-gnu/libdl.so.2)
+    cd zynq-rootfs/usr/lib/aarch64-linux-gnu
+    rm libdl.so
+    ln -s ../../../lib/aarch64-linux-gnu/libdl.so.2 libdl.so
+
 * ROOTFSARCH
 
 You must have a copy of the rootfs archive
