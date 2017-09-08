@@ -3,12 +3,34 @@
 
 The following is the list of the main tags of the repository:
 
+## axiom-v0.14          (15/09/2017)
+* All sub-projects
+    + add x86 DEB and FS compilation support
+    + impove compilation system
+* axiom-nic
+    + add support of FORTH bitstream
+    + fix kthread main loop
+    + improve retrasmission of LONG messages
+    + add statistics in the driver
+    + add x86 skeleton STUB driver
+* User space applications
+    + axiom-netperf
+        - add support of RDMA test (sync and async)
+        - add multi-thread support
+    + axiom-ethtap
+        - add multi-thread support
+    + small fixes
+* GASNet
+    + fix not aligned access on RDMA zone
+    + small fixes
+
 ## axiom-v0.13          (13/06/2017)
 * All sub-projects
     + add PetaLinux/Linaro compilation support
     + add DEB packages generation support
 * QEMU
     + replace buildroot FS with Ubuntu FS from real AXIOM board
+
 ## axiom-v0.12          (11/05/2017)
 * QEMU
     + remove LOOPBACK bit in the status register
@@ -29,6 +51,7 @@ The following is the list of the main tags of the repository:
     + use new async AXIOM user API
     + update to gasnet-1.29.3
     + small fixes
+
 ## axiom-v0.11          (30/01/2017)
 * User space library
     + add Extrae (tracing) support in the AXIOM NIC API
