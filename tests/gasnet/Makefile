@@ -14,14 +14,22 @@ include ../../scripts/locations.mk
 .PHONY: clean build install distclean
 
 ifeq ($(FS),x86)
+
+_ccred:="\033[0;31m"
+ccred:=$(shell echo -e $(_ccred))
+ccgreen:=$(shell echo -e "\033[0;32m")
+ccblue:=$(shell echo -e "\033[0;34m")
+_ccend:="\033[0m"
+ccend:=$(shell echo -e $(_ccend))
+
 install:
-	@echo "GASNET tests will not be build on X86 NATIVE"
+	@echo "$(ccred)GASNET tests will not be build on X86 NATIVE$(ccend)"
 build:
-	@echo "GASNET tests will not be build on X86 NATIVE"
+	@echo "$(ccred)GASNET tests will not be build on X86 NATIVE$(ccend)"
 clean:
-	@echo "GASNET tests will not be build on X86 NATIVE"
+	@echo "$(ccred)GASNET tests will not be build on X86 NATIVE$(ccend)"
 distclean:
-	@echo "GASNET tests will not be build on X86 NATIVE"
+	@echo "$(ccred)GASNET tests will not be build on X86 NATIVE$(ccend)"
 else
 install: install-int install-ext
 build: build-int build-ext

@@ -2,16 +2,6 @@
 
 DEBIAN_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-#DEB_TARGET_ARCH=arm64
-#DEB_TARGET_ARCH_BITS=64
-#DEB_TARGET_ARCH_CPU=arm64
-#DEB_TARGET_ARCH_ENDIAN=little
-#DEB_TARGET_ARCH_OS=linux
-#DEB_TARGET_GNU_CPU=aarch64
-#DEB_TARGET_GNU_SYSTEM=linux-gnu
-#DEB_TARGET_GNU_TYPE=aarch64-linux-gnu
-#DEB_TARGET_MULTIARCH=aarch64-linux-gnu
-
 export KERN
 export FS
 
@@ -20,15 +10,36 @@ OUTPUT_DIR := $(DEBIAN_DIR)/../../output
 endif
 
 ifeq ($(KERN),seco)
+#
+# SECO kernel
+#
 KERNELDIR := $(AXIOMBSP)/build/linux/kernel/link-to-kernel-build
 ROOTFSDIR := $(AXIOMBSP)/build/linux/rootfs/targetroot
+else ifeq ($(KERN),x86)
+#
+# X86 kernel
+#
+ifdef _KVERSION
+KERNELDIR := /lib/modules/$(_KVERSION)/build
 else
+KERNELDIR := /lib/modules/$(shell uname -r)/build
+endif
+ROOTFSDIR := /
+else
+#
+# other kernel
+#
 KERNELDIR := $(OUTPUT_DIR)/build/linux-custom
 ROOTFSDIR := $(OUTPUT_DIR)/target
 endif
 
+ifdef _KVERSION
+# forced KVERSION (only needed for x86 compiled into a chroot)
+KVERSION := $(_KVERSION)
+else
 KVERSION := $(shell cat $(KERNELDIR)/include/config/kernel.release)
 KVERSION := $(subst -dirty,,$(KVERSION))
+endif
 
 .PHONY: build build-arch build-indep binary binary-arch binary-indep clean
 
@@ -41,11 +52,13 @@ build-indep:
 
 binary: binary-arch binary-indep
 
-binary-arch: make-changelog
+binary-arch: make-changelog init-control
 	dh_testroot
 	dh_prep
 	dh_installdirs
 
+ifneq ($(KERN),x86)
+# this is required for package linux-modules-XXXX that is not built for x86
 	mkdir -p $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)
 	mkdir -p $(DEBIAN_DIR)/tmp/boot
 	cp -r $(ROOTFSDIR)/lib/modules/$(KVERSION)/* \
@@ -55,6 +68,7 @@ binary-arch: make-changelog
 	rm -f -r $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)/extra
 	rm -f $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)/build
 	rm -f $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)/source
+endif
 
 	dh_install --list-missing
 	dh_installdocs
@@ -96,10 +110,13 @@ binary-arch: make-changelog
 	dh_shlibdeps  --sysroot=$(ROOTFSDIR)
 	dh_installdeb
 
+ifneq ($(KERN),x86)
+# this is required for package linux-modules-XXXX that is not built for x86
 	echo "kversion=$(KVERSION)" >>$(DEBIAN_DIR)/linux-modules.substvars
 	dh_gencontrol -plinux-modules -- -DPackage=linux-modules-$(KVERSION)
 	mv $(DEBIAN_DIR)/linux-modules/usr/share/doc/linux-modules \
 		$(DEBIAN_DIR)/linux-modules/usr/share/doc/linux-modules-$(KVERSION)
+endif
 
 	echo "kversion=$(KVERSION)" >>$(DEBIAN_DIR)/axiomeu.substvars
 	dh_gencontrol -paxiomeu
@@ -114,6 +131,19 @@ binary-indep:
 clean: clean-changelog
 	dh_testdir
 	dh_clean
+
+#
+# ccontrol
+#
+
+.PHONY: init-control
+
+init-control:
+ifeq ($(FS),x86)
+	ln -s -f $(DEBIAN_DIR)/control.x86 $(DEBIAN_DIR)/control
+else
+	ln -s -f $(DEBIAN_DIR)/control.other $(DEBIAN_DIR)/control
+endif
 
 #
 # changelog

@@ -77,6 +77,10 @@ help:
 # build/install/clean/distclean
 #
 
+ifdef FROMDEB
+SUDO :=
+endif
+
 .PHONY: clean build install distclean
 
 install: build install-nbody

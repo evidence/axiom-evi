@@ -1,4 +1,3 @@
-
 #
 # management of parameters
 #
@@ -40,6 +39,16 @@ endif
 DISABLE_INSTR:=$(_DISABLE_INSTR)
 endif
 
+ifdef _KVERSION
+ifdef KVERSION
+ifneq ($(KVERSION),$(_KVERSION))
+$(error You have redefined KVERSION. To do this you must do a "make mrproper" followed by a "make KVERSION=???? configure" with the new parameters)
+endif
+endif
+# note that KVERSION is not defined!
+# _KVERSION is exported
+endif
+
 # test parameters definition
 
 _ccred:="\033[0;31m"
@@ -66,8 +75,13 @@ You must define some variable on the command line (for example "make KERN=br FS=
 * DISABLE_INSTR ($(ccgreen)optional$(ccend), used during libraries compilation)
     0: compile EXTRAE and nic user library with instrumentation support (default)
     1: disable EXTRAE compilation and nic user library instrumentation
+ * KVERSION ($(ccgreen)optional$(ccend), used to compile X86 in a choroot)
+    you must defined this if you are compiling for X86 from a chroot and must be
+    set to the kernel version (otherwise a "uname -r" is used using the chroot host
+    kernel version)
 Note that:
 KERN, FS and DISABLE_INSTR must defined during "make configure" and never changed.
+KVERSION must be defined only for X86 chroot compilation during "make configure".
 QEMU_SNAP can be redefined on every invocation.
 )
 endef
@@ -171,6 +185,9 @@ ifeq ($(DISABLE_INSTR),0)
 $(info $(ccgreen)DISABLE_INSTR$(ccend)=0 (using EXTRAE instrumentation))
 else
 $(info $(ccgreen)DISABLE_INSTR$(ccend)=1 (disable EXTRAE compilation and integration))
+endif
+ifdef _KVERSION
+$(info $(ccgreen)_KVERSION$(ccend)=$(_KVERSION) (X86 kernel version))
 endif
 
 #
@@ -332,6 +349,10 @@ config-save:
 	@echo "_KERN:=$(KERN)" >>params.mk
 	@echo "_FS:=$(FS)" >>params.mk
 	@echo "_DISABLE_INSTR:=$(DISABLE_INSTR)" >>params.mk
+ifdef KVERSION
+	@echo "export _KVERSION" >>params.mk
+	@echo "_KVERSION:=$(KVERSION)" >>params.mk
+endif
 
 help::
 	@echo "CONFIGURE"
@@ -347,6 +368,9 @@ help::
 
 .PHONY: libs allocator-driver allocator-lib allocator-lib-config allocator-lib-config-force allocator axiom-nic axiom-apps _buildroot buildroot arm-firmware qemu-dts qemu allocator allocator-config-force allocator-config
 
+# to preserve the make environment on invocation
+SUDO := sudo -E
+
 ifeq ($(DISABLE_INSTR),1)
 libs: 
 else
@@ -358,7 +382,7 @@ endif
 allocator-driver: libs
 	$(MAKE) -C $(EVI_ALLOC_DRV_DIR)
 ifeq ($(FS),x86)
-	sudo $(MAKE) FS=$(FS) KERN=$(KERN) DESTDIR=/ -C $(EVI_ALLOC_DRV_DIR) install
+	$(SUDO) $(MAKE) FS=$(FS) KERN=$(KERN) DESTDIR=/ -C $(EVI_ALLOC_DRV_DIR) install
 else
 	$(FAKEROOT) $(MAKE) DESTDIR=$(TARGET_DIR) -C $(EVI_ALLOC_DRV_DIR) install
 endif
@@ -392,9 +416,9 @@ allocator-lib-config: libs
 allocator-lib: allocator-lib-config
 	PATH=$(LINPATH) $(MAKE) -C $(EVI_ALLOC_LIB_DIR)
 ifeq ($(FS),x86)
-	sudo $(MAKE) -C $(EVI_ALLOC_LIB_DIR) install
-	sudo mkdir -p /usr/local/axiom-evi-allocator-lib
-	sudo cp $(EVI_ALLOC_LIB_DIR)/ldscript/x86/xs_map64.lds /usr/local/axiom-evi-allocator-lib
+	$(SUDO) $(MAKE) -C $(EVI_ALLOC_LIB_DIR) install
+	$(SUDO) mkdir -p /usr/local/axiom-evi-allocator-lib
+	$(SUDO) cp $(EVI_ALLOC_LIB_DIR)/ldscript/x86/xs_map64.lds /usr/local/axiom-evi-allocator-lib
 else
 	$(FAKEROOT) $(MAKE) DESTDIR=$(TARGET_DIR) -C $(EVI_ALLOC_LIB_DIR) install
 endif
@@ -435,7 +459,7 @@ allocator-config: allocator-driver allocator-lib
 allocator: allocator-config
 	PATH=$(LINPATH) $(MAKE) -C $(ALLOCATOR_DIR)
 ifeq ($(FS),x86)
-	sudo  $(MAKE) DESTDIR=/ -C $(ALLOCATOR_DIR) install
+	$(SUDO)  $(MAKE) DESTDIR=/ -C $(ALLOCATOR_DIR) install
 else
 	PATH=$(LINPATH) $(FAKEROOT) $(MAKE) DESTDIR=$(TARGET_DIR) -C $(ALLOCATOR_DIR) install
 endif
@@ -462,7 +486,7 @@ endif
 axiom-apps: libs allocator
 ifeq ($(FS),x86)
 	$(MAKE) -C $(EVI_APPS_DIR)
-	sudo $(MAKE) FS=$(FS) KERN=$(KERN) -C $(EVI_APPS_DIR) install
+	$(SUDO) $(MAKE) FS=$(FS) KERN=$(KERN) -C $(EVI_APPS_DIR) install
 else
 	$(MAKE) -C $(EVI_APPS_DIR) install
 endif
@@ -553,7 +577,7 @@ ifeq ($(FS),seco)
 	$(FAKEROOT) $(MAKE) -C $(GASNET_BUILD_DIR_DEBUG) DESTDIR=$(TARGET_DIR) install
 else
 ifeq ($(FS),x86)
-	@sudo $(MAKE) -C $(GASNET_BUILD_DIR_DEBUG) DESTDIR=/ install
+	@$(SUDO) $(MAKE) -C $(GASNET_BUILD_DIR_DEBUG) DESTDIR=/ install
 else
 	@$(MAKE) -C $(GASNET_BUILD_DIR_DEBUG) DESTDIR=$(SYSROOT_DIR) install
 endif
@@ -587,7 +611,7 @@ ifeq ($(FS),seco)
 	$(FAKEROOT) $(MAKE) -C $(GASNET_BUILD_DIR_PERF) DESTDIR=$(TARGET_DIR) install
 else
 ifeq ($(FS),x86)
-	@sudo $(MAKE) -C $(GASNET_BUILD_DIR_PERF) DESTDIR=/ install
+	@$(SUDO) $(MAKE) -C $(GASNET_BUILD_DIR_PERF) DESTDIR=/ install
 else
 	@$(MAKE) -C $(GASNET_BUILD_DIR_PERF) DESTDIR=$(SYSROOT_DIR) install
 endif
@@ -654,7 +678,7 @@ nanox-config-debug:
 nanox-debug: nanox-config-debug
 	@PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_DEBUG)
 ifeq ($(FS),x86)
-	@sudo $(MAKE) PATH=$(LINPATH) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=/ install
+	@$(SUDO) $(MAKE) PATH=$(LINPATH) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=/ install
 else
 	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(NANOX_BUILD_DIR_DEBUG) DESTDIR=$(TARGET_DIR) install
 endif
@@ -678,7 +702,7 @@ nanox-config-perf:
 nanox-perf: nanox-config-perf
 	@PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_PERF)
 ifeq ($(FS),x86)
-	@sudo $(MAKE) PATH=$(LINPATH) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=/ install
+	@$(SUDO) $(MAKE) PATH=$(LINPATH) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=/ install
 else
 	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(NANOX_BUILD_DIR_PERF) DESTDIR=$(TARGET_DIR) install
 endif
@@ -702,7 +726,7 @@ nanox-config-instr:
 nanox-instr: nanox-config-instr
 	@PATH=$(LINPATH) $(MAKE) $(NANOXFLAGS_INSTR) -j$(BUILDCPUS) -C $(NANOX_BUILD_DIR_INSTR)
 ifeq ($(FS),x86)
-	@sudo $(MAKE) PATH=$(LINPATH) -C $(NANOX_BUILD_DIR_INSTR) DESTDIR=/ install
+	@$(SUDO) $(MAKE) PATH=$(LINPATH) -C $(NANOX_BUILD_DIR_INSTR) DESTDIR=/ install
 else
 	@PATH=$(LINPATH) $(FAKEROOT) $(MAKE) -C $(NANOX_BUILD_DIR_INSTR) DESTDIR=$(TARGET_DIR) install
 endif
@@ -799,8 +823,8 @@ mcxx-config:
 mcxx: mcxx-config
 ifeq ($(FS),x86)
 	@make -j$(BUILDCPUS) -C $(MCXX_BUILD_DIR)
-#	@sudo make -C $(MCXX_BUILD_DIR) DESTDIR=$(HOST_DIR) install
-	@sudo make -C $(MCXX_BUILD_DIR) install
+#	@$(SUDO) make -C $(MCXX_BUILD_DIR) DESTDIR=$(HOST_DIR) install
+	@$(SUDO) make -C $(MCXX_BUILD_DIR) install
 else
 	@make -j$(BUILDCPUS) PATH=$(PATH):$(HOST_DIR)/usr/bin -C $(MCXX_BUILD_DIR)
 #	@make -C $(MCXX_BUILD_DIR) DESTDIR=$(HOST_DIR) install
@@ -902,7 +926,7 @@ else
 #
 	@$(MAKE) -j$(BUILDCPUS) -C $(EXTRAE_BUILD_DIR)
 ifeq ($(FS),x86)
-	@sudo $(MAKE) -C $(EXTRAE_BUILD_DIR) install
+	@$(SUDO) $(MAKE) -C $(EXTRAE_BUILD_DIR) install
 else
 	@$(MAKE) -C $(EXTRAE_BUILD_DIR) DESTDIR=$(TARGET_DIR) install
 	@$(MAKE) -C $(EXTRAE_BUILD_DIR) DESTDIR=$(SYSROOT_DIR) install
@@ -1347,8 +1371,20 @@ help::
 ROOTFSTMP:=$(AXIOMHOME)/rootfs-tmp
 ROOTFSWRK:=$(AXIOMHOME)/rootfs-wrk
 
-DEBENV := ROOTFS=$(ROOTFSTMP) GCC_TARGET=arm64 CC=$(LINARO)/host/usr/bin/aarch64-linux-gnu-gcc PATH=$(PATH):$(LINARO)/host/bin
+ifeq ($(FS),x86)
+DEBENV := ROOTFS=/ GCC_TARGET=x86 PATH=$(LOCFILE_DIR)/bin:$(PATH)
+else
+DEBENV := ROOTFS=$(ROOTFSTMP) GCC_TARGET=arm64 CC=$(LINARO)/host/usr/bin/aarch64-linux-gnu-gcc PATH=$(LOCFILE_DIR)/bin:$(PATH):$(LINARO)/host/bin
+endif
 
+ifeq ($(FS),x86)
+deb-prepare:
+	mkdir -p $(AXIOMHOME)/debs
+	rm -f $(AXIOMHOME)/*.deb
+
+deb-unprepare:
+	rm -f $(AXIOMHOME)/*.deb
+else
 deb-prepare: qemu
 	mkdir -p $(AXIOMHOME)/debs
 	-sudo umount $(ROOTFSTMP)
@@ -1360,16 +1396,22 @@ deb-prepare: qemu
 	rm -f $(AXIOMHOME)/*.deb
 
 deb-unprepare:
-	rm -f $(ROOTFSTMP)/*.deb
 	rm -f $(AXIOMHOME)/*.deb
+	rm -f $(ROOTFSTMP)/*.deb
 	-sudo umount $(ROOTFSTMP)
 	sudo rm -r -f $(ROOTFSTMP) $(ROOTFSWRK)
+endif
+
 
 deb-install:
-	cp $(AXIOMHOME)/*deb $(ROOTFSTMP)
 	cp $(AXIOMHOME)/*deb $(AXIOMHOME)/debs
+ifeq ($(FS),x86)
+	sudo dpkg --install $(AXIOMHOME)/*.deb
+else
+	cp $(AXIOMHOME)/*deb $(ROOTFSTMP)
 	sudo chroot $(ROOTFSTMP) /bin/bash -c "/usr/bin/dpkg --install /*.deb"
 	rm -f $(ROOTFSTMP)/*.deb
+endif
 	rm -f $(AXIOMHOME)/*.deb
 
 .PHONY: _deb-kernel _deb-extrae _deb-evinic _deb_allocator-drv _deb-allocato-lib
@@ -1378,14 +1420,16 @@ deb-install:
 _deb-kernel:
 # kernel modules
 	@echo "$(ccgreen)===DEBs for metapackages and kernel modules$(ccend)"
+	echo $(OUTPUT_DIR)
 	$(DEBENV) fakeroot $(MAKE) -C $(LOCFILE_DIR) -f debian/rules binary
 	mv -f $(AXIOMHOME)/axiomeu-dev_*deb $(AXIOMHOME)/axiomeu_*deb $(AXIOMHOME)/debs
+ifneq ($(KERN),x86)
 	$(MAKE) deb-install
+endif
 deb-kernel: deb-prepare _deb-kernel
 _deb-extrae:
 # extrae
 	@echo "$(ccgreen)===DEBs for extrae$(ccend)"
-	$(MAKE) extrae
 	$(DEBENV) fakeroot $(MAKE) -C $(EXTRAE_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 deb-extrae: deb-prepare _deb-extrae
@@ -1404,7 +1448,6 @@ deb-allocator-drv: deb-prepare _deb-allocator-drv
 _deb-allocator-lib:
 # axiom allocator library
 	@echo "$(ccgreen)===DEBs for allocator library$(ccend)"
-	$(MAKE) allocator-lib
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_ALLOC_LIB_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 deb-allocator-lib: deb-prepare _deb-allocator-lib
@@ -1425,7 +1468,6 @@ deb-run-lib: deb-prepare _deb-run-lib
 _deb-allocator:
 # memory allocator
 	@echo "$(ccgreen)===DEBs for axiom allocator$(ccend)"
-	$(MAKE) allocator
 	$(DEBENV) fakeroot $(MAKE) -C $(ALLOCATOR_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 deb-allocator: deb-prepare _deb-allocator
@@ -1438,22 +1480,32 @@ deb-eviapps: deb-prepare _deb-eviapps
 _deb-gasnet:
 # gasnet
 	@echo "$(ccgreen)===DEBs for gasnet$(ccend)"
-	$(MAKE) gasnet
 	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 deb-gasnet: deb-prepare _deb-gasnet
 _deb-nanox:
 # nanox
 	@echo "$(ccgreen)===DEBs for nanox$(ccend)"
-	$(MAKE) nanox
 	$(DEBENV) fakeroot $(MAKE) -C $(NANOX_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 deb-nanox: deb-prepare _deb-nanox
+_deb-mcxx:
+# mcxx
+	@echo "$(ccgreen)===DEBs for mcxx$(ccend)"
+ifeq ($(FS),x86)
+	$(DEBENV) fakeroot $(MAKE) -C $(MCXX_DIR) -f debian/rules binary
+	$(MAKE) deb-install
+endif
+deb-mcxx: deb-prepare _deb-mcxx
 
 .PHONY: deb-kernel deb-extrae deb-evinic deb_allocator-drv deb-allocato-lib
 .PHONY: deb_init-lib deb-run-lib deb_allocator deb-apps deb-gasnet deb-nanox
 
-deb: deb-prepare           \
+deb-warn:
+	@echo "$(ccred)Remeber that to make deb packages all must be already build$(ccend)"
+
+deb: deb-warn              \
+	deb-prepare        \
 	_deb-kernel        \
 	_deb-extrae        \
 	_deb-evinic        \
@@ -1464,7 +1516,8 @@ deb: deb-prepare           \
 	_deb-allocator     \
 	_deb-eviapps       \
 	_deb-gasnet        \
-	_deb-nanox
+	_deb-nanox         \
+	_deb-mcxx
 
 .PHONY: _deb-tests-ompss _deb-tests-gasnet _deb-tests-axiom
 
@@ -1473,15 +1526,17 @@ _deb-tests-ompss:
 	@echo "$(ccgreen)===DEBs for ompss test$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(OMPSS_TESTS_DIR) -f debian/rules binary
 	mv $(OMPSS_TESTS_DIR)/../axiom-tests-ompss*deb $(AXIOMHOME)/debs
-	$(DEBENV) fakeroot $(MAKE) -C $(OMPSS_TESTS_DIR) -f debian/rules clean
+#	$(DEBENV) fakeroot $(MAKE) -C $(OMPSS_TESTS_DIR) -f debian/rules clean
 deb-tests-ompss: deb-prepare _deb-tests-ompss
 
 _deb-tests-gasnet:
 # gasnet axiom tests
+ifneq ($(FS),x86)
 	@echo "$(ccgreen)===DEBs for gasnet test$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_TESTS_DIR) -f debian/rules binary
 	mv $(GASNET_TESTS_DIR)/../axiom-tests-*deb $(AXIOMHOME)/debs
-	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_TESTS_DIR) -f debian/rules clean
+#	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_TESTS_DIR) -f debian/rules clean
+endif
 deb-tests-gasnet: deb-prepare _deb-tests-gasnet
 
 _deb-tests-axiom:
@@ -1489,7 +1544,7 @@ _deb-tests-axiom:
 	@echo "$(ccgreen)===DEBs for axiom test$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(AXIOM_TESTS_DIR) -f debian/rules binary
 	mv $(AXIOM_TESTS_DIR)/../axiom-*deb $(AXIOMHOME)/debs
-	$(DEBENV) fakeroot $(MAKE) -C $(AXIOM_TESTS_DIR) -f debian/rules clean
+#	$(DEBENV) fakeroot $(MAKE) -C $(AXIOM_TESTS_DIR) -f debian/rules clean
 deb-tests-axiom: deb-prepare _deb-tests-axiom
 
 .PHONY: deb-tests-ompss deb-tests-gasnet deb-tests-axiom

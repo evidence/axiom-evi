@@ -7,3 +7,7 @@ axiom-tests-ompss/
 changelog
 files
 tmp/
+axiom-tests-dbg.substvars
+axiom-tests-dbg/
+axiom-tests.substvars
+axiom-tests/

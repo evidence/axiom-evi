@@ -2,16 +2,6 @@
 
 DEBIAN_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-#DEB_TARGET_ARCH=arm64
-#DEB_TARGET_ARCH_BITS=64
-#DEB_TARGET_ARCH_CPU=arm64
-#DEB_TARGET_ARCH_ENDIAN=little
-#DEB_TARGET_ARCH_OS=linux
-#DEB_TARGET_GNU_CPU=aarch64
-#DEB_TARGET_GNU_SYSTEM=linux-gnu
-#DEB_TARGET_GNU_TYPE=aarch64-linux-gnu
-#DEB_TARGET_MULTIARCH=aarch64-linux-gnu
-
 .PHONY: build build-arch build-indep binary binary-arch binary-indep clean
 
 build: build-arch build-indep
@@ -28,7 +18,7 @@ binary-arch: make-changelog
 	dh_testroot
 	dh_prep
 	dh_installdirs
-	make DESTDIR=$(DEBIAN_DIR)/tmp install
+	make FROMDEB=1 DESTDIR=$(DEBIAN_DIR)/tmp install
 
 	dh_install --list-missing
 	dh_installdocs
