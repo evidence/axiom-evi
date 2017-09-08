@@ -6,11 +6,11 @@ The following is the list of the main tags of the repository:
 ## axiom-v0.14          (15/09/2017)
 * All sub-projects
     + add x86 DEB and FS compilation support
-    + impove compilation system
+    + improve compilation system
 * axiom-nic
     + add support of FORTH bitstream
     + fix kthread main loop
-    + improve retrasmission of LONG messages
+    + improve retransmission of LONG messages
     + add statistics in the driver
     + add x86 skeleton STUB driver
 * User space applications
