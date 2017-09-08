@@ -1526,7 +1526,6 @@ _deb-tests-ompss:
 	@echo "$(ccgreen)===DEBs for ompss test$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(OMPSS_TESTS_DIR) -f debian/rules binary
 	mv $(OMPSS_TESTS_DIR)/../axiom-tests-ompss*deb $(AXIOMHOME)/debs
-#	$(DEBENV) fakeroot $(MAKE) -C $(OMPSS_TESTS_DIR) -f debian/rules clean
 deb-tests-ompss: deb-prepare _deb-tests-ompss
 
 _deb-tests-gasnet:
@@ -1535,7 +1534,6 @@ ifneq ($(FS),x86)
 	@echo "$(ccgreen)===DEBs for gasnet test$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_TESTS_DIR) -f debian/rules binary
 	mv $(GASNET_TESTS_DIR)/../axiom-tests-*deb $(AXIOMHOME)/debs
-#	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_TESTS_DIR) -f debian/rules clean
 endif
 deb-tests-gasnet: deb-prepare _deb-tests-gasnet
 
@@ -1544,7 +1542,6 @@ _deb-tests-axiom:
 	@echo "$(ccgreen)===DEBs for axiom test$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(AXIOM_TESTS_DIR) -f debian/rules binary
 	mv $(AXIOM_TESTS_DIR)/../axiom-*deb $(AXIOMHOME)/debs
-#	$(DEBENV) fakeroot $(MAKE) -C $(AXIOM_TESTS_DIR) -f debian/rules clean
 deb-tests-axiom: deb-prepare _deb-tests-axiom
 
 .PHONY: deb-tests-ompss deb-tests-gasnet deb-tests-axiom
@@ -1566,17 +1563,20 @@ clean-deb: deb-unprepare
 	$(DEBENV) fakeroot $(MAKE) -C $(EVI_APPS_DIR) -f debian/rules clean
 	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_DIR) -f debian/rules clean
 	$(DEBENV) fakeroot $(MAKE) -C $(NANOX_DIR) -f debian/rules clean
+ifeq ($(FS),x86)
+	$(DEBENV) fakeroot $(MAKE) -C $(MCXX_DIR) -f debian/rules clean
+endif
 	$(DEBENV) fakeroot $(MAKE) -C $(AXIOM_TESTS_DIR) -f debian/rules clean
 	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_TESTS_DIR) -f debian/rules clean
 	$(DEBENV) fakeroot $(MAKE) -C $(OMPSS_TESTS_DIR) -f debian/rules clean
 	-rm -f $(AXIOMHOME)/*.deb
 
 distclean-deb: clean-deb distclean-extrae distclean-gasnet distclean-nanox
-	$(MAKE) -C $(EVI_NIC_DIR) distclean
-	$(MAKE) -C $(EVI_ALLOC_DRV_DIR) distclean
-	$(MAKE) -C $(EVI_ALLOC_LIB_DIR) distclean
-	$(MAKE) -C $(ALLOCATOR_DIR) distclean
-	$(MAKE) -C $(EVI_APPS_DIR) distclean
+	test -e $(EVI_NIC_DIR)/Makefile && $(MAKE) -C $(EVI_NIC_DIR) distclean || true
+	test -e $(EVI_ALLOC_DRV_DIR)/Makefile && $(MAKE) -C $(EVI_ALLOC_DRV_DIR) distclean || true
+	test -e $(EVI_ALLOC_LIB_DIR)/Makefile && $(MAKE) -C $(EVI_ALLOC_LIB_DIR) distclean || true
+	test -e $(ALLOCATOR_DIR)/Makefile && $(MAKE) -C $(ALLOCATOR_DIR) distclean || true
+	test -e $(EVI_APPS_DIR)/Makefile && $(MAKE) -C $(EVI_APPS_DIR) distclean || true
 
 help::
 	@echo "DEBIANization"

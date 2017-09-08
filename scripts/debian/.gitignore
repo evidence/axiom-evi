@@ -9,3 +9,4 @@ linux-modules.postrm.debhelper
 linux-modules.substvars
 linux-modules/
 tmp/
+control
