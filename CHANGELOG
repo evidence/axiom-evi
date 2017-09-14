@@ -23,6 +23,8 @@ The following is the list of the main tags of the repository:
 * GASNet
     + fix not aligned access on RDMA zone
     + small fixes
+* QEMU
+    + no longer supported (use axiom-v0.13)
 
 ## axiom-v0.13          (13/06/2017)
 * All sub-projects
