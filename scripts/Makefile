@@ -1402,17 +1402,44 @@ deb-unprepare:
 	sudo rm -r -f $(ROOTFSTMP) $(ROOTFSWRK)
 endif
 
+# chroot to ROOTFS as user
+rootfs-shell:
+	@FAIL=0 ;\
+	  [ -x /usr/bin/qemu-aarch64 ] || \
+	    { echo "$(ccred)/usr/bin/qemu-aarch64 not found!$(ccend)";\
+	    FAIL=1; } ;\
+	  [ -x $(ROOTFS)/usr/bin/qemu-aarch64 ] || \
+	    { echo "$(ccred)$(ROOTFS)/usr/bin/qemu-aarch64 not found!$(ccend)";\
+	    FAIL=1; } ;\
+	  [ -f /proc/sys/fs/binfmt_misc/qemu-aarch64 ] || \
+	    { echo "$(ccred)/proc/sys/fs/binfmt_misc/qemu-aarch64 not found!$(ccend)";\
+	    FAIL=1; } ;\
+	  [ -e /lib/ld-linux-aarch64.so.1 ] || \
+	    { echo "$(ccred)/lib/ld-linux-aarch64.so.1 not found!$(ccend)";\
+	    FAIL=1; } ;\
+	  [ -e $(ROOTFS)/lib/ld-linux-aarch64.so.1 ] || \
+	    { echo "$(ccred)$(ROOTFS)/lib/ld-linux-aarch64.so.1 not found!$(ccend)";\
+	    FAIL=1; } ;\
+	  [ $$FAIL -eq 0 ] && $(FAKEROOT) fakechroot chroot $(ROOTFS) /bin/bash
 
 deb-install:
-	cp $(AXIOMHOME)/*deb $(AXIOMHOME)/debs
 ifeq ($(FS),x86)
+#
+# X86
+#
+	cp $(AXIOMHOME)/*deb $(AXIOMHOME)/debs
 	sudo dpkg --install $(AXIOMHOME)/*.deb
+	rm -f $(AXIOMHOME)/*.deb
 else
+#
+# other
+#
+	cp $(AXIOMHOME)/*deb $(AXIOMHOME)/debs
 	cp $(AXIOMHOME)/*deb $(ROOTFSTMP)
 	sudo chroot $(ROOTFSTMP) /bin/bash -c "/usr/bin/dpkg --install /*.deb"
 	rm -f $(ROOTFSTMP)/*.deb
-endif
 	rm -f $(AXIOMHOME)/*.deb
+endif
 
 .PHONY: _deb-kernel _deb-extrae _deb-evinic _deb_allocator-drv _deb-allocato-lib
 .PHONY: _deb_init-lib _deb-run-lib _deb_allocator _deb-apps _deb-gasnet _deb-nanox
@@ -1586,4 +1613,5 @@ help::
 	@echo "  clean-deb      Clean all deb build (including tests packages)"
 	@echo "  distclean-deb  Clean all deb build and compilation"
 	@echo " "
+	@echo "  rootfs-shell   Chroot on ROOTFS as regular user"
 	@echo "This targets need P=1 on command line."
