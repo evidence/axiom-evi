@@ -75,7 +75,7 @@ You must define some variable on the command line (for example "make KERN=br FS=
 * DISABLE_INSTR ($(ccgreen)optional$(ccend), used during libraries compilation)
     0: compile EXTRAE and nic user library with instrumentation support (default)
     1: disable EXTRAE compilation and nic user library instrumentation
- * KVERSION ($(ccgreen)optional$(ccend), used to compile X86 in a choroot)
+* KVERSION ($(ccgreen)optional$(ccend), used to compile X86 in a choroot)
     you must defined this if you are compiling for X86 from a chroot and must be
     set to the kernel version (otherwise a "uname -r" is used using the chroot host
     kernel version)
@@ -90,9 +90,6 @@ ifndef KERN
 $(error $(ENV_HELP))
 endif
 ifndef FS
-$(error $(ENV_HELP))
-endif
-ifndef DISABLE_INSTR
 $(error $(ENV_HELP))
 endif
 
