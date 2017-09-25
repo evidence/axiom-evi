@@ -10,3 +10,5 @@ linux-modules.substvars
 linux-modules/
 tmp/
 control
+axiom-startup-static.substvars
+axiom-startup-static/

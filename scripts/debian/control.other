@@ -13,6 +13,12 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Linux kernel modules
  Linux kernel modules
 
+Package: axiom-startup-static
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Scripts to start axion with static routing
+ Scripts to start axion with static routing
+
 Package: axiomeu
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, axiom-init, axiom-run, axiom-ethtap, axiom-apps, nanox, axiom-evi-nic-modules-${kversion}, axiom-evi-allocator-modules-${kversion}

@@ -68,6 +68,8 @@ ifneq ($(KERN),x86)
 	rm -f -r $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)/extra
 	rm -f $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)/build
 	rm -f $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)/source
+
+	cp -r $(DEBIAN_DIR)/axiom-startup-static.src/* $(DEBIAN_DIR)/tmp/
 endif
 
 	dh_install --list-missing
@@ -116,6 +118,7 @@ ifneq ($(KERN),x86)
 	dh_gencontrol -plinux-modules -- -DPackage=linux-modules-$(KVERSION)
 	mv $(DEBIAN_DIR)/linux-modules/usr/share/doc/linux-modules \
 		$(DEBIAN_DIR)/linux-modules/usr/share/doc/linux-modules-$(KVERSION)
+	dh_gencontrol -paxiom-startup-static
 endif
 
 	echo "kversion=$(KVERSION)" >>$(DEBIAN_DIR)/axiomeu.substvars
