@@ -341,9 +341,9 @@ After the installation you must create a symbolic link from usr to linaro/host d
 cd ~/linaro/host
 ln -s . usr
 
-Then you must create a link from pkg-config to aarcha64-linux-pkg-config:
+Then you must create a link from pkg-config to aarcha64-linux-gnu-pkg-config:
 cd ~/linaro/host/usr/bin
-ln -s /usr/bin/pkg-config aarcha64-linux-pkg-config
+ln -s /usr/bin/pkg-config aarcha64-linux-gnu-pkg-config
 
 * ROOTFS
      + Yout must have extracted the Seco Ubuntu filesystem image; this must point to the installation directory
