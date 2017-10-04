@@ -361,13 +361,23 @@ Extrae try to use libdl.so (linkt to /lib/aarch64-linux-gnu/libdl.so.2)
      + You must have a copy of the rootfs archive
      + (default $HOME/zynq-ubuntu-minimal_16.04-xenial_v1.2.tar.gz)
 
+Note that some packages required for a build can be missing; for example into a ubuntu xenial you should have installed at least:
+build-essential git libssl-dev libncurses5-dev gawk bison wget flex bc pkg-config
+libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev
+autoconf automake gfortran libxml2-dev libtool-bin.
+To generate the DEB packages debhelper fakechroot fakeroot binfmt-support must be installed.
+
 ### 5.2 Compile the system
 
 #### 5.2.1 Include settings
 
 To compile the system you must include the settings.sh into ypur enviroment
 
+```
 bash$ source axiom-evi/settings.sh
+```
+
+Note that the environment must be clean (i.e. you can not include the petalinux's settings)
 
 #### 5.2.2 The enviroment
 
@@ -407,6 +417,15 @@ bash:~/axiom-evi/scripts$ make KERN=XXX FS=XXX DISABLE_INSTR=XXX
 ```
 
 where XXX is the values specified in the 5.2.2 section
+
+#### 5.2.5 generating DEB packages
+
+```
+bash:~/axiom-evi/scripts$ make deb
+```
+
+The packages debhelper, fakeroot, fakechroot and binfmt-support must be installed. The debian
+are generated into the ~/axiom-evi/debs directory.
 
 ### 5.3 Note for X86 compilation
 
