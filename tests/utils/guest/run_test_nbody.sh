@@ -13,7 +13,7 @@ else
     echo "Executing N-body on `axiom-info -N -q` boards..."
 
     #export NX_ARGS="--cluster --cluster-network axiom --smp-workers $NUM_THREADS --disable-binding --cluster-smp-presend 780 --thd-output"
-    export NX_ARGS="--cluster --cluster-network axiom --smp-workers $NUM_THREADS --disable-binding --thd-output"
+    export NX_ARGS="--cluster --cluster-network axiom --smp-workers $NUM_THREADS --disable-binding --cluster-smp-presend 3 --thd-output"
     export NX_GASNET_SEGMENT_SIZE=268435456
     export NX_CLUSTER_NODE_MEMORY=134217728
     if [ $NUM_THREADS == 1 ]; then
