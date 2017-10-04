@@ -362,10 +362,12 @@ Extrae try to use libdl.so (linkt to /lib/aarch64-linux-gnu/libdl.so.2)
      + (default $HOME/zynq-ubuntu-minimal_16.04-xenial_v1.2.tar.gz)
 
 Note that some packages required for a build can be missing; for example into a ubuntu xenial you should have installed at least:
-build-essential git libssl-dev libncurses5-dev gawk bison wget flex bc pkg-config
-libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev
-autoconf automake gfortran libxml2-dev libtool-bin.
-To generate the DEB packages debhelper fakechroot fakeroot binfmt-support must be installed.
+build-essential git libssl-dev libncurses5-dev gawk bison wget flex
+bc pkg-config libglib2.0-dev libfdt-dev libpixman-1-dev
+zlib1g-dev linux-tools-generic linux-headers-generic
+autoconf automake gfortran libxml2-dev vim libtool-bin
+libsqlite3-dev gperf debhelper fakeroot fakechroot qemu-user-static.
+debhelper fakechroot fakeroot binfmt-support.
 
 ### 5.2 Compile the system
 
