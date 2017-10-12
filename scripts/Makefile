@@ -773,6 +773,9 @@ distclean-nanox-perf:
 	@[ -d $(NANOX_BUILD_DIR_PERF) ] && rm -rf $(NANOX_BUILD_DIR_PERF) || true
 
 distclean-nanox: distclean-nanox-instr distclean-nanox-perf distclean-nanox-debug
+	@if [ -r $(NANOX_DIR)/configure ]; then \
+	    rm $(NANOX_DIR)/configure;\
+	fi
 
 help::
 	@echo "NANOX (OMPSS)"
@@ -859,6 +862,9 @@ clean-mcxx:
 
 distclean-mcxx:
 	@[ -d $(MCXX_BUILD_DIR) ] && rm -rf $(MCXX_BUILD_DIR) || true
+	@if [ -r $(MCXX_DIR)/configure ]; then \
+	    rm $(MCXX_DIR)/configure;\
+	fi
 
 help::
 	@echo "MCXX (OMPSS)"
@@ -935,6 +941,9 @@ clean-extrae:
 
 distclean-extrae:
 	[ -d $(EXTRAE_BUILD_DIR) ] && rm -rf $(EXTRAE_BUILD_DIR) || true
+	@if [ -r $(EXTRAE_DIR)/configure ]; then \
+	    rm $(EXTRAE_DIR)/configure;\
+	fi
 
 #endif
 
