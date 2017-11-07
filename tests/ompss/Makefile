@@ -33,7 +33,7 @@ MCCFLAGS= --cluster --ompss --instrument -k
 endif
 
 SOURCES:=$(wildcard src/ompss_*.c)
-OBJS:=$(SOURCES:.c=.o)
+OBJS:=$(SOURCES:.c=.o) src/ompss_evimm_debug.o
 EXECS:=$(OBJS:.o=)
 
 DESTDIR:=$(TARGET_DIR)/root/tests_ompss
@@ -49,6 +49,9 @@ LAUNCHER+=$(COMFILE_DIR)/utils/guest/extrae.xml
 
 %.o: %.c
 	$(MCC) $(MCCFLAGS) $(OMPSS_CFLAGS) -c -o $@ $?
+
+src/ompss_evimm_debug.o: src/ompss_evimm.c
+	$(MCC) $(MCCFLAGS) $(OMPSS_CFLAGS) -DMATRIX_DEBUG -c -o $@ $?
 
 #
 # help
