@@ -11,3 +11,5 @@ axiom-tests-dbg.substvars
 axiom-tests-dbg/
 axiom-tests.substvars
 axiom-tests/
+axiom-tests-dbg.debhelper.log
+axiom-tests.debhelper.log

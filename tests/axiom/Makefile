@@ -25,6 +25,7 @@ endif
 endif
 
 install:
+	$(MAKE) -C src $@
 	$(MAKE) -C $(EVI_APPS_DIR)/tests $@
 	$(FAKEROOT) $(MAKE) install-real
 
@@ -49,6 +50,7 @@ install-real:
 	$(SUDO) cp suite/*  $(DESTDIR)/opt/axiom/tests_axiom
 
 build clean distclean:
+	$(MAKE) -C src $@
 	$(MAKE) -C $(EVI_APPS_DIR)/tests $@
 
 .PHONY: start run stop sync target log
