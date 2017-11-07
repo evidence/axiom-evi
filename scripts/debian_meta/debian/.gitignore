@@ -12,3 +12,8 @@ tmp/
 control
 axiom-startup-static.substvars
 axiom-startup-static/
+axiom-startup.postinst.debhelper
+axiom-startup.postrm.debhelper
+axiom-startup.prerm.debhelper
+axiom-startup.substvars
+axiom-startup/
