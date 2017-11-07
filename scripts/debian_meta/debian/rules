@@ -106,7 +106,7 @@ endif
 
 ifneq ($(KERN),x86)
 	dh_gencontrol -paxiom-startup-static
-	dh_gencontrol -paxiom-startup
+#	dh_gencontrol -paxiom-startup
 endif
 
 	echo "kversion=$(KVERSION)" >>$(DEBIAN_DIR)/axiomeu.substvars

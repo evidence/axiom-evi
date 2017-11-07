@@ -1551,7 +1551,6 @@ deb-warn2:
 
 deb: deb-warn              \
 	deb-prepare        \
-	_deb-meta          \
 	_deb-kernel        \
 	_deb-extrae        \
 	_deb-evinic        \
@@ -1565,6 +1564,8 @@ deb: deb-warn              \
 	_deb-nanox         \
 	_deb-mcxx          \
 	deb-warn2
+
+#	_deb-meta          \
 
 .PHONY: _deb-tests-ompss _deb-tests-gasnet _deb-tests-axiom
 
