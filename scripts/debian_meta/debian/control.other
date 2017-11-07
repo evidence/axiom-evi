@@ -1,4 +1,4 @@
-Source: axiom-evi
+Source: axiom-evi-meta
 Section: unknown
 Priority: optional
 Maintainer: Massimiliano <massy@unknown>
@@ -7,17 +7,19 @@ Standards-Version: 3.9.5
 Homepage: <insert the upstream URL, if relevant>
 Vcs-Git: git://anonscm.debian.org/collab-maint/axiom-apps.git
 
-Package: linux-modules
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Linux kernel modules
- Linux kernel modules
-
 Package: axiom-startup-static
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}
+#Conflicts: axiom-startup
 Description: Scripts to start axion with static routing
  Scripts to start axion with static routing
+
+Package: axiom-startup
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+#Conflicts: axiom-startup-static
+Description: Scripts to start axion system
+ Scripts to start axion system
 
 Package: axiomeu
 Architecture: all

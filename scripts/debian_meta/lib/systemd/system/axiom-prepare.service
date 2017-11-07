@@ -1,0 +1,10 @@
+[Unit]
+Description=Axiom prepare
+After=systemd-remount-fs.service
+
+[Service]
+Type=oneshot
+ExecStart=/etc/init.d/axiom-prepare start
+
+[Install]
+WantedBy=multi-user.target

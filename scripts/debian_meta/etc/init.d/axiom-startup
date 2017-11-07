@@ -1,0 +1,83 @@
+#! /bin/sh
+#
+# kFreeBSD do not accept scripts as interpreters, using #!/bin/sh and sourcing.
+if [ true != "$INIT_D_SCRIPT_SOURCED" ] ; then
+    set "$0" "$@"; INIT_D_SCRIPT_SOURCED=true . /lib/init/init-d-script
+fi
+### BEGIN INIT INFO
+# Provides:          axiom-startup
+# Required-Start:    $syslog $network
+# Required-Stop:     $syslog $network
+# Should-Start:      $local_fs
+# Should-Stop:       $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Axiom init
+# Description:       Launch axiom-init
+#                    
+### END INIT INFO
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=/usr/bin/axiom-init
+NAME=axiom-init
+DESC="Axiom initalization daemon"
+OPTIONS=""
+
+test -f $DAEMON || exit 0
+
+set -e
+
+if [ -f /etc/default/axiom-startup ]; then
+    . /etc/default/axiom-startup
+fi
+if [ -f /etc/axiom/axiomrc ]; then
+    . /etc/axiom/axiomrc
+fi
+
+. /lib/lsb/init-functions
+
+f [ x"${MASTER}" = x"yes" ]; then
+    OPTIONS="-m"
+else
+    OPTIONS=""
+fi
+
+start() {
+    modprobe axiom-netdev
+    start-stop-daemon --start --backgroud --oknodo --quiet --exec $DAEMON -- $OPTIONS
+}
+
+stop() {
+    killall axiom-ethtap 2>/dev/null || true
+    start-stop-daemon --stop --background --oknodo --quiet --exec $DAEMON
+    rmmod axiom-netdev || true
+    rmmod axiom_mem_dev || true
+    rmmod axiom_mem_manager || true
+}
+
+case "$1" in
+  start|"")
+      [ "$VERBOSE" = no ] || log_action_begin_msg "Starting $DESC:"
+      start
+      [ "$VERBOSE" = no ] || log_action_end_msg $ES
+      ;;
+  stop)
+      [ "$VERBOSE" = no ] || log_action_begin_msg "Stopping $DESC:"
+      stop
+      [ "$VERBOSE" = no ] || log_action_end_msg $ES
+      ;;
+  restart)
+      start
+      stop
+      ;;
+  reload|force-reload|status)
+      echo "Error: argument '$1' not supported" >&2
+      exit 3
+      ;;
+  *)
+      echo "Usage: axiom-prepare start|stop|restart" >&2
+      exit 3
+      ;;
+esac
+
+exit 0
