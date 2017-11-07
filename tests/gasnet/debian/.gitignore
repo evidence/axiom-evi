@@ -7,3 +7,9 @@ axiom-tests-ompss/
 changelog
 files
 tmp/
+axiom-tests-gasnet-dbg.debhelper.log
+axiom-tests-gasnet-dbg.substvars
+axiom-tests-gasnet-dbg/
+axiom-tests-gasnet.debhelper.log
+axiom-tests-gasnet.substvars
+axiom-tests-gasnet/
