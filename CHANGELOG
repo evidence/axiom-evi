@@ -3,6 +3,22 @@
 
 The following is the list of the main tags of the repository:
 
+## axiom-v0.15          (09/11/2017)
+* All sub-projects
+    + small fixes and impovements on deb package generation
+* axiom-nic
+    + add support of FORTH bitstream (20171024_1944_axiom_ni)
+        + new register layout (removed GPIO)
+        + support USB-C reversible
+    + update datasheet
+* User space applications
+    + axiom-init
+        + add feature to save routing table
+    + axiom-info
+        + add more debug info
+    + small fixes and impovements
+* Update BSC repositories with latest available (nanox, mcxx, extrae)
+
 ## axiom-v0.14          (15/09/2017)
 * All sub-projects
     + add x86 DEB and FS compilation support
