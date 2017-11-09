@@ -79,6 +79,11 @@ DRIVER_SUBS="MODULE_VERSION(\"v${VERSION}\");"
 DRIVER_PATH="../axiom-evi-nic/axiom_netdev_driver"
 DRIVER_INCLUDE="--include *.c"
 
+API_RE="#define AXIOM_API_VERSION_STR.*"
+API_SUBS="#define AXIOM_API_VERSION_STR \"v${VERSION}\""
+API_PATH="../axiom-evi-nic/include"
+API_INCLUDE="--include *.h"
+
 DATASHEET_RE=".*\\\newcommand{\\\versionapi}.*"
 DATASHEET_SUBS="\\\newcommand{\\\versionapi}{v${VERSION}}"
 DATASHEET_PATH="../axiom-evi-nic/axiom_docs/datasheet"
@@ -103,6 +108,8 @@ if [ "$SET" = "1" ]; then
         xargs sed -i -e "s/${DRIVER_RE}/${DRIVER_SUBS}/"
     grep -rIl "$NIC_RE" "$NIC_PATH" $NIC_INCLUDE | \
         xargs sed -i -e "s/${NIC_RE}/${NIC_SUBS}/"
+    grep -rIl "$API_RE" "$API_PATH" $API_INCLUDE | \
+        xargs sed -i -e "s/${API_RE}/${API_SUBS}/"
     grep -rIl "$ALLOC_RE" "$ALLOC_PATH" $ALLOC_INCLUDE | \
         xargs sed -i -e "s/${ALLOC_RE}/${ALLOC_SUBS}/"
     grep -rIl "$TESTS_RE" "$TESTS_PATH" $TESTS_INCLUDE | \
@@ -124,6 +131,7 @@ elif [ "$PRINT" = "1" ]; then
     grep -rnIe "$APPS_RE" "$APPS_PATH" $APPS_INCLUDE
     grep -rnIe "$DRIVER_RE" "$DRIVER_PATH" $DRIVER_INCLUDE
     grep -rnIe "$NIC_RE" "$NIC_PATH" $NIC_INCLUDE
+    grep -rnIe "$API_RE" "$API_PATH" $API_INCLUDE
     grep -rnIe "$ALLOC_RE" "$ALLOC_PATH" $ALLOC_INCLUDE
     grep -rnIe "$TESTS_RE" "$TESTS_PATH" $TESTS_INCLUDE
     grep -rnIe "$MEMLIB_RE" "$MEMLIB_PATH" $MEMLIB_INCLUDE
