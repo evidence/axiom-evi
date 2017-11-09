@@ -1,0 +1,11 @@
+[Unit]
+Description=Axiom startup
+After=systemd-remount-fs.service axiom-prepare.service
+
+[Service]
+Type=forking
+ExecStart=/etc/init.d/axiom-startup start
+ExecStop=/etc/init.d/axiom-startup stop
+
+[Install]
+WantedBy=multi-user.target

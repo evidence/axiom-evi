@@ -58,18 +58,10 @@ binary-arch: make-changelog init-control
 	dh_installdirs
 
 ifneq ($(KERN),x86)
-# this is required for package linux-modules-XXXX that is not built for x86
-	mkdir -p $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)
-	mkdir -p $(DEBIAN_DIR)/tmp/boot
-	cp -r $(ROOTFSDIR)/lib/modules/$(KVERSION)/* \
-		$(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)
-	cp $(KERNELDIR)/System.map \
-		$(DEBIAN_DIR)/tmp/boot/System.map-$(KVERSION)
-	rm -f -r $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)/extra
-	rm -f $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)/build
-	rm -f $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)/source
-
-	cp -r $(DEBIAN_DIR)/axiom-startup-static.src/* $(DEBIAN_DIR)/tmp/
+	mkdir -p $(DEBIAN_DIR)/tmp
+	$(MAKE) DESTDIR=$(DEBIAN_DIR)/tmp install
+#	cp -r $(DEBIAN_DIR)/axiom-startup-static.src/* $(DEBIAN_DIR)/tmp/
+#	cp -r $(DEBIAN_DIR)/axiom-startup.src/* $(DEBIAN_DIR)/tmp/
 endif
 
 	dh_install --list-missing
@@ -83,7 +75,7 @@ endif
 	dh_installemacsen
 	dh_installifupdown
 	dh_installinfo
-	dh_installinit
+	dh_installinit -paxiom-startup --onlyscripts
 	dh_installmenu
 	dh_installmime
 	dh_installmodules
@@ -113,12 +105,8 @@ endif
 	dh_installdeb
 
 ifneq ($(KERN),x86)
-# this is required for package linux-modules-XXXX that is not built for x86
-	echo "kversion=$(KVERSION)" >>$(DEBIAN_DIR)/linux-modules.substvars
-	dh_gencontrol -plinux-modules -- -DPackage=linux-modules-$(KVERSION)
-	mv $(DEBIAN_DIR)/linux-modules/usr/share/doc/linux-modules \
-		$(DEBIAN_DIR)/linux-modules/usr/share/doc/linux-modules-$(KVERSION)
 	dh_gencontrol -paxiom-startup-static
+#	dh_gencontrol -paxiom-startup
 endif
 
 	echo "kversion=$(KVERSION)" >>$(DEBIAN_DIR)/axiomeu.substvars
@@ -134,12 +122,13 @@ binary-indep:
 clean: clean-changelog
 	dh_testdir
 	dh_clean
+	$(MAKE) clean-control
 
 #
 # ccontrol
 #
 
-.PHONY: init-control
+.PHONY: init-control clean-control
 
 init-control:
 ifeq ($(FS),x86)
@@ -147,6 +136,9 @@ ifeq ($(FS),x86)
 else
 	ln -s -f $(DEBIAN_DIR)/control.other $(DEBIAN_DIR)/control
 endif
+
+clean-control:
+	rm -f $(DEBIAN_DIR)/control
 
 #
 # changelog
@@ -157,7 +149,7 @@ VERSION := $(shell git describe --tags | sed -e 's/^axiom-v//'  -e 's/-/+/' -e '
 BDATE := $(shell date -R)
 
 define changelog
-axiom-evi ($(VERSION)) unstable; urgency=low
+axiom-evi-meta ($(VERSION)) unstable; urgency=low
 
   * Dummy changelog.
 

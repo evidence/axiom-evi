@@ -1,0 +1,10 @@
+/etc/systemd/system/multi-user.target.wants/axiom-prepare.service
+/lib/systemd/system/axiom-prepare.service
+/etc/systemd/system/multi-user.target.wants/axiom-startup.service
+/lib/systemd/system/axiom-startup.service
+/etc/init.d/axiom-prepare
+/etc/init.d/axiom-startup
+/etc/axiom/axiom_end_discovery.sh
+/etc/axiom/axiomrc
+/usr/sbin/axiom-make-master.sh
+/usr/sbin/axiom-restart.sh

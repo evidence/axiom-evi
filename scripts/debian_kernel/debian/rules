@@ -1,0 +1,170 @@
+#!/usr/bin/make -f
+
+DEBIAN_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
+export KERN
+export FS
+
+ifndef OUTPUT_DIR
+OUTPUT_DIR := $(DEBIAN_DIR)/../../output
+endif
+
+ifeq ($(KERN),seco)
+#
+# SECO kernel
+#
+KERNELDIR := $(AXIOMBSP)/build/linux/kernel/link-to-kernel-build
+ROOTFSDIR := $(AXIOMBSP)/build/linux/rootfs/targetroot
+else ifeq ($(KERN),x86)
+#
+# X86 kernel
+#
+ifdef _KVERSION
+KERNELDIR := /lib/modules/$(_KVERSION)/build
+else
+KERNELDIR := /lib/modules/$(shell uname -r)/build
+endif
+ROOTFSDIR := /
+else
+#
+# other kernel
+#
+KERNELDIR := $(OUTPUT_DIR)/build/linux-custom
+ROOTFSDIR := $(OUTPUT_DIR)/target
+endif
+
+ifdef _KVERSION
+# forced KVERSION (only needed for x86 compiled into a chroot)
+KVERSION := $(_KVERSION)
+else
+KVERSION := $(shell cat $(KERNELDIR)/include/config/kernel.release)
+KVERSION := $(subst -dirty,,$(KVERSION))
+endif
+
+.PHONY: build build-arch build-indep binary binary-arch binary-indep clean
+
+build: build-arch build-indep
+
+build-arch:
+	dh_testdir
+
+build-indep:
+
+binary: binary-arch binary-indep
+
+binary-arch: make-changelog init-control
+	dh_testroot
+	dh_prep
+	dh_installdirs
+
+ifneq ($(KERN),x86)
+# this is required for package linux-modules-XXXX that is not built for x86
+	mkdir -p $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)
+	mkdir -p $(DEBIAN_DIR)/tmp/boot
+	cp -r $(ROOTFSDIR)/lib/modules/$(KVERSION)/* \
+		$(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)
+	cp $(KERNELDIR)/System.map \
+		$(DEBIAN_DIR)/tmp/boot/System.map-$(KVERSION)
+	rm -f -r $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)/extra
+	rm -f $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)/build
+	rm -f $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)/source
+endif
+
+	dh_install --list-missing
+	dh_installdocs
+	dh_installchangelogs
+	dh_installexamples
+	dh_installman
+	dh_installcatalogs
+	dh_installcron
+	dh_installdebconf
+	dh_installemacsen
+	dh_installifupdown
+	dh_installinfo
+	dh_installinit
+	dh_installmenu
+	dh_installmime
+	dh_installmodules
+	dh_installlogcheck
+	dh_installlogrotate
+	dh_installpam
+	dh_installppp
+	dh_installudev
+	dh_installwm
+	dh_installgsettings
+
+	dh_bugfiles
+	dh_ucf
+	dh_lintian
+	dh_gconf
+	dh_icons
+	dh_perl
+	dh_usrlocal
+
+	dh_link
+	dh_installxfonts
+	dh_compress
+	dh_fixperms
+#	dh_strip
+	dh_makeshlibs
+	dh_shlibdeps  --sysroot=$(ROOTFSDIR)
+	dh_installdeb
+
+ifneq ($(KERN),x86)
+# this is required for package linux-modules-XXXX that is not built for x86
+	echo "kversion=$(KVERSION)" >>$(DEBIAN_DIR)/linux-modules.substvars
+	dh_gencontrol -plinux-modules -- -DPackage=linux-modules-$(KVERSION)
+	mv $(DEBIAN_DIR)/linux-modules/usr/share/doc/linux-modules \
+		$(DEBIAN_DIR)/linux-modules/usr/share/doc/linux-modules-$(KVERSION)
+endif
+
+	dh_md5sums
+	dh_builddeb
+
+binary-indep:
+
+clean: clean-changelog
+	dh_testdir
+	dh_clean
+	$(MAKE) clean-control
+
+#
+# ccontrol
+#
+
+.PHONY: init-control clean-control
+
+init-control:
+ifeq ($(FS),x86)
+	ln -s -f $(DEBIAN_DIR)/control.x86 $(DEBIAN_DIR)/control
+else
+	ln -s -f $(DEBIAN_DIR)/control.other $(DEBIAN_DIR)/control
+endif
+
+clean-control:
+	rm -f $(DEBIAN_DIR)/control
+
+#
+# changelog
+#
+
+# NB: no --dirty
+VERSION := $(shell git describe --tags | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
+BDATE := $(shell date -R)
+
+define changelog
+axiom-evi-kernel ($(VERSION)) unstable; urgency=low
+
+  * Dummy changelog.
+
+ -- Foo <foo@bar.com>  $(BDATE)
+endef
+export changelog
+
+.PHONY: make-changelog clean-changelog
+
+make-changelog:
+	echo "$$changelog" >$(DEBIAN_DIR)/changelog
+
+clean-changelog:
+	rm -f $(DEBIAN_DIR)/changelog

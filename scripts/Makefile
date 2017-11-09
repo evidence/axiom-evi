@@ -1372,7 +1372,7 @@ help::
 # DEB
 #
 
-.PHONY: deb-prepare deb-unprepare deb-install deb deb-tests clean-deb distclean-deb
+.PHONY: deb-prepare deb-unprepare deb-install deb-tests-move deb deb-tests clean-deb distclean-deb
 
 ROOTFSTMP:=$(AXIOMHOME)/rootfs-tmp
 ROOTFSWRK:=$(AXIOMHOME)/rootfs-wrk
@@ -1447,19 +1447,28 @@ else
 	rm -f $(AXIOMHOME)/*.deb
 endif
 
+deb-tests-move:
+	mv $(TESTS_DIR)/*deb $(AXIOMHOME)/debs
+
 .PHONY: _deb-kernel _deb-extrae _deb-evinic _deb_allocator-drv _deb-allocato-lib
 .PHONY: _deb_init-lib _deb-run-lib _deb_allocator _deb-apps _deb-gasnet _deb-nanox
+.PHONY: _deb_meta
 
 _deb-kernel:
 # kernel modules
-	@echo "$(ccgreen)===DEBs for metapackages and kernel modules$(ccend)"
-	echo $(OUTPUT_DIR)
-	$(DEBENV) fakeroot $(MAKE) -C $(LOCFILE_DIR) -f debian/rules binary
-	mv -f $(AXIOMHOME)/axiomeu-dev_*deb $(AXIOMHOME)/axiomeu_*deb $(AXIOMHOME)/debs
 ifneq ($(KERN),x86)
+	@echo "$(ccgreen)===DEBs for kernel modules$(ccend)"
+	$(DEBENV) fakeroot $(MAKE) -C $(SCRIPTS_DIR)/debian_kernel -f debian/rules binary
+	mv -f $(SCRIPTS_DIR)/*.deb $(AXIOMHOME)/
 	$(MAKE) deb-install
 endif
 deb-kernel: deb-prepare _deb-kernel
+_deb-meta:
+# metapackages
+	@echo "$(ccgreen)===DEBs metapackages $(ccend)"
+	$(DEBENV) fakeroot $(MAKE) -C $(SCRIPTS_DIR)/debian_meta -f debian/rules binary
+	mv -f $(SCRIPTS_DIR)/*deb $(AXIOMHOME)/debs
+deb-meta: deb-prepare _deb-meta
 _deb-extrae:
 # extrae
 	@echo "$(ccgreen)===DEBs for extrae$(ccend)"
@@ -1537,8 +1546,12 @@ deb-mcxx: deb-prepare _deb-mcxx
 deb-warn:
 	@echo "$(ccred)Remeber that to make deb packages all must be already build$(ccend)"
 
+deb-warn2:
+	@echo "$(ccgreen)Packages for test not done.  Use 'make deb-tests' to DEBIANize them$(ccend)"
+
 deb: deb-warn              \
 	deb-prepare        \
+	_deb-meta          \
 	_deb-kernel        \
 	_deb-extrae        \
 	_deb-evinic        \
@@ -1550,7 +1563,8 @@ deb: deb-warn              \
 	_deb-eviapps       \
 	_deb-gasnet        \
 	_deb-nanox         \
-	_deb-mcxx
+	_deb-mcxx          \
+	deb-warn2
 
 .PHONY: _deb-tests-ompss _deb-tests-gasnet _deb-tests-axiom
 
@@ -1558,7 +1572,7 @@ _deb-tests-ompss:
 # ompss axiom tests
 	@echo "$(ccgreen)===DEBs for ompss test$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(OMPSS_TESTS_DIR) -f debian/rules binary
-	mv $(OMPSS_TESTS_DIR)/../axiom-tests-ompss*deb $(AXIOMHOME)/debs
+	$(MAKE) deb-tests-move
 deb-tests-ompss: deb-prepare _deb-tests-ompss
 
 _deb-tests-gasnet:
@@ -1566,7 +1580,7 @@ _deb-tests-gasnet:
 ifneq ($(FS),x86)
 	@echo "$(ccgreen)===DEBs for gasnet test$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_TESTS_DIR) -f debian/rules binary
-	mv $(GASNET_TESTS_DIR)/../axiom-tests-*deb $(AXIOMHOME)/debs
+	$(MAKE) deb-tests-move
 endif
 deb-tests-gasnet: deb-prepare _deb-tests-gasnet
 
@@ -1574,7 +1588,7 @@ _deb-tests-axiom:
 # axiom tests
 	@echo "$(ccgreen)===DEBs for axiom test$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(AXIOM_TESTS_DIR) -f debian/rules binary
-	mv $(AXIOM_TESTS_DIR)/../axiom-*deb $(AXIOMHOME)/debs
+	$(MAKE) deb-tests-move
 deb-tests-axiom: deb-prepare _deb-tests-axiom
 
 .PHONY: deb-tests-ompss deb-tests-gasnet deb-tests-axiom
@@ -1614,7 +1628,7 @@ distclean-deb: clean-deb distclean-extrae distclean-gasnet distclean-nanox
 help::
 	@echo "DEBIANization"
 	@echo "  deb            Build debian packages"
-	@echo "  deb-test       Build test debian packages"
+	@echo "  deb-tests      Build test debian packages"
 	@echo " "
 	@echo "  clean-deb      Clean all deb build (including tests packages)"
 	@echo "  distclean-deb  Clean all deb build and compilation"
