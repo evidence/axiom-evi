@@ -1547,7 +1547,7 @@ deb-warn:
 	@echo "$(ccred)Remeber that to make deb packages all must be already build$(ccend)"
 
 deb-warn2:
-	@echo "$(ccred)Use 'make deb-tests' to DEBIANize the tests$(ccend)"
+	@echo "$(ccgreen)Packages for test not done.  Use 'make deb-tests' to DEBIANize them$(ccend)"
 
 deb: deb-warn              \
 	deb-prepare        \
