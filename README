@@ -190,8 +190,18 @@ where XXX is the values specified in the 2.2.2 section
 ```
     $ make deb
 ```
-
 The debian packages are generated into the ```axiom-evi/debs``` directory.
+
+```
+    $ make deb-tests    
+```
+Generate the tests debian packages.
+After the generation of the debian packages the comand
+
+```
+    $ make clean-deb
+```
+clean the system (but not delete the generated packages).
 
 ### 2.3 Update the submodules
 
