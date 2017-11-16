@@ -2,6 +2,8 @@
 
 DEBIAN_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
+include $(DEBIAN_DIR)/../../locations.mk
+
 export KERN
 export FS
 
@@ -40,6 +42,17 @@ else
 KVERSION := $(shell cat $(KERNELDIR)/include/config/kernel.release)
 KVERSION := $(subst -dirty,,$(KVERSION))
 endif
+
+# debian sub-packages versions
+APPS_VERSION := $(shell git -C $(EVI_APPS_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
+INIT_VERSION := $(APPS_VERSION)
+RUN_VERSION := $(APPS_VERSION)
+ETHTAP_VERSION := $(APPS_VERSION)
+NANOX_VERSION := $(shell git -C $(NANOX_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
+EVINIC_VERSION := $(shell git -C $(EVI_NIC_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
+ALLOCATOR_VERSION := $(shell git -C $(EVI_ALLOC_DRV_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
+ALLOCATOR_LIB_VERSION := $(shell git -C $(EVI_ALLOC_LIB_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
+GASNET_VERSION := $(shell git -C $(GASNET_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
 
 .PHONY: build build-arch build-indep binary binary-arch binary-indep clean
 
@@ -110,8 +123,26 @@ ifneq ($(KERN),x86)
 endif
 
 	echo "kversion=$(KVERSION)" >>$(DEBIAN_DIR)/axiomeu.substvars
+	echo "init-version=$(INIT_VERSION)" >>$(DEBIAN_DIR)/axiomeu.substvars
+	echo "run-version=$(RUN_VERSION)" >>$(DEBIAN_DIR)/axiomeu.substvars
+	echo "ethtap-version=$(ETHTAP_VERSION)" >>$(DEBIAN_DIR)/axiomeu.substvars
+	echo "apps-version=$(APPS_VERSION)" >>$(DEBIAN_DIR)/axiomeu.substvars
+	echo "nanox-version=$(NANOX_VERSION)" >>$(DEBIAN_DIR)/axiomeu.substvars
+	echo "evinic-version=$(EVINIC_VERSION)" >>$(DEBIAN_DIR)/axiomeu.substvars
+	echo "allocator-version=$(ALLOCATOR_VERSION)" >>$(DEBIAN_DIR)/axiomeu.substvars
+	echo "allocator-lib-version=$(ALLOCATOR_LIB_VERSION)" >>$(DEBIAN_DIR)/axiomeu.substvars
+	echo "gasnet-version=$(GASNET_VERSION)" >>$(DEBIAN_DIR)/axiomeu.substvars
 	dh_gencontrol -paxiomeu
 	echo "kversion=$(KVERSION)" >>$(DEBIAN_DIR)/axiomeu-dev.substvars
+	echo "init-version=$(INIT_VERSION)" >>$(DEBIAN_DIR)/axiomeu-dev.substvars
+	echo "run-version=$(RUN_VERSION)" >>$(DEBIAN_DIR)/axiomeu-dev.substvars
+	echo "ethtap-version=$(ETHTAP_VERSION)" >>$(DEBIAN_DIR)/axiomeu-dev.substvars
+	echo "apps-version=$(APPS_VERSION)" >>$(DEBIAN_DIR)/axiomeu-dev.substvars
+	echo "nanox-version=$(NANOX_VERSION)" >>$(DEBIAN_DIR)/axiomeu-dev.substvars
+	echo "evinic-version=$(EVINIC_VERSION)" >>$(DEBIAN_DIR)/axiomeu-dev.substvars
+	echo "allocator-version=$(ALLOCATOR_VERSION)" >>$(DEBIAN_DIR)/axiomeu-dev.substvars
+	echo "allocator-lib-version=$(ALLOCATOR_LIB_VERSION)" >>$(DEBIAN_DIR)/axiomeu-dev.substvars
+	echo "gasnet-version=$(GASNET_VERSION)" >>$(DEBIAN_DIR)/axiomeu-dev.substvars
 	dh_gencontrol -paxiomeu-dev
 
 	dh_md5sums
