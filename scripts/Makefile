@@ -1429,18 +1429,22 @@ rootfs-shell:
 	  [ $$FAIL -eq 0 ] && $(FAKEROOT) fakechroot chroot $(ROOTFS) /bin/bash
 
 deb-install:
+	for D in $(AXIOMHOME)/*deb; do \
+		DEB=`basename $$D`; \
+		ST=`echo $$DEB | sed 's/_.*//'`; \
+		rm -f $(AXIOMHOME)/debs/$$ST*;\
+	done
+	cp $(AXIOMHOME)/*deb $(AXIOMHOME)/debs
 ifeq ($(FS),x86)
 #
 # X86
 #
-	cp $(AXIOMHOME)/*deb $(AXIOMHOME)/debs
 	sudo dpkg --install $(AXIOMHOME)/*.deb
 	rm -f $(AXIOMHOME)/*.deb
 else
 #
 # other
 #
-	cp $(AXIOMHOME)/*deb $(AXIOMHOME)/debs
 	cp $(AXIOMHOME)/*deb $(ROOTFSTMP)
 	sudo chroot $(ROOTFSTMP) /bin/bash -c "/usr/bin/dpkg --install /*.deb"
 	rm -f $(ROOTFSTMP)/*.deb
@@ -1541,7 +1545,7 @@ endif
 deb-mcxx: deb-prepare _deb-mcxx
 
 .PHONY: deb-kernel deb-extrae deb-evinic deb_allocator-drv deb-allocato-lib
-.PHONY: deb_init-lib deb-run-lib deb_allocator deb-apps deb-gasnet deb-nanox
+.PHONY: deb_init-lib deb-run-lib deb_allocator deb-eviapps deb-gasnet deb-nanox
 
 deb-warn:
 	@echo "$(ccred)Remeber that to make deb packages all must be already build$(ccend)"
