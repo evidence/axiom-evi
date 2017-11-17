@@ -1372,7 +1372,7 @@ help::
 # DEB
 #
 
-.PHONY: deb-prepare deb-unprepare deb-install deb-tests-move deb deb-tests clean-deb distclean-deb
+.PHONY: deb-prepare deb-unprepare deb-install deb-move deb deb-tests clean-deb distclean-deb
 
 ROOTFSTMP:=$(AXIOMHOME)/rootfs-tmp
 ROOTFSWRK:=$(AXIOMHOME)/rootfs-wrk
@@ -1451,7 +1451,12 @@ else
 	rm -f $(AXIOMHOME)/*.deb
 endif
 
-deb-tests-move:
+deb-move:
+	for D in $(TESTS_DIR)/*deb; do \
+		DEB=`basename $$D`; \
+		ST=`echo $$DEB | sed 's/_.*//'`; \
+		rm -f $(AXIOMHOME)/debs/$$ST*;\
+	done
 	mv $(TESTS_DIR)/*deb $(AXIOMHOME)/debs
 
 .PHONY: _deb-kernel _deb-extrae _deb-evinic _deb_allocator-drv _deb-allocato-lib
