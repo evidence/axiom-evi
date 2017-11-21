@@ -1581,7 +1581,7 @@ _deb-tests-ompss:
 # ompss axiom tests
 	@echo "$(ccgreen)===DEBs for ompss test$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(OMPSS_TESTS_DIR) -f debian/rules binary
-	$(MAKE) deb-tests-move
+	$(MAKE) deb-move
 deb-tests-ompss: deb-prepare _deb-tests-ompss
 
 _deb-tests-gasnet:
@@ -1589,7 +1589,7 @@ _deb-tests-gasnet:
 ifneq ($(FS),x86)
 	@echo "$(ccgreen)===DEBs for gasnet test$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(GASNET_TESTS_DIR) -f debian/rules binary
-	$(MAKE) deb-tests-move
+	$(MAKE) deb-move
 endif
 deb-tests-gasnet: deb-prepare _deb-tests-gasnet
 
@@ -1597,7 +1597,7 @@ _deb-tests-axiom:
 # axiom tests
 	@echo "$(ccgreen)===DEBs for axiom test$(ccend)"
 	$(DEBENV) fakeroot $(MAKE) -C $(AXIOM_TESTS_DIR) -f debian/rules binary
-	$(MAKE) deb-tests-move
+	$(MAKE) deb-move
 deb-tests-axiom: deb-prepare _deb-tests-axiom
 
 .PHONY: deb-tests-ompss deb-tests-gasnet deb-tests-axiom
@@ -1653,6 +1653,10 @@ help::
 	@echo "  deb-nanox         Build package for Nanos++"
 	@echo "  deb-mcxx          Build package for Mercurium (DISABLED)"
 	@echo "  PS: partial packages build require a prior complete build"
+	@echo " "
+	@echo "  deb-tests-axiom   Build package for Axiom tests"
+	@echo "  deb-tests-gasnet  Build package for Gasnet tests"
+	@echo "  deb-tests-ompss   Build package for OMPSS@Cluster tests"
 	@echo " "
 	@echo "  clean-deb      Clean all deb build (including tests packages)"
 	@echo "  distclean-deb  Clean all deb build and compilation"
