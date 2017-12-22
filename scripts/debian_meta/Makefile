@@ -9,5 +9,6 @@ build:
 install: build
 	mkdir -p $(DESTDIR)/usr
 	cp -r sbin $(DESTDIR)/usr
+	cp -r bin $(DESTDIR)/usr
 	cp -r etc $(DESTDIR)/
 	cp -r lib $(DESTDIR)/

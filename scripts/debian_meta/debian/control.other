@@ -32,3 +32,9 @@ Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, nanox-dev (= ${nanox-version}), axiom-evi-allocator-dev (= ${allocator-lib-version}), gasnet-dev (= ${gasnet-version}), libevi-lmm-dev (= ${allocator-lib-version}), libaxiom-init-dev (= ${init-version}), libaxiom-run-dev (= ${run-version}), libaxiom-user-dev  (= ${evinic-version})
 Description: Axiom development meta-package
  Axiom development meta-package
+
+Package: axiom-chrt
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: chrt to change axiom kernel thread scheduler
+ chrt to change axiom kernel thread scheduler
