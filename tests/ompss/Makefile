@@ -1,14 +1,4 @@
 
-export KERN
-export FS
-export DISABLE_INSTR
-
-include ../../scripts/params.mk
-
-KERN:=$(_KERN)
-FS:=$(_FS)
-DISABLE_INSTR:=$(_DISABLE_INSTR)
-
 include ../common.mk
 include ../../scripts/locations.mk
 
@@ -16,33 +6,28 @@ CFLAGS := -g -finline-functions -fomit-frame-pointer -Wall -Wno-unused -std=gnu1
 LDFLAGS :=
 LDLIBS := -lm
 
-ifeq ($(FS),seco)
-EXTRA_OMPSS_CFLAGS := -I$(ROOTFS)/usr/include/aarch64-linux-gnu
-else
 EXTRA_OMPSS_CFLAGS :=
-endif
 
-OMPSS_CFLAGS := $(CFLAGS) $(EXTRA_OMPSS_CFLAGS) $(call PKG-CFLAGS, axiom_user_api axiom_init_api  axiom_run_api axiom_allocator evi_lmm)
-OMPSS_LDFLAGS := $(LDFLAGS) $(call PKG-LDFLAGS, axiom_user_api axiom_init_api  axiom_run_api axiom_allocator evi_lmm)
-OMPSS_LDLIBS := $(LDLIBS) $(call PKG-LDLIBS, axiom_user_api axiom_init_api  axiom_run_api axiom_allocator evi_lmm)
+OMPSS_CFLAGS := $(CFLAGS) $(EXTRA_OMPSS_CFLAGS)
+OMPSS_LDFLAGS := $(LDFLAGS)
+OMPSS_LDLIBS := $(LDLIBS)
 
-ifneq ($(FS),br)
-MCCFLAGS= --cluster --ompss -k
-else
-MCCFLAGS= --cluster --ompss --instrument -k
-endif
+MCCFLAGS := --cluster --ompss -k
 
 SOURCES:=$(wildcard src/ompss_*.c)
 OBJS:=$(SOURCES:.c=.o) src/ompss_evimm_debug.o
 EXECS:=$(OBJS:.o=)
 
-DESTDIR:=$(TARGET_DIR)/root/tests_ompss
-LAUNCHER:=$(COMFILE_DIR)/utils/guest/run_test_ompss.sh
-LAUNCHER+=$(COMFILE_DIR)/utils/guest/run_suite.sh
-LAUNCHER+=$(COMFILE_DIR)/utils/guest/run_test_nbody.sh
-LAUNCHER+=$(COMFILE_DIR)/utils/guest/run_test_nbody_extrae.sh
-LAUNCHER+=$(COMFILE_DIR)/utils/guest/run_test_ompss_extrae.sh
-LAUNCHER+=$(COMFILE_DIR)/utils/guest/extrae.xml
+MYDESTDIR:=$(DESTDIR)/opt/axiom/tests_ompss
+GUESTDIR := $(TESTS_DIR)/utils/guest
+LAUNCHER:=$(GUESTDIR)/run_test_ompss.sh
+LAUNCHER+=$(GUESTDIR)/run_suite.sh
+LAUNCHER+=$(GUESTDIR)/run_test_nbody.sh
+LAUNCHER+=$(GUESTDIR)/run_test_nbody_extrae.sh
+LAUNCHER+=$(GUESTDIR)/run_test_ompss_extrae.sh
+LAUNCHER+=$(GUESTDIR)/extrae.xml
+
+.DEFAULT_GOAL := build
 
 %: %.o
 	$(MCC) $(MCCFLAGS) $(OMPSS_LDFLAGS) -o $@ $? $(OMPSS_LDLIBS)
@@ -66,35 +51,24 @@ help:
 	@echo "build      build all the tests"
 	@echo "install    build and install all the tests"
 	@echo "clean      clean the tests"
-	@echo ""
-	@echo "start      start qemu/switch system"
-	@echo "stop       stop qemu/switch"
-	@echo "sync       sync running qemu axiom nodes with root filesystem"
-	@echo "target     rebuild the root filesystem"
-	@echo ""
-	@echo "tests      run all the tests"
-	@echo "tests-own  run own tests"
-	@echo ""
+	@echo "distclean  clean the tests"
+	@echo "mrproper   clean the tests"
 
 #
 # build/install/clean/distclean
 #
 
-ifdef FROMDEB
-SUDO :=
-endif
+.PHONY: clean build install distclean mrproper
 
-.PHONY: clean build install distclean
-
-install: build install-nbody
-	$(FAKEROOT) $(SUDO) mkdir -p $(DESTDIR)
-	-$(FAKEROOT) $(SUDO) cp $(EXECS) $(DESTDIR)
-	-$(FAKEROOT) $(SUDO) cp $(LAUNCHER) $(DESTDIR)
-	-$(FAKEROOT) $(SUDO) cp suite/* $(DESTDIR)
+install: install-nbody
+	mkdir -p $(MYDESTDIR)
+	-cp $(EXECS) $(MYDESTDIR)
+	-cp $(LAUNCHER) $(MYDESTDIR)
+	-cp suite/* $(MYDESTDIR)
 
 build: $(OBJS) $(EXECS) build-nbody
 
-clean distclean: clean-nbody
+clean distclean mrproper: clean-nbody
 	rm -f $(OBJS) $(EXECS)
 
 #
@@ -109,28 +83,18 @@ NBODY_EXEC=$(NBODY_DIR)/nbody
 .PHONY: install-nbody build-nbody clean-nbody distclean-nbody
 
 install-nbody: build-nbody
-	$(FAKEROOT) $(SUDO) mkdir -p $(DESTDIR)
-	$(FAKEROOT) $(SUDO) cp -f $(NBODY_EXEC) $(DESTDIR)
-	$(FAKEROOT) $(SUDO) cp -f $(NBODY_DIR)/../particles-*.in $(DESTDIR)
-	$(FAKEROOT) $(SUDO) cp -f $(NBODY_DIR)/../particles-*.ref $(DESTDIR)
+	mkdir -p $(MYDESTDIR)
+	cp -f $(NBODY_EXEC) $(MYDESTDIR)
+	cp -f $(NBODY_DIR)/../particles-*.in $(MYDESTDIR)
+	cp -f $(NBODY_DIR)/../particles-*.ref $(MYDESTDIR)
 
 build-nbody: $(NBODY_EXEC)
 
 $(NBODY_EXEC): $(NBODY_OBJS)
 
-
-clean-nbody distclean-nbody:
+clean-nbody distclean-nbody mrproper-nbody:
 	rm -f $(NBODY_OBJS) $(NBODY_EXEC)
 
-
-#
-# start/stop/sync/target/log
-#
-
-.PHONY: start run stop sync target log
-
-start run stop sync target log:
-	$(MAKE) -C $(SCRIPTS_DIR) $@
 
 #
 # tests
@@ -142,6 +106,7 @@ DATE := $(shell date +%Y%m%d_%H%M%S)
 
 tests: tests-own
 
+# DOES NOT WORK!
 tests-own:
 	@sshpass -p root \
 	  ssh  -q -o StrictHostKeyChecking=no -p 22200 -l root 127.0.0.1 \

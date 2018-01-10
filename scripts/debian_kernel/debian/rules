@@ -2,20 +2,13 @@
 
 DEBIAN_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-export KERN
-export FS
-
-ifndef OUTPUT_DIR
-OUTPUT_DIR := $(DEBIAN_DIR)/../../output
-endif
-
-ifeq ($(KERN),seco)
+ifeq ($(MODE),aarch64)
 #
 # SECO kernel
 #
 KERNELDIR := $(AXIOMBSP)/build/linux/kernel/link-to-kernel-build
 ROOTFSDIR := $(AXIOMBSP)/build/linux/rootfs/targetroot
-else ifeq ($(KERN),x86)
+else ifeq ($(MODE),x86)
 #
 # X86 kernel
 #
@@ -29,8 +22,7 @@ else
 #
 # other kernel
 #
-KERNELDIR := $(OUTPUT_DIR)/build/linux-custom
-ROOTFSDIR := $(OUTPUT_DIR)/target
+$(error Unknonw mode '$(MODE)')
 endif
 
 ifdef _KVERSION
@@ -110,7 +102,7 @@ endif
 	dh_shlibdeps  --sysroot=$(ROOTFSDIR)
 	dh_installdeb
 
-ifneq ($(KERN),x86)
+ifneq ($(MODE),x86)
 # this is required for package linux-modules-XXXX that is not built for x86
 	echo "kversion=$(KVERSION)" >>$(DEBIAN_DIR)/linux-modules.substvars
 	dh_gencontrol -plinux-modules -- -DPackage=linux-modules-$(KVERSION)
@@ -123,10 +115,10 @@ endif
 
 binary-indep:
 
-clean: clean-changelog
+clean: init-control clean-changelog
 	dh_testdir
 	dh_clean
-	$(MAKE) clean-control
+	$(MAKE) -C $(DEBIAN_DIR) -f rules clean-control
 
 #
 # ccontrol
