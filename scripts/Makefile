@@ -107,7 +107,7 @@ endif
 # MAIN targets
 #
 
-.PHONY: all build clean clean-all help
+.PHONY: all build clean distclean mrproper clean-all help
 
 .DEFAULT_GOAL := build
 
@@ -115,18 +115,21 @@ build: nic apps
 
 clean: extrae-clean libs-clean allocator-lib-clean allocator-drv-clean allocator-clean apps-clean nic-clean
 
+distclean: configure-clean extrae-distclean libs-distclean allocator-lib-distclean allocator-drv-distclean allocator-distclean apps-distclean nic-distclean
+
+mrproper: configure-clean extrae-mrproper libs-mrproper allocator-lib-mrproper allocator-drv-mrproper allocator-mrproper apps-mrproper nic-mrproper
+
 clean-all: clean gasnet-clean ompss-clean tests-clean
+
+distclean-all: distclean gasnet-distclean ompss-distclean tests-distclean
+
+mrproper-all: mrproper gasnet-mrproper ompss-mrproper tests-mrproper umount
 
 all: build gasnet ompss tests
 
-help::
-	@echo "GENERAL"
-	@echo "  build     Build libraries and axiom applications"
-	@echo "  all       As 'build' including gasnet, ompss and tests"
-	@echo "  clean     Clean projects"
-	@echo "  clean-all Clean projects including ganset, ompss and tests"
-	@echo "  help      This help"
-	@echo " "
+umount: unprepare-install deb-unprepare
+
+# help is at the bottom of the makefile
 
 #
 # EXTRAE
@@ -163,7 +166,7 @@ extrae: extrae-build prepare-install
 	@PATH=$(LINARO_PATH) $(MAKE) -C $(EXTRAE_BUILD_DIR) DESTDIR=$(TARGET_DIR) install
 
 extrae-clean:
-	[ -d $(EXTRAE_BUILD_DIR) ] && make -C $(EXTRAE_BUILD_DIR) clean
+	[ -d $(EXTRAE_BUILD_DIR) ] && make -C $(EXTRAE_BUILD_DIR) clean || true
 
 extrae-distclean:
 	[ -d $(EXTRAE_BUILD_DIR) ] && rm -rf $(EXTRAE_BUILD_DIR) || true
@@ -197,11 +200,11 @@ help::
 .PHONY: libs-build libs
 .PHONY: libs-clean libs-distclean libs-mrproper
 
-libs-build: _extrae
-	$(MAKE) -C $(NIC_DIR) libs
-	$(MAKE) -C $(APPS_DIR) libs
+libs-build: _extrae prepare-install
+	$(MAKE) -C $(NIC_DIR) libs-install
+	$(MAKE) -C $(APPS_DIR) libs-install
 
-libs: libs-build prepare-install
+libs: libs-build
 	$(SUDO) $(MAKE) -C $(NIC_DIR) libs-install
 	$(SUDO) $(MAKE) -C $(APPS_DIR) libs-install
 
@@ -232,10 +235,10 @@ help::
 .PHONY: allocator-drv-build allocator-drv
 .PHONY: allocator-drv-clean allocator-drv-distclean allocator-drv-mrproper
 
-allocator-drv-build:
+allocator-drv-build: prepare-install
 	$(MAKE) -C $(ALLOCATOR_DRV_DIR)
 
-allocator-drv: allocator-drv-build prepare-install
+allocator-drv: allocator-drv-build
 	$(SUDO) $(MAKE) -C $(ALLOCATOR_DRV_DIR) DESTDIR=$(TARGET_DIR) install
 
 allocartor-drv-clean:
@@ -275,10 +278,10 @@ allocator-lib-config:
 	  $(MAKE) allocator-lib-config-force; \
 	fi
 
-allocator-lib-build: allocator-lib-config
+allocator-lib-build: allocator-lib-config prepare-install
 	PATH=$(LINARO_PATH) $(MAKE) -C $(ALLOCATOR_LIB_DIR)
 
-allocator-lib: allocator-lib-build prepare-install
+allocator-lib: allocator-lib-build
 	$(SUDO) $(MAKE) -C $(ALLOCATOR_LIB_DIR) DESTDIR=$(TARGET_DIR) install
 ifeq ($(MODE),x86)
         # missing files :-(
@@ -342,10 +345,10 @@ allocator-config: allocator-lib
 		$(MAKE) allocator-config-force; \
 	fi
 
-allocator-build: allocator-config
+allocator-build: allocator-config prepare-install
 	PATH=$(LINARO_PATH) $(MAKE) -C $(ALLOCATOR_BUILD_DIR)
 
-allocator: allocator-build prepare-install
+allocator: allocator-build
 	PATH=$(LINARO_PATH) $(SUDO) $(MAKE) -C $(ALLOCATOR_BUILD_DIR) \
 	  DESTDIR=$(TARGET_DIR) install
 ifeq ($(FS),aarch64)
@@ -363,7 +366,7 @@ allocator-clean:
 
 allocator-distclean:
 	[ -d $(ALLOCATOR_BUILD_DIR) ] && \
-		rm -r -f $(ALLOCATOR_BUILD_DIR)
+		rm -r -f $(ALLOCATOR_BUILD_DIR) || true
 
 allocator-mrproper: allocator-distclean
 
@@ -389,10 +392,10 @@ clean: extrae-clean libs-clean allocator-drv-clean allocator-lib-clean allocator
 
 NIC_INSTALL_OTHER_ARGS:=
 
-nic-build: _extrae libs
+nic-build: _extrae libs allocator-drv prepare-install
 	$(MAKE) -C $(NIC_DIR)
 
-nic: nic-build prepare-install
+nic: nic-build
 	$(SUDO) $(MAKE) -C $(NIC_DIR) $(NIC_INSTALL_OTHER_ARGS) install
 
 nic-clean:
@@ -419,10 +422,10 @@ help::
 
 .PHONY: apps-build apps apps-clean apps-distclean apps-mrproper
 
-apps-build: libs allocator
+apps-build: libs allocator prepare-install
 	$(MAKE) -C $(APPS_DIR)
 
-apps: apps-build prepare-install
+apps: apps-build
 	$(SUDO) $(MAKE) -C $(APPS_DIR) install
 
 apps-clean:
@@ -489,10 +492,10 @@ gasnet-config-debug: libs
 	  $(MAKE) gasnet-config-debug-force ;\
 	fi
 
-gasnet-build-debug: gasnet-config-debug
+gasnet-build-debug: gasnet-config-debug prepare-install
 	@$(MAKE) -C $(GASNET_BUILD_DIR_DEBUG)
 
-gasnet-debug: gasnet-build-debug prepare-install
+gasnet-debug: gasnet-build-debug
 	$(SUDO) $(MAKE) -C $(GASNET_BUILD_DIR_DEBUG) DESTDIR=$(TARGET_DIR) install
 
 gasnet-config-perf-force:
@@ -508,10 +511,10 @@ gasnet-config-perf: gasnet-bootstrap libs
 	  $(MAKE) gasnet-config-perf-force ;\
 	fi
 
-gasnet-build-perf: gasnet-config-perf
+gasnet-build-perf: gasnet-config-perf prepare-install
 	@$(MAKE) -C $(GASNET_BUILD_DIR_PERF)
 
-gasnet-perf: gasnet-build-perf prepare-install
+gasnet-perf: gasnet-build-perf
 	$(SUDO) $(MAKE) -C $(GASNET_BUILD_DIR_PERF) DESTDIR=$(TARGET_DIR) install
 
 gasnet: gasnet-debug gasnet-perf
@@ -609,12 +612,12 @@ nanox-config-debug:
 	  $(MAKE) nanox-config-debug-force; \
 	fi
 
-nanox-build-debug: nanox-config-debug
+nanox-build-debug: nanox-config-debug prepare-install
 	@PATH=$(LINARO_PATH) \
 	    $(MAKE) $(NANOX_DEBUG_VARS) -C $(NANOX_BUILD_DIR_DEBUG) \
 	    -j$(BUILDCPUS) 
 
-nanox-debug: nanox-build-debug prepare-install
+nanox-debug: nanox-build-debug
 	@PATH=$(LINARO_PATH) $(SUDO) \
 	    $(MAKE) $(NANOX_DEBUG_VARS) -C $(NANOX_BUILD_DIR_DEBUG) \
 	    DESTDIR=$(TARGET_DIR) install
@@ -643,12 +646,12 @@ nanox-config-perf:
 	  $(MAKE) nanox-config-perf-force; \
 	fi
 
-nanox-build-perf: nanox-config-perf
+nanox-build-perf: nanox-config-perf prepare-install
 	@PATH=$(LINARO_PATH) \
 	    $(MAKE) $(NANOX_PERF_VARS) -C $(NANOX_BUILD_DIR_PERF) \
 	    -j$(BUILDCPUS) 
 
-nanox-perf: nanox-build-perf prepare-install
+nanox-perf: nanox-build-perf
 	@PATH=$(LINARO_PATH) $(SUDO) \
 	    $(MAKE) $(NANOX_PERF_VARS) -C $(NANOX_BUILD_DIR_PERF) \
 	    DESTDIR=$(TARGET_DIR) install
@@ -678,12 +681,12 @@ nanox-config-instr:
 	  $(MAKE) nanox-config-instr-force; \
 	fi
 
-nanox-build-instr: nanox-config-instr
+nanox-build-instr: nanox-config-instr prepare-install
 	@PATH=$(LINARO_PATH) \
 	    $(MAKE) $(NANOX_INSTR_VARS) -C $(NANOX_BUILD_DIR_INSTR) \
 	    -j$(BUILDCPUS)
 
-nanox-instr: nanox-build-instr prepare-install
+nanox-instr: nanox-build-instr
 	@PATH=$(LINARO_PATH) $(SUDO) \
 	    $(MAKE) $(NANOX_INSTR_VARS) -C $(NANOX_BUILD_DIR_INSTR) \
 	    DESTDIR=$(TARGET_DIR) install
@@ -904,19 +907,19 @@ help::
 .PHONY: tests tests-axiom tests-gasnet tests-ompss
 .PHONY: tests-clean tests-axiom-clean tests-gasnet-clean tests-ompss-clean
 
-tests-axiom:
+tests-axiom: prepare-install
 	@$(MAKE) -C $(AXIOM_TESTS_DIR) build install
 
 tests-axiom-clean:
 	@$(MAKE) -C $(AXIOM_TESTS_DIR) clean
 
-tests-ompss:
+tests-ompss: prepare-install
 	@$(MAKE) -C $(OMPSS_TESTS_DIR) build install
 
 tests-ompss-clean:
 	@$(MAKE) -C $(OMPSS_TESTS_DIR) clean
 
-tests-gasnet: gasnet
+tests-gasnet: gasnet prepare-install
 	@$(MAKE) -C $(GASNET_TESTS_DIR) build install
 
 tests-gasnet-clean:
@@ -1078,21 +1081,25 @@ deb-meta: deb-prepare _deb-meta
 _deb-extrae:
 # extrae
 	@echo "$(ccgreen)===DEBs for extrae$(ccend)"
+ifeq ($(DISABLE_INSTR),0)
 	$(DEBENV) $(MAKE) -C $(EXTRAE_DIR) -f debian/rules binary
 	$(MAKE) deb-install
+else
+	@echo "Instrumentation disabled"
+endif
 deb-extrae: deb-prepare _deb-extrae
-_deb-nic:
-# axiom user library & kernel module
-	@echo "$(ccgreen)===DEBs for axiom user library (and kernel module)$(ccend)"
-	$(DEBENV) $(MAKE) -C $(NIC_DIR) -f debian/rules binary
-	$(MAKE) deb-install
-deb-nic: deb-prepare _deb-nic
 _deb-allocator-drv:
 # axiom allocator kernel module
 	@echo "$(ccgreen)===DEBs for allocator kernel module$(ccend)"
 	$(DEBENV) $(MAKE) -C $(ALLOCATOR_DRV_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 deb-allocator-drv: deb-prepare _deb-allocator-drv
+_deb-nic:
+# axiom user library & kernel module
+	@echo "$(ccgreen)===DEBs for axiom user library (and kernel module)$(ccend)"
+	$(DEBENV) $(MAKE) -C $(NIC_DIR) -f debian/rules binary
+	$(MAKE) deb-install
+deb-nic: deb-prepare _deb-nic
 _deb-allocator-lib:
 # axiom allocator library
 	@echo "$(ccgreen)===DEBs for allocator library$(ccend)"
@@ -1117,7 +1124,7 @@ _deb-allocator:
 # memory allocator
 	@echo "$(ccgreen)===DEBs for axiom allocator$(ccend)"
 	$(DEBENV) $(MAKE) -C $(ALLOCATOR_DIR) -f debian/rules binary
-	$(MAKE) deb-install
+	$(MAKE) NCONF=1 deb-install
 deb-allocator: deb-prepare _deb-allocator
 _deb-apps:
 # axiom apps
@@ -1160,8 +1167,8 @@ deb: deb-warn              \
 	_deb-kernel        \
 	_deb-meta          \
 	_deb-extrae        \
-	_deb-nic           \
 	_deb-allocator-drv \
+	_deb-nic           \
 	_deb-allocator-lib \
 	_deb-init-lib      \
 	_deb-run-lib       \
@@ -1258,4 +1265,25 @@ help::
 	@echo " "
 	@echo "  deb-clean         Clean all deb build (including tests packages)"
 	@echo "  deb-ditsclean     Clean all deb build and compilation"
+	@echo " "
+
+#
+# general help
+#
+
+help::
+	@echo "GENERAL"
+	@echo "  build     Build libraries and axiom applications (DEFAULT target)"
+	@echo "  all       As 'build' including gasnet, ompss and tests"
+	@echo "  gasnet    Build gasnet (libraries must already be built)"
+	@echo "  nanox     Build nanox (libraries and nanox must already be built)"
+	@echo "  clean     Clean projects (but no gasnet, ompss and test)"
+	@echo "  clean-all Clean projects including subproject ganset, ompss and tests"
+	@echo "  umount    Umount (and delete) used overlayfs"
+	@echo "  help      This help"
+	@echo " "
+	@echo "  distclean     Clean projects including configuration"
+	@echo "  mrproper      Clean projects including configuration and autoconfig"
+	@echo "  distclean-all Clean projects including configuration and subproject gasnet,ompss and tests"
+	@echo "  mrproper-all  Clean projects including configuration and autoconfig and subproject gasnet,ompss and tests"
 	@echo " "
