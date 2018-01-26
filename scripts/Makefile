@@ -1031,6 +1031,7 @@ endif
 # install the generated DEB packages into the debian temp rootfs
 # and save them into debs/ directory
 deb-install:
+	mkdir -p $(AXIOM_DIR)/debs
 	for D in $(AXIOM_DIR)/*deb; do \
 		DEB=`basename $$D`; \
 		ST=`echo $$DEB | sed 's/_.*//'`; \
@@ -1055,6 +1056,7 @@ endif
 
 # save the generated DEB packages into the debs/ directory
 deb-move:
+	mkdir -p $(AXIOM_DIR)/debs
 	for D in $(TESTS_DIR)/*deb; do \
 		DEB=`basename $$D`; \
 		ST=`echo $$DEB | sed 's/_.*//'`; \
