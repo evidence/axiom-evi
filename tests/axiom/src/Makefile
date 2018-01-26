@@ -17,7 +17,7 @@ clean distclean mrproper:
 
 install: build
 	mkdir -p $(DESTDIR)/opt/axiom/tests_axiom
-	cp $(EXECS) $(DESTDIR)/opt/axiom/tests_axiom
+	-cp $(EXECS) $(DESTDIR)/opt/axiom/tests_axiom
 
 
 
