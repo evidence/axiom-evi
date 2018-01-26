@@ -117,7 +117,7 @@ clean: extrae-clean libs-clean allocator-lib-clean allocator-drv-clean allocator
 
 distclean: configure-clean extrae-distclean libs-distclean allocator-lib-distclean allocator-drv-distclean allocator-distclean apps-distclean nic-distclean
 
-mrproper: configure-clean extrae-mrproper libs-mrproper allocator-lib-mrproper allocator-drv-mrproper allocator-mrproper apps-mrproper nic-mrproper
+mrproper: extrae-mrproper libs-mrproper allocator-lib-mrproper allocator-drv-mrproper allocator-mrproper apps-mrproper nic-mrproper configure-clean 
 
 clean-all: clean gasnet-clean ompss-clean tests-clean
 
@@ -172,7 +172,7 @@ extrae-distclean:
 	[ -d $(EXTRAE_BUILD_DIR) ] && rm -rf $(EXTRAE_BUILD_DIR) || true
 
 extrae-mrproper: extrae-distclean
-	rm -f $(EXTRAE_DIR)/configure
+	-rm -f $(EXTRAE_DIR)/configure
 
 .PHONY: _extrae
 ifeq ($(DISABLE_INSTR),1)
@@ -209,14 +209,16 @@ libs: libs-build
 	$(SUDO) $(MAKE) -C $(APPS_DIR) libs-install
 
 libs-clean:
-	$(MAKE) -C $(NIC_DIR) clean
-	$(MAKE) -C $(APPS_DIR) clean
+	$(MAKE) -C $(NIC_DIR) libs-clean
+	$(MAKE) -C $(APPS_DIR) libs-clean
 
 libs-distclean:
-	$(MAKE) -C $(NIC_DIR) distclean
-	$(MAKE) -C $(APPS_DIR) distclean
+	-$(MAKE) -C $(NIC_DIR) libs-distclean
+	-$(MAKE) -C $(APPS_DIR) libs-distclean
 
-libs-mrproper: libs-distclean
+libs-mrproper:
+	-$(MAKE) -C $(NIC_DIR) libs-distclean
+	-$(MAKE) -C $(APPS_DIR) libs-distclean
 
 help::
 	@echo "AXIOM USER LIBRARIES"
@@ -245,7 +247,7 @@ allocartor-drv-clean:
 	$(MAKE) -C $(ALLOCATOR_DRV_DIR) clean
 
 allocator-drv-distclean:
-	$(MAKE) -C $(ALLOCATOR_DRV_DIR) distclean
+	-$(MAKE) -C $(ALLOCATOR_DRV_DIR) distclean
 
 allocator-drv-mrproper: allocator-drv-distclean
 
@@ -402,7 +404,7 @@ nic-clean:
 	$(MAKE) -C $(NIC_DIR) clean
 
 nic-distclean:
-	$(MAKE) -C $(NIC_DIR) distclean
+	-$(MAKE) -C $(NIC_DIR) distclean
 
 nic-mrproper: nic-distclean
 
@@ -432,10 +434,10 @@ apps-clean:
 	$(MAKE) -C $(APPS_DIR) clean
 
 apps-distclean:
-	$(MAKE) -C $(APPS_DIR) distclean
+	-$(MAKE) -C $(APPS_DIR) distclean
 
 apps-mrproper:
-	$(MAKE) -C $(APPS_DIR) mrproper
+	-$(MAKE) -C $(APPS_DIR) mrproper
 
 help::
 	@echo "AXIOM APPLICATIONS"
