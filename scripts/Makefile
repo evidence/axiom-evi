@@ -434,7 +434,8 @@ apps-clean:
 apps-distclean:
 	$(MAKE) -C $(APPS_DIR) distclean
 
-apps-mrproper: apps-distclean
+apps-mrproper:
+	$(MAKE) -C $(APPS_DIR) mrproper
 
 help::
 	@echo "AXIOM APPLICATIONS"
@@ -786,7 +787,7 @@ mcxx-config:
 mcxx-build: mcxx-config
 	PATH=$(LINARO_PATH) $(MAKE) -C $(MCXX_BUILD_DIR) -j$(BUILDCPUS)
 
-mcxx:
+mcxx: mcxx-build
 	PATH=$(LINARO_PATH) $(MAKE) -C $(MCXX_BUILD_DIR) DESTDIR= install
 
 # mcxx native (i.e. should run on axiom board)
