@@ -97,7 +97,7 @@ endif
 configure: configure-save
 	make -C $(NIC_DIR) configure
 	make -C $(APPS_DIR) configure
-ifeq ($(DISABLE_EXTRAE),0)
+ifeq ($(DISABLE_INSTR),0)
 	cd $(EXTRAE_DIR) && autoreconf -fiv
 endif
 	cd $(ALLOCATOR_LIB_DIR) &&  autoreconf -fiv
