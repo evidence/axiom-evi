@@ -1,4 +1,0 @@
-#!/bin/sh
-
-[ -e /etc/axiomrc ] && sed -i "s/MASTER=no/MASTER=yes/" /etc/axiomrc
-/etc/init.d/S45axiom restart
