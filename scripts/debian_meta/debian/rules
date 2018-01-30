@@ -80,7 +80,7 @@ endif
 	dh_installemacsen
 	dh_installifupdown
 	dh_installinfo
-#	dh_installinit -paxiom-startup --onlyscripts
+	dh_installinit -paxiom-startup --onlyscripts
 	dh_installmenu
 	dh_installmime
 	dh_installmodules
@@ -111,7 +111,7 @@ endif
 
 ifneq ($(MODE),x86)
 	dh_gencontrol -paxiom-startup-static
-#	dh_gencontrol -paxiom-startup
+	dh_gencontrol -paxiom-startup
 	dh_gencontrol -paxiom-scheduler
 endif
 

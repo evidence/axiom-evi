@@ -14,12 +14,12 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Scripts to start axion with static routing
  Scripts to start axion with static routing
 
-#Package: axiom-startup
-#Architecture: all
-#Depends: ${shlibs:Depends}, ${misc:Depends}
-##Conflicts: axiom-startup-static
-#Description: Scripts to start axion system
-# Scripts to start axion system
+Package: axiom-startup
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+#Conflicts: axiom-startup-static
+Description: Scripts to start axion system
+ Scripts to start axion system
 
 Package: axiomeu
 Architecture: all

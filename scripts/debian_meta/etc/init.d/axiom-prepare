@@ -21,7 +21,7 @@ fi
 DESC="Description of the service"
 DAEMON=/usr/sbin/daemonexecutablename
 
-. /lib/init/vars.sh                                       
+. /lib/init/vars.sh
 . /lib/lsb/init-functions
 
 setup() {
