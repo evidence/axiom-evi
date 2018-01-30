@@ -1,30 +1,11 @@
-[submodule "axiom-evi-qemu"]
-	path = axiom-evi-qemu
-	url = privatevm:/home/git/axiom-evi-qemu
-	branch = axiom
 [submodule "axiom-evi-nic"]
 	path = axiom-evi-nic
 	url = privatevm:/home/git/axiom-evi-nic
 	branch = master
-[submodule "axiom-evi-buildroot"]
-	path = axiom-evi-buildroot
-	url = privatevm:/home/git/axiom-evi-buildroot
-	branch = axiom
-[submodule "axiom-evi-linux"]
-	path = axiom-evi-linux
-	url = privatevm:/home/git/axiom-evi-linux
-	branch = axiom
 [submodule "axiom-evi-apps"]
 	path = axiom-evi-apps
 	url = privatevm:/home/git/axiom-evi-apps
 	branch = master
-[submodule "axiom-evi-u-boot"]
-	path = axiom-evi-u-boot
-	url = privatevm:/home/git/axiom-evi-u-boot
-	branch = axiom
-[submodule "arm-trusted-firmware"]
-	path = arm-trusted-firmware
-	url = https://github.com/Xilinx/arm-trusted-firmware.git
 [submodule "axiom-evi-gasnet"]
 	path = axiom-evi-gasnet
 	url = privatevm:/home/git/axiom-evi-gasnet
