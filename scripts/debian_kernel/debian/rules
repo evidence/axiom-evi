@@ -7,6 +7,7 @@ ifeq ($(MODE),aarch64)
 # SECO kernel
 #
 KERNELDIR := $(AXIOMBSP)/build/linux/kernel/link-to-kernel-build
+PETAROOTFSDIR := $(AXIOMBSP)/build/linux/rootfs/targetroot
 ROOTFSDIR := $(ROOTFS)
 else ifeq ($(MODE),x86)
 #
@@ -53,7 +54,7 @@ ifneq ($(KERN),x86)
 # this is required for package linux-modules-XXXX that is not built for x86
 	mkdir -p $(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)
 	mkdir -p $(DEBIAN_DIR)/tmp/boot
-	cp -r $(ROOTFSDIR)/lib/modules/$(KVERSION)/* \
+	cp -r $(PETAROOTFSDIR)/lib/modules/$(KVERSION)/* \
 		$(DEBIAN_DIR)/tmp/lib/modules/$(KVERSION)
 	cp $(KERNELDIR)/System.map \
 		$(DEBIAN_DIR)/tmp/boot/System.map-$(KVERSION)
