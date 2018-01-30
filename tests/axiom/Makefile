@@ -1,62 +1,22 @@
 
-export KERN
-export FS
-export DISABLE_INSTR
-
-include ../../scripts/params.mk
-
-KERN:=$(_KERN)
-FS:=$(_FS)
-DISABLE_INSTR:=$(_DISABLE_INSTR)
-
+include ../common.mk
 include ../../scripts/locations.mk
 
-.PHONY: build install clean distclean install-real
+.PHONY: build install clean distclean mrproper install-real
 
 GUESTDIR := $(TESTS_DIR)/utils/guest
 LAUNCHERS := $(GUESTDIR)/run_test_axiom.sh
 LAUNCHERS += $(GUESTDIR)/run_suite.sh
 
-FAKEROOT :=
-ifeq ($(FS),seco)
-ifndef FAKEROOTKEY
-FAKEROOT := fakeroot -i $(ROOTFS).faked -s $(ROOTFS).faked
-endif
-endif
-
-install:
+build install clean distclean mrproper:
 	$(MAKE) -C src $@
-	$(MAKE) -C $(EVI_APPS_DIR)/tests $@
-	$(FAKEROOT) $(MAKE) install-real
-
-ifeq ($(FS),x86)
-# FS=x86
-ifdef FROMDEB
-SUDO :=
-else
-SUDO := sudo
-endif
-else
-# FS=other
-SUDO :=
-endif
-
-# default (if not already defined)
-DESTDIR:=$(TARGET_DIR)
+	$(MAKE) -C $(APPS_DIR)/tests $@
+	if [ "$@"="install" ]; then $(MAKE) install-real; fi
 
 install-real:
-	$(SUDO) mkdir -p $(DESTDIR)/opt/axiom/tests_axiom
-	$(SUDO) cp $(LAUNCHERS)  $(DESTDIR)/opt/axiom/tests_axiom
-	$(SUDO) cp suite/*  $(DESTDIR)/opt/axiom/tests_axiom
-
-build clean distclean:
-	$(MAKE) -C src $@
-	$(MAKE) -C $(EVI_APPS_DIR)/tests $@
-
-.PHONY: start run stop sync target log
-
-start run stop sync target log:
-	$(MAKE) -C $(SCRIPTS_DIR) $@
+	mkdir -p $(DESTDIR)/opt/axiom/tests_axiom
+	cp $(LAUNCHERS)  $(DESTDIR)/opt/axiom/tests_axiom
+	cp suite/*  $(DESTDIR)/opt/axiom/tests_axiom
 
 .PHONY: tests tests-core
 
@@ -64,6 +24,7 @@ DATE := $(shell date +%Y%m%d_%H%M%S)
 
 tests: tests-core
 
+# DOES NOT WORK!
 tests-core:
 	@sshpass -p root \
 	  ssh  -q -o StrictHostKeyChecking=no -p 22200 -l root 127.0.0.1 \
@@ -82,13 +43,9 @@ help:
 	@echo "build      build all the tests"
 	@echo "install    build and install all the tests"
 	@echo "clean      clean the tests"
-	@echo ""
-	@echo "start      start qemu/switch system"
-	@echo "stop       stop qemu/switch"
-	@echo "sync       sync running qemu axiom nodes with root filesystem"
-	@echo "target     rebuild the root filesystem"
+	@echo "distclean  clean the tests"
+	@echo "mrproper   clean the tests"
 	@echo ""
 	@echo "tests      run all the tests"
-	@echo "tests-core run core tests"
+	@echo "tests-core run core tests (DOES NOT WORK!)"
 	@echo ""
-

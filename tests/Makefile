@@ -1,17 +1,7 @@
 
-export KERN
-export FS
-export QEMU_SNAP
-export DISABLE_INSTR
-
-.PHONY: clean distclean build install
+.PHONY: clean distclean build install mrproper
 
 SUBDIRS=axiom gasnet ompss
 
-install build clean distclean:
+install build clean distclean mrproper:
 	for dir in $(SUBDIRS); do $(MAKE) -C $$dir $@; done
-
-.PHONY: start stop run target sync
-
-start stop run target sync:
-	$(MAKE) -C ../scripts $@

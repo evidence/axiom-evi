@@ -4,20 +4,13 @@ DEBIAN_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 include $(DEBIAN_DIR)/../../locations.mk
 
-export KERN
-export FS
-
-ifndef OUTPUT_DIR
-OUTPUT_DIR := $(DEBIAN_DIR)/../../output
-endif
-
-ifeq ($(KERN),seco)
+ifeq ($(MODE),aarch64)
 #
 # SECO kernel
 #
 KERNELDIR := $(AXIOMBSP)/build/linux/kernel/link-to-kernel-build
 ROOTFSDIR := $(AXIOMBSP)/build/linux/rootfs/targetroot
-else ifeq ($(KERN),x86)
+else ifeq ($(MODE),x86)
 #
 # X86 kernel
 #
@@ -31,8 +24,7 @@ else
 #
 # other kernel
 #
-KERNELDIR := $(OUTPUT_DIR)/build/linux-custom
-ROOTFSDIR := $(OUTPUT_DIR)/target
+$(error Unknown MODE='$(MODE)')
 endif
 
 ifdef _KVERSION
@@ -44,14 +36,14 @@ KVERSION := $(subst -dirty,,$(KVERSION))
 endif
 
 # debian sub-packages versions
-APPS_VERSION := $(shell git -C $(EVI_APPS_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
+APPS_VERSION := $(shell git -C $(APPS_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
 INIT_VERSION := $(APPS_VERSION)
 RUN_VERSION := $(APPS_VERSION)
 ETHTAP_VERSION := $(APPS_VERSION)
 NANOX_VERSION := $(shell git -C $(NANOX_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
-EVINIC_VERSION := $(shell git -C $(EVI_NIC_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
-ALLOCATOR_VERSION := $(shell git -C $(EVI_ALLOC_DRV_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
-ALLOCATOR_LIB_VERSION := $(shell git -C $(EVI_ALLOC_LIB_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
+EVINIC_VERSION := $(shell git -C $(NIC_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
+ALLOCATOR_VERSION := $(shell git -C $(ALLOCATOR_DRV_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
+ALLOCATOR_LIB_VERSION := $(shell git -C $(ALLOCATOR_LIB_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
 GASNET_VERSION := $(shell git -C $(GASNET_DIR) describe --tags --dirty | sed -e 's/^axiom-v//'  -e 's/-/+/' -e 's/-/~/g')
 
 .PHONY: build build-arch build-indep binary binary-arch binary-indep clean
@@ -70,7 +62,7 @@ binary-arch: make-changelog init-control
 	dh_prep
 	dh_installdirs
 
-ifneq ($(KERN),x86)
+ifneq ($(MODE),x86)
 	mkdir -p $(DEBIAN_DIR)/tmp
 	$(MAKE) DESTDIR=$(DEBIAN_DIR)/tmp install
 #	cp -r $(DEBIAN_DIR)/axiom-startup-static.src/* $(DEBIAN_DIR)/tmp/
@@ -151,10 +143,10 @@ endif
 
 binary-indep:
 
-clean: clean-changelog
+clean: init-control clean-changelog
 	dh_testdir
 	dh_clean
-	$(MAKE) clean-control
+	$(MAKE) -C $(DEBIAN_DIR) -f rules clean-control
 
 #
 # ccontrol

@@ -1,15 +1,6 @@
 
-export KERN
-export FS
-export DISABLE_INSTR
-
-include ../../scripts/params.mk
-
-KERN:=$(_KERN)
-FS:=$(_FS)
-DISABLE_INSTR:=$(_DISABLE_INSTR)
-
 include ../common.mk
+include ../../scripts/locations.mk
 
 # gasnet conduit selection
 
@@ -36,19 +27,19 @@ LDLIBS := $(call PKG-LDLIBS,axiom_user_api axiom_init_api axiom_run_api axiom_al
 
 # gasnet fragment and hack
 
-include $(SYSROOT_DIR)/$(shell $(PKG-CONFIG) --variable=includedir $(GASNET))/$(GASNET_CONDUIT)-conduit/$(GASNET_CONDUIT)-$(GASNET_MODE).mak
+include $(ROOTFSTMP)/$(shell $(PKG-CONFIG) --variable=includedir $(GASNET))/$(GASNET_CONDUIT)-conduit/$(GASNET_CONDUIT)-$(GASNET_MODE).mak
 
-GASNET_PREFIX=${SYSROOT_DIR}/usr
-GASNET_LDFLAGS+=-L$(SYSROOT_DIR)/$(shell $(PKG-CONFIG) --variable=libdir $(GASNET))/..
-GASNET_CFLAGS+=-I$(SYSROOT_DIR)/$(shell $(PKG-CONFIG) --variable=includedir $(GASNET))/../axiom
+GASNET_PREFIX=${ROOTFSTMP}/usr
+GASNET_LDFLAGS+=-L$(ROOTFSTMP)/$(shell $(PKG-CONFIG) --variable=libdir $(GASNET))/..
+GASNET_CFLAGS+=-I$(ROOTFSTMP)/$(shell $(PKG-CONFIG) --variable=includedir $(GASNET))/../axiom
 GASNET_CFLAGS+= -Wno-unused-function 
 ifeq ($(GASNET_CONDUIT),udp)
 GASNET_LDFLAGS+=-lstdc++
 endif
 
-ifeq ($(FS),x86)
-GASNET_CFLAGS+=-I$(SYSROOT_DIR)/$(shell $(PKG-CONFIG) --variable=includedir $(GASNET))
-GASNET_CFLAGS+=-I$(SYSROOT_DIR)/$(shell $(PKG-CONFIG) --variable=includedir $(GASNET))/axiom-conduit
+ifeq ($(MODE),x86)
+GASNET_CFLAGS+=-I$(ROOTFSTMP)/$(shell $(PKG-CONFIG) --variable=includedir $(GASNET))
+GASNET_CFLAGS+=-I$(ROOTFSTMP)/$(shell $(PKG-CONFIG) --variable=includedir $(GASNET))/axiom-conduit
 GASNET_CFLAGS+=$(call PKG-CFLAGS, $(GASNET))
 endif
 
@@ -73,27 +64,24 @@ DEPFLAGS = -MT $@ -MMD -MP -MF $@.Td
 
 # my targets
 
-DESTDIR:=$(TARGET_DIR)/root/tests_gasnet_$(GASNET_TYPE)
-LAUNCHERS:=$(COMFILE_DIR)/utils/guest/run_test_gasnet.sh
-LAUNCHERS+=$(COMFILE_DIR)/utils/guest/run_suite.sh
+MYTARGETDIR:=$(DESTDIR)/opt/axiom/tests_gasnet_$(GASNET_TYPE)
+GUESTDIR:=$(TESTS_DIR)/utils/guest
+LAUNCHERS:=$(GUESTDIR)/run_test_gasnet.sh
+LAUNCHERS+=$(GUESTDIR)/run_suite.sh
 
-.PHONY: clean build install distclean install-real
+.PHONY: clean build install distclean install-real mrproper
 
-# default (if not already defined)
-DESTDIR:=/opt/axiom/tests_gasnet
-
-install: build
-	$(FAKEROOT) $(MAKE) -f makefile-gasnet.mk install-real
-
-install-real:
-	$(SUDO) mkdir -p $(DESTDIR)
-	for EXE in $(EXECS); do $(SUDO) cp $${EXE} $(DESTDIR)/`echo $${EXE}|sed -e 's,.*/,,' -e 's,_$(GASNET_TYPE),,'`; done
-	$(SUDO) cp $(LAUNCHERS) $(DESTDIR)
-	$(SUDO) cp suite/* $(DESTDIR)
+install:
+	-mkdir -p $(MYTARGETDIR)
+	for EXE in $(EXECS); do \
+	  cp $${EXE} $(MYTARGETDIR)/`echo $${EXE}|sed -e 's,.*/,,' -e 's,_$(GASNET_TYPE),,'`;\
+	done
+	cp $(LAUNCHERS) $(MYTARGETDIR)
+	cp suite/* $(MYTARGETDIR)
 
 -include $(DEPS)
 
 build: $(EXECS) $(OBJS)
 
-clean distclean:
+clean distclean mrproper:
 	-rm -f $(OBJS) $(DEPS) $(EXECS)

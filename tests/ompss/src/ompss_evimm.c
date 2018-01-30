@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <limits.h>
+#include <string.h>
 
 #include "time.h"
 
@@ -124,6 +125,7 @@ int main (int argc, char *argv[])
     b=malloc(sizeof(int)*N*N);
     c=malloc(sizeof(int)*N*N);
     matmul_time=malloc(sizeof(long int)*N);
+    memset(matmul_time,0,sizeof(long int)*N);
     logmsg("Initializing system done!");
 
     logmsg("Initializing matrices ....................");
@@ -164,8 +166,15 @@ int main (int argc, char *argv[])
 	logmsg("NOTE: Found %d ERRORS!", errors);
 #endif
 #endif
-    
+
     for (i=0; i < N-BLOCKSIZE; i+=BLOCKSIZE) {
+        if (matmul_time[i]>=0) {
+            total_matmul += matmul_time[i];
+            max_matmul = (max_matmul > matmul_time[i]) ? max_matmul : matmul_time[i];
+            min_matmul = (min_matmul < matmul_time[i]) ? min_matmul : matmul_time[i];
+        }
+    }
+    if (i<N) {
         if (matmul_time[i]>=0) {
             total_matmul += matmul_time[i];
             max_matmul = (max_matmul > matmul_time[i]) ? max_matmul : matmul_time[i];

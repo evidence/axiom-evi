@@ -1,19 +1,14 @@
 
-export KERN
-export FS
-export DISABLE_INSTR
-
-include ../../scripts/params.mk
-
-KERN:=$(_KERN)
-FS:=$(_FS)
-DISABLE_INSTR:=$(_DISABLE_INSTR)
-
+include ../common.mk
 include ../../scripts/locations.mk
 
-.PHONY: clean build install distclean
+#
+# main targets
+#
 
-ifeq ($(FS),x86)
+.PHONY: clean build install distclean mr-proper
+
+ifeq ($(MODE),x86)
 
 _ccred:="\033[0;31m"
 ccred:=$(shell echo -e $(_ccred))
@@ -22,31 +17,18 @@ ccblue:=$(shell echo -e "\033[0;34m")
 _ccend:="\033[0m"
 ccend:=$(shell echo -e $(_ccend))
 
-install:
+build install clean distclean mrproper:
 	@echo "$(ccred)GASNET tests will not be build on X86 NATIVE$(ccend)"
-build:
-	@echo "$(ccred)GASNET tests will not be build on X86 NATIVE$(ccend)"
-clean:
-	@echo "$(ccred)GASNET tests will not be build on X86 NATIVE$(ccend)"
-distclean:
-	@echo "$(ccred)GASNET tests will not be build on X86 NATIVE$(ccend)"
+
 else
-install: install-int install-ext
+
 build: build-int build-ext
+install: install-int install-ext
 clean: clean-int clean-ext
 distclean: distclean-int distclean-ext
-endif
+mrproper: mrproper-int mrproper-ext
 
-FAKEROOT :=
-ifeq ($(FS),seco)
-ifndef FAKEROOTKEY
-FAKEROOT := fakeroot -i $(ROOTFS).faked -s $(ROOTFS).faked
 endif
-endif
-
-# default (if not already defined)
-DESTDIR:=$(TARGET_DIR)
-export DESTDIR
 
 #
 # external tests
@@ -54,16 +36,15 @@ export DESTDIR
 
 .PHONY: install-ext build-ext clean-ext distclean-ext install-ext-real
 
-install-ext: build-ext
-	$(FAKEROOT) $(MAKE) install-ext-real
-
-install-ext-real:
-	$(SUDO) mkdir -p $(DESTDIR)/opt/axiom/tests_gasnet_dbg
-	$(SUDO) cp $(GASNET_BUILD_DIR_DEBUG)/axiom-conduit/test* \
-		$(DESTDIR)/opt/axiom/tests_gasnet_dbg
-	$(SUDO) mkdir -p $(DESTDIR)/opt/axiom/tests_gasnet_per
-	$(SUDO) cp $(GASNET_BUILD_DIR_PERF)/axiom-conduit/test* \
-		$(DESTDIR)/opt/axiom/tests_gasnet_per
+install-ext:
+	TYPE=dbg ;\
+	  MYTARGETDIR=$(DESTDIR)/opt/axiom/tests_gasnet_$${TYPE} ;\
+	  mkdir -p $${MYTARGETDIR} ;\
+	  cp $(GASNET_BUILD_DIR_DEBUG)/axiom-conduit/test* $${MYTARGETDIR}
+	TYPE=per ;\
+	  MYTARGETDIR=$(DESTDIR)/opt/axiom/tests_gasnet_$${TYPE} ;\
+	  mkdir -p $${MYTARGETDIR} ;\
+	  cp $(GASNET_BUILD_DIR_PERF)/axiom-conduit/test* $${MYTARGETDIR}
 
 build-ext:
 	@$(MAKE) -j$(BUILDCPUS) -C $(GASNET_BUILD_DIR_DEBUG) tests-par
@@ -78,24 +59,17 @@ clean-ext distclean-ext:
 # own tests
 #
 
-.PHONY: install-int build-int clean-int distclean-int
+.PHONY: install-int build-int clean-int distclean-int mrproper-int
 
-install-int build-int clean-int distclean-int:
-	@$(MAKE) -f makefile-gasnet.mk \
-		DESTDIR=$(DESTDIR)/opt/axiom/tests_gasnet/dbg \
-		GASNET:=gasnet-debug $(subst -int,,$@)
-	@$(MAKE) -f makefile-gasnet.mk \
-		DESTDIR=$(DESTDIR)/opt/axiom/tests_gasnet_per \
-		GASNET:=gasnet-performance $(subst -int,,$@)
-
-#
-# utility
-#
-
-.PHONY: start run stop sync target log gasnet
-
-start run stop sync target log gasnet:
-	$(MAKE) -C $(SCRIPTS_DIR) $@
+install-int build-int clean-int distclean-int mrproper-int:
+	@$(MAKE) \
+		-f makefile-gasnet.mk \
+		GASNET:=gasnet-debug \
+		$(subst -int,,$@)
+	@$(MAKE) \
+		-f makefile-gasnet.mk \
+		GASNET:=gasnet-performance \
+		$(subst -int,,$@)
 
 #
 # tests
@@ -107,6 +81,7 @@ DATE := $(shell date +%Y%m%d_%H%M%S)
 
 tests: tests-core tests-exit tests-hsl tests-own tests-perf
 
+# DOES NOT WORK!
 tests-core tests-exit tests-hsl tests-own tests-perf:
 	-@ssh-keygen -f "$${HOME}/.ssh/known_hosts" -R [127.0.0.1]:22200
 	@sshpass -p root \

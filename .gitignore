@@ -5,3 +5,5 @@ output
 debs
 rootfs-tmp
 rootfs-wrk
+rootfs-deb-tmp
+rootfs-deb-wrk
