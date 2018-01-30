@@ -119,7 +119,7 @@ ifndef MODE
 MODE:=aarch64
 endif
 ifndef DISABLE_INSTR
-DISABLE_INSTR:=1
+DISABLE_INSTR:=0
 endif
 ifeq ($(MODE),x86)
 ifndef KVERSION

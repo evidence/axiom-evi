@@ -129,12 +129,11 @@ and to add some lines to ~/.gitconfig
 [user]
         name = YOUR_NAME
         email = YOUR_EMAIL
-        
 [http]
         sslverify = false
 
 [credential]
-        helper = store	
+        helper = store
 
 ```
 
@@ -149,7 +148,7 @@ This section explains how to configure and compile the AXIOM sub-modules.
 
 **Requirements:**
 
-Note that some packages required for a build can be missing.  
+Note that some packages required for a build can be missing.
 For example into a Ubuntu 16.04 LTS you should have installed the following packages:
 ```
 $ sudo apt-get install build-essential git libssl-dev libncurses5-dev gawk bison wget
@@ -197,7 +196,7 @@ Change the environment variables into ```axiom-evi/settings.sh```.
 
     + Then you must create a link "aarcha64-linux-gnu-pkg-config" to pkg-config:
 ```
-            cd ~/linaro/host/usr/bin
+            cd ${LINARO}/host/usr/bin
             ln -s /usr/bin/pkg-config aarcha64-linux-gnu-pkg-config
 ```
 
@@ -206,8 +205,8 @@ Change the environment variables into ```axiom-evi/settings.sh```.
     + (default $HOME/zynq-rootfs)
     + Usually $HOME/zynq-rootfs is a link to $HOME/zynq-ubuntu-minimal_16.04-xenial_v1.3
 
-    + NOTE: in zynq-rootfs/usr/lib/aarch64-linux-gnu there are .so with absolute link.  
-    Extrae try to use libdl.so (link to /lib/aarch64-linux-gnu/libdl.so.2)  
+    + NOTE: in zynq-rootfs/usr/lib/aarch64-linux-gnu there are .so with absolute link.
+    Extrae try to use libdl.so (link to /lib/aarch64-linux-gnu/libdl.so.2)
     To fix this issue:
 ```
         cd zynq-rootfs/usr/lib/aarch64-linux-gnu
@@ -260,21 +259,15 @@ If you go into the ```scripts``` directory and do the command ```make``` for the
 #### 3.2.3 Configure the system
 
 ```
-    $ make MODE=XXX DISABLE_INSTR=XXX configure
+    $ make MODE=aarch64 DISABLE_INSTR=0 configure
 ```
 
-where XXX is the values specified in the 2.2.2 section
+you can change parameters as specified in the 3.2.2 section
 
 #### 3.2.4 Compile the system
 
 ```
     $ make all
-```
-**Note** that a temp overlay rootfs is mounted under ~/axiom-evi/rootfs-tmp and is used
-to install the sub-projects applications/libraries; this rootfs must be mounted if you use
-the make command from the sub-projects; this can be accomplished using the following command from the ~/axiom-evi/scripts directory
-```
-    $ make prepare-install
 ```
 
 
@@ -286,12 +279,31 @@ the make command from the sub-projects; this can be accomplished using the follo
 The debian packages are generated into the ```axiom-evi/debs``` directory.
 
 ```
-    $ make deb-tests    
+    $ make deb-tests
 ```
 Generate the tests debian packages.
-After the generation of the debian packages the command
 
-### 3.3 Update the sub-modules
+
+### 3.3 Handle temp overlay rootfs
+
+During the compilation, we need some overlay rootfs to build the packages.
+To umount these directories:
+
+```
+    $ make umount-temp
+```
+
+After the first compilation of all packages, if you want to compile in the submodule dir,
+you must mount these overlay roots:
+```
+    $ make mount-temp
+```
+**Note** that a temp overlay rootfs is mounted under ~/axiom-evi/rootfs-tmp and is used
+to install the sub-projects applications/libraries; this rootfs must be mounted if you use
+the make command from the sub-projects; this can be accomplished using the following command from the ~/axiom-evi/scripts directory
+
+
+### 3.4 Update the sub-modules
 
 The best way to compile a new release is to clear the previous compilation to be sure to have a clean state and update each sub-modules.
 
@@ -309,9 +321,9 @@ The best way to compile a new release is to clear the previous compilation to be
 * the system shell should be bash, so there must be a link from /bin/sh to bash
 * the linux-tools-generic and linux-headers-generic packages must be installed
 
-## 5. Note to compile an Axiom application
+## 4. Note to compile an AXIOM application
 
-### 5.1 Standalone application
+### 4.1 Standalone application
 
 You must link your application using the supplied linker script.
 (This script include some entry point requested by the axiom memory manager).
@@ -328,14 +340,15 @@ You could also use pkg-config:
 pkg-config --libs evi_lmm
 ```
 
-### 5.2 OMPSS@Cluster
+### 4.2 OMPSS@Cluster application
 
-To compile a OMPSS@Cluster application you should use
+To compile a OMPSS@Cluster application you should use these flags for mercurium
 ```
---ompss --cluster
+MCCFLAGS := --ompss --cluster
 ```
 during compilation. You must use the following flags during the link phase
 ```
---rdynamic -Wl,-T~/axiom-evi/axiom-evi-allocator-lib/ldscript/aarch64/xs_map64.lds
+LDFLAGS += --rdynamic -Wl,-T~/axiom-evi/axiom-evi-allocator-lib/ldscript/aarch64/xs_map64.lds
 ```
 **NOTE** The ```--rdynamic``` flag is required otherwise the symbols from the supplied linker script will be discharged.
+

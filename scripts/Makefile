@@ -47,6 +47,8 @@ prepare-install-force:
 
 unprepare-install:
 	-sudo umount $(ROOTFSTMP)
+
+remove-tempdir: unprepare-install
 	sudo rm -r -f $(ROOTFSTMP) $(ROOTFSWRK)
 
 TARGET_DIR:=$(ROOTFSTMP)
@@ -107,7 +109,7 @@ endif
 # MAIN targets
 #
 
-.PHONY: all build clean distclean mrproper clean-all help
+.PHONY: all build clean distclean mrproper clean-all help mount-temp umount-temp
 
 .DEFAULT_GOAL := build
 
@@ -123,11 +125,14 @@ clean-all: clean gasnet-clean ompss-clean tests-clean
 
 distclean-all: distclean gasnet-distclean ompss-distclean tests-distclean
 
-mrproper-all: mrproper gasnet-mrproper ompss-mrproper tests-mrproper umount
+mrproper-all: mrproper gasnet-mrproper ompss-mrproper tests-mrproper remove-tempdir deb-remove-tempdir
 
 all: build gasnet ompss tests
 
-umount: unprepare-install deb-unprepare
+mount-temp: prepare-install deb-prepare
+
+umount-temp: unprepare-install deb-unprepare
+
 
 # help is at the bottom of the makefile
 
@@ -991,6 +996,8 @@ deb-unprepare:
 	rm -f $(AXIOM_DIR)/*.deb
 	rm -f $(ROOTFSDEBTMP)/*.deb
 	-sudo umount $(ROOTFSDEBTMP)
+
+deb-remove-tempdir: deb-unprepare
 	sudo rm -r -f $(ROOTFSDEBTMP) $(ROOTFSDEBWRK)
 
 endif
@@ -1278,14 +1285,15 @@ help::
 
 help::
 	@echo "GENERAL"
-	@echo "  build     Build libraries and axiom applications (DEFAULT target)"
-	@echo "  all       As 'build' including gasnet, ompss and tests"
-	@echo "  gasnet    Build gasnet (libraries must already be built)"
-	@echo "  nanox     Build nanox (libraries and nanox must already be built)"
-	@echo "  clean     Clean projects (but no gasnet, ompss and test)"
-	@echo "  clean-all Clean projects including subproject ganset, ompss and tests"
-	@echo "  umount    Umount (and delete) used overlayfs"
-	@echo "  help      This help"
+	@echo "  build         Build libraries and axiom applications (DEFAULT target)"
+	@echo "  all           As 'build' including gasnet, ompss and tests"
+	@echo "  gasnet        Build gasnet (libraries must already be built)"
+	@echo "  nanox         Build nanox (libraries and nanox must already be built)"
+	@echo "  clean         Clean projects (but no gasnet, ompss and test)"
+	@echo "  clean-all     Clean projects including subproject ganset, ompss and tests"
+	@echo "  mount-temp    Mount needed overlayfs"
+	@echo "  umount-temp   Umount used overlayfs"
+	@echo "  help          This help"
 	@echo " "
 	@echo "  distclean     Clean projects including configuration"
 	@echo "  mrproper      Clean projects including configuration and autoconfig"
