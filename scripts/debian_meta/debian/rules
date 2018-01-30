@@ -9,7 +9,7 @@ ifeq ($(MODE),aarch64)
 # SECO kernel
 #
 KERNELDIR := $(AXIOMBSP)/build/linux/kernel/link-to-kernel-build
-ROOTFSDIR := $(AXIOMBSP)/build/linux/rootfs/targetroot
+ROOTFSDIR := $(ROOTFS)
 else ifeq ($(MODE),x86)
 #
 # X86 kernel
