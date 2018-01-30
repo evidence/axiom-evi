@@ -3,7 +3,7 @@ include ../common.mk
 include ../../scripts/locations.mk
 
 CFLAGS := -g -finline-functions -fomit-frame-pointer -Wall -Wno-unused -std=gnu11 -fPIC
-LDFLAGS :=
+LDFLAGS := -rdynamic -Wl,-T$(ALLOCATOR_LIB_DIR)/ldscript/aarch64/xs_map64.lds
 LDLIBS := -lm
 
 EXTRA_OMPSS_CFLAGS :=
