@@ -3,6 +3,41 @@
 
 The following is the list of the main tags of the repository:
 
+## axiom-v1.0           (31/01/2018)
+* All sub-projects
+    + final version of AXIOM SW Stack
+    + removed files and submodules related to QEMU emulation
+    + change build system for all submodules
+    + align RDMA and LONG buffers to 128bit to work with latest FORTH bitstream
+* axiom-nic
+    + update control register layout (new FORTH bitstream)
+    + add sysfs parameters and info
+    + discard packets sent to node not reachable
+    + add kthread watchdog
+    + add memcpy() workaround to work on no-cached pages
+    + reserve port 7 for XSMLL messages
+    + axiom-scheduler
+        + add new script to change scheduler parameters of axiom-nic kthread
+* User space applications
+    + axiom-init
+        + start discovery protocol on a specific request
+        + fix discovery algorithm to work on FORTH bitstream
+    + axiom-netperf
+        + change throughput unit (1 gigabit = 10^9bits on SI)
+    + axiom-run
+        + add feature to handle scheduling parameters
+        + add vimar profile
+        + fix sync on child startup
+    + axiom-utility
+        + add feature to send request to axiom-init to start discovery
+* GASNet
+    + change default bind port to 4
+    + small fixes
+* NANOS
+    + add feature to change scheduling parameters on working and communication
+      thread
+    + add feature to force the number of OS pthread to use
+
 ## axiom-v0.15          (09/11/2017)
 * All sub-projects
     + small fixes and impovements on deb package generation
