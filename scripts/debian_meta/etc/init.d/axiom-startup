@@ -44,7 +44,7 @@ fi
 
 start() {
     modprobe axiom-netdev
-    start-stop-daemon --start --backgroud --oknodo --quiet --exec $DAEMON -- $OPTIONS
+    start-stop-daemon --start --background --oknodo --quiet --exec $DAEMON -- $OPTIONS
 }
 
 stop() {
