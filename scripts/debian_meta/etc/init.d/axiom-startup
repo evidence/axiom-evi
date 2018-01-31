@@ -44,12 +44,12 @@ fi
 
 start() {
     modprobe axiom-netdev
-    start-stop-daemon --start --background --oknodo --quiet --exec $DAEMON -- $OPTIONS
+    start-stop-daemon --start --background --oknodo --no-close --exec $DAEMON -- $OPTIONS
 }
 
 stop() {
-    killall axiom-ethtap 2>/dev/null || true
-    start-stop-daemon --stop --background --oknodo --quiet --exec $DAEMON
+    pkill axiom-ethtap 2>/dev/null || true
+    start-stop-daemon --stop --background --oknodo --no-close --exec $DAEMON
     rmmod axiom-netdev || true
     rmmod axiom_mem_dev || true
     rmmod axiom_mem_manager || true

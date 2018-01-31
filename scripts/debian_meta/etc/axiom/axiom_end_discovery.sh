@@ -2,7 +2,7 @@
 
 # run by axiom-init at the end of discovery protocol
 
-killall axiom-ethtap 2>/dev/null 1>/dev/null
+pkill axiom-ethtap 2>/dev/null 1>/dev/null
 modprobe tun
 axiom-ethtap -n 8 &
 
