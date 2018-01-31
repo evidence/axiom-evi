@@ -1041,7 +1041,7 @@ deb-install:
 	mkdir -p $(AXIOM_DIR)/debs
 	for D in $(AXIOM_DIR)/*deb; do \
 		DEB=`basename $$D`; \
-		ST=`echo $$DEB | sed 's/_.*//'`; \
+		ST=`echo $$DEB | sed 's/_.*/_/'`; \
 		rm -f $(AXIOM_DIR)/debs/$$ST*;\
 	done
 	cp $(AXIOM_DIR)/*deb $(AXIOM_DIR)/debs
@@ -1066,7 +1066,7 @@ deb-move:
 	mkdir -p $(AXIOM_DIR)/debs
 	for D in $(TESTS_DIR)/*deb; do \
 		DEB=`basename $$D`; \
-		ST=`echo $$DEB | sed 's/_.*//'`; \
+		ST=`echo $$DEB | sed 's/_.*/_/'`; \
 		rm -f $(AXIOM_DIR)/debs/$$ST*;\
 	done
 	mv $(TESTS_DIR)/*deb $(AXIOM_DIR)/debs
