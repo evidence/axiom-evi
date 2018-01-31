@@ -973,7 +973,7 @@ else
 ROOTFSDEBTMP:=$(AXIOM_DIR)/rootfs-deb-tmp
 ROOTFSDEBWRK:=$(AXIOM_DIR)/rootfs-deb-wrk
 
-deb-prepare:
+deb-prepare: prepare-install
 	@if ! findmnt -n $(ROOTFSDEBTMP) >/dev/null; then \
 	  mkdir -p $(ROOTFSDEBTMP) ;\
 	  mkdir -p $(ROOTFSDEBWRK) ;\
@@ -1078,7 +1078,7 @@ deb-move:
 _deb-kernel:
 # kernel modules
 ifneq ($(MODE),x86)
-	@echo "$(ccgreen)===DEBs for kernel modules$(ccend)"
+	@echo "$(ccgreen)===DEBs for kernel modules [deb-kernel]$(ccend)"
 	$(DEBENV) $(MAKE) -C $(SCRIPTS_DIR)/debian_kernel -f debian/rules binary
 	mv -f $(SCRIPTS_DIR)/*.deb $(AXIOM_DIR)/
 	$(MAKE) deb-install
@@ -1086,13 +1086,13 @@ endif
 deb-kernel: deb-prepare _deb-kernel
 _deb-meta:
 # metapackages
-	@echo "$(ccgreen)===DEBs metapackages $(ccend)"
+	@echo "$(ccgreen)===DEBs metapackages [deb-meta]$(ccend)"
 	$(DEBENV) $(MAKE) -C $(SCRIPTS_DIR)/debian_meta -f debian/rules binary
 	mv -f $(SCRIPTS_DIR)/*deb $(AXIOM_DIR)/debs
 deb-meta: deb-prepare _deb-meta
 _deb-extrae:
 # extrae
-	@echo "$(ccgreen)===DEBs for extrae$(ccend)"
+	@echo "$(ccgreen)===DEBs for extrae [deb-extrae]$(ccend)"
 ifeq ($(DISABLE_INSTR),0)
 	$(DEBENV) $(MAKE) -C $(EXTRAE_DIR) -f debian/rules binary
 	$(MAKE) deb-install
@@ -1102,63 +1102,63 @@ endif
 deb-extrae: deb-prepare _deb-extrae
 _deb-allocator-drv:
 # axiom allocator kernel module
-	@echo "$(ccgreen)===DEBs for allocator kernel module$(ccend)"
+	@echo "$(ccgreen)===DEBs for allocator kernel module [deb-allocator-drv]$(ccend)"
 	$(DEBENV) $(MAKE) -C $(ALLOCATOR_DRV_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 deb-allocator-drv: deb-prepare _deb-allocator-drv
 _deb-nic:
 # axiom user library & kernel module
-	@echo "$(ccgreen)===DEBs for axiom user library (and kernel module)$(ccend)"
+	@echo "$(ccgreen)===DEBs for axiom user library (and kernel module) [deb-nic]$(ccend)"
 	$(DEBENV) $(MAKE) -C $(NIC_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 deb-nic: deb-prepare _deb-nic
 _deb-allocator-lib:
 # axiom allocator library
-	@echo "$(ccgreen)===DEBs for allocator library$(ccend)"
+	@echo "$(ccgreen)===DEBs for allocator library [deb-allocator-lib]$(ccend)"
 	$(DEBENV) $(MAKE) -C $(ALLOCATOR_LIB_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 deb-allocator-lib: deb-prepare _deb-allocator-lib
 _deb-init-lib:
 # axiom init library
-	@echo "$(ccgreen)===DEBs for axiom init library$(ccend)"
+	@echo "$(ccgreen)===DEBs for axiom init library [deb-init-lib]$(ccend)"
 	$(DEBENV) $(MAKE) -C $(APPS_DIR)/axiom-init -f debian/rules binary
 	mv $(APPS_DIR)/*.deb $(AXIOM_DIR)
 	$(MAKE) deb-install
 deb-init-lib: deb-prepare _deb-init-lib
 _deb-run-lib:
 # axiom run library
-	@echo "$(ccgreen)===DEBs for axiom run library$(ccend)"
+	@echo "$(ccgreen)===DEBs for axiom run library [deb-run-lib]$(ccend)"
 	$(DEBENV) $(MAKE) -C $(APPS_DIR)/axiom-run -f debian/rules binary
 	mv $(APPS_DIR)/*.deb $(AXIOM_DIR)
 	$(MAKE) deb-install
 deb-run-lib: deb-prepare _deb-run-lib
 _deb-allocator:
 # memory allocator
-	@echo "$(ccgreen)===DEBs for axiom allocator$(ccend)"
+	@echo "$(ccgreen)===DEBs for axiom allocator [deb-allocator]$(ccend)"
 	$(DEBENV) $(MAKE) -C $(ALLOCATOR_DIR) -f debian/rules binary
 	$(MAKE) NCONF=1 deb-install
 deb-allocator: deb-prepare _deb-allocator
 _deb-apps:
 # axiom apps
-	@echo "$(ccgreen)===DEBs for axiom system applications$(ccend) "
+	@echo "$(ccgreen)===DEBs for axiom system applications [deb-apps]$(ccend) "
 	$(DEBENV) $(MAKE) -C $(APPS_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 deb-apps: deb-prepare _deb-apps
 _deb-gasnet:
 # gasnet
-	@echo "$(ccgreen)===DEBs for gasnet$(ccend)"
+	@echo "$(ccgreen)===DEBs for gasnet [deb-gasnet]$(ccend)"
 	$(DEBENV) $(MAKE) -C $(GASNET_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 deb-gasnet: deb-prepare _deb-gasnet
 _deb-nanox:
 # nanox
-	@echo "$(ccgreen)===DEBs for nanox$(ccend)"
+	@echo "$(ccgreen)===DEBs for nanox [deb-nanox]$(ccend)"
 	$(DEBENV) $(MAKE) -C $(NANOX_DIR) -f debian/rules binary
 	$(MAKE) deb-install
 deb-nanox: deb-prepare _deb-nanox
 _deb-mcxx:
 # mcxx
-	@echo "$(ccgreen)===DEBs for mcxx$(ccend)"
+	@echo "$(ccgreen)===DEBs for mcxx [deb-mcxx]$(ccend)"
 ifeq ($(MODE),x86)
 	$(DEBENV) fakeroot $(MAKE) -C $(MCXX_DIR) -f debian/rules binary
 	$(MAKE) deb-install
@@ -1195,7 +1195,7 @@ deb: deb-warn              \
 
 _deb-tests-ompss:
 # ompss axiom tests
-	@echo "$(ccgreen)===DEBs for ompss test$(ccend)"
+	@echo "$(ccgreen)===DEBs for ompss test [deb-tests-ompss]$(ccend)"
 	$(DEBENV) $(MAKE) -C $(OMPSS_TESTS_DIR) -f debian/rules binary
 	$(MAKE) deb-move
 deb-tests-ompss: deb-prepare _deb-tests-ompss
@@ -1203,7 +1203,7 @@ deb-tests-ompss: deb-prepare _deb-tests-ompss
 _deb-tests-gasnet:
 # gasnet axiom tests
 ifneq ($(MODE),x86)
-	@echo "$(ccgreen)===DEBs for gasnet test$(ccend)"
+	@echo "$(ccgreen)===DEBs for gasnet test [deb-tests-gasnet]$(ccend)"
 	$(DEBENV) $(MAKE) -C $(GASNET_TESTS_DIR) -f debian/rules binary
 	$(MAKE) deb-move
 endif
@@ -1211,7 +1211,7 @@ deb-tests-gasnet: deb-prepare _deb-tests-gasnet
 
 _deb-tests-axiom:
 # axiom tests
-	@echo "$(ccgreen)===DEBs for axiom test$(ccend)"
+	@echo "$(ccgreen)===DEBs for axiom test [deb-tests-axiom]$(ccend)"
 	$(DEBENV) $(MAKE) -C $(AXIOM_TESTS_DIR) -f debian/rules binary
 	$(MAKE) deb-move
 deb-tests-axiom: deb-prepare _deb-tests-axiom
