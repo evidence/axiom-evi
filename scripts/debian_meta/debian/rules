@@ -111,6 +111,9 @@ endif
 
 ifneq ($(MODE),x86)
 	dh_gencontrol -paxiom-startup-static
+	echo "kversion=$(KVERSION)" >>$(DEBIAN_DIR)/axiom-startup.substvars
+	echo "evinic-version=$(EVINIC_VERSION)" >>$(DEBIAN_DIR)/axiom-startup.substvars
+	echo "allocator-version=$(ALLOCATOR_VERSION)" >>$(DEBIAN_DIR)/axiom-startup.substvars
 	dh_gencontrol -paxiom-startup
 	dh_gencontrol -paxiom-scheduler
 endif

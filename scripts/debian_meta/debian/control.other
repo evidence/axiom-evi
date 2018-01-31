@@ -9,14 +9,14 @@ Vcs-Git: git://anonscm.debian.org/collab-maint/axiom-apps.git
 
 Package: axiom-startup-static
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, 
 #Conflicts: axiom-startup
 Description: Scripts to start axion with static routing
  Scripts to start axion with static routing
 
 Package: axiom-startup
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, axiom-evi-nic-modules-${kversion} (= ${evinic-version}), axiom-evi-allocator-modules-${kversion} (= ${allocator-version})
 #Conflicts: axiom-startup-static
 Description: Scripts to start axion system
  Scripts to start axion system
@@ -29,7 +29,7 @@ Description: Axiom meta-package
 
 Package: axiomeu-dev
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, nanox-dev (= ${nanox-version}), axiom-evi-allocator-dev (= ${allocator-lib-version}), gasnet-dev (= ${gasnet-version}), libevi-lmm-dev (= ${allocator-lib-version}), libaxiom-init-dev (= ${init-version}), libaxiom-run-dev (= ${run-version}), libaxiom-user-dev  (= ${evinic-version})
+Depends: ${shlibs:Depends}, ${misc:Depends}, nanox-dev (= ${nanox-version}), axiom-evi-allocator-dev (= ${allocator-version}), gasnet-dev (= ${gasnet-version}), libevi-lmm-dev (= ${allocator-lib-version}), libaxiom-init-dev (= ${init-version}), libaxiom-run-dev (= ${run-version}), libaxiom-user-dev  (= ${evinic-version})
 Description: Axiom development meta-package
  Axiom development meta-package
 
