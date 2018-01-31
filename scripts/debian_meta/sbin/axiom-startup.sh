@@ -51,6 +51,9 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+systemctl stop axiom-startup 
+sleep 1
+
 pkill axiom-ethtap > /dev/null 2>&1
 pkill axiom-init > /dev/null 2>&1
 sleep 1
