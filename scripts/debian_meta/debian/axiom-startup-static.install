@@ -1,4 +1,1 @@
-/etc/axiom/axiom_static_rt_node_1.txt
-/etc/axiom/axiom_static_rt_loopback.txt
-/etc/axiom/axiom_static_rt_node_2.txt
 /usr/sbin/axiom-startup.sh
