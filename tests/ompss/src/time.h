@@ -1,7 +1,7 @@
 /*!
  * \file time.h
  *
- * \version     v0.15
+ * \version     v1.0
  * \date        2016-02-13
  *
  * Copyright (C) 2016, Evidence Srl.
