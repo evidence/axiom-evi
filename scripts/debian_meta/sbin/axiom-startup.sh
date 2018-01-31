@@ -1,23 +1,29 @@
 #!/bin/bash
 
 NODES=2
+KILL=0
 
 function usage () {
     echo -e "\nUsage: $0 [-n NODES]  NODEID\n"
+    echo -e "USE ONLY for STATIC routing!"
     echo -e "Load all AXIOM modules and start axiom-init and axiom-ethtap."
     echo -e "NODEID and NODES are required, because for now we use static routing."
     echo -e "\nExample: $0 1\n"
 
     echo -e "\noptions (specified before NODEID):\n"
     echo -e "    -n  NODES   specify the number of nodes in the cluster [default $NODES]\n"
+    echo -e "    -k          kill all deamons, unload the kernel modules and exit\n"
     echo -e "    -h          print this help\n"
 
 }
 
-while getopts ":n:h" opt; do
+while getopts ":n:hk" opt; do
     case $opt in
         n)
             NODES=$OPTARG
+            ;;
+        k)
+            KILL=1
             ;;
         h)
             usage
@@ -59,6 +65,10 @@ pkill axiom-init > /dev/null 2>&1
 sleep 1
 modprobe -r axiom-netdev > /dev/null 2>&1
 modprobe -r tun > /dev/null 2>&1
+
+if [[ $KILL -eq 1 ]]; then
+    exit 0
+fi
 
 set -x
 
