@@ -201,7 +201,7 @@ Change the environment variables into ```axiom-evi/settings.sh```.
 ```
 
 * ROOTFS
-    + You must have extracted the Seco Ubuntu filesystem image; this must point to the installation directory
+    + You must have extracted the Seco Ubuntu file-system image; this must point to the installation directory
     + (default $HOME/zynq-rootfs)
     + Usually $HOME/zynq-rootfs is a link to $HOME/zynq-ubuntu-minimal_16.04-xenial_v1.3
 
@@ -244,7 +244,7 @@ If you go into the ```scripts``` directory and do the command ```make``` for the
     * DISABLE_INSTR (optional, used during libraries compilation)
        0: compile EXTRAE and nic user library with instrumentation support (default)
        1: disable EXTRAE compilation and nic user library instrumentation
-    * KVERSION (optional, used to compile X86 in a choroot)
+    * KVERSION (optional, used to compile X86 in a chroot)
        you must defined this if you are compiling for X86 from a chroot and must be
        set to the kernel version (otherwise a "uname -r" is used using the chroot host
        kernel version)
@@ -293,7 +293,7 @@ To umount these directories:
     $ make umount-temp
 ```
 
-After the first compilation of all packages, if you want to compile in the submodule dir,
+After the first compilation of all packages, if you want to compile in the sub-module directory,
 you must mount these overlay roots:
 ```
     $ make mount-temp
@@ -358,31 +358,31 @@ LDFLAGS += --rdynamic -Wl,-T~/axiom-evi/axiom-evi-allocator-lib/ldscript/aarch64
 
 #### 5.1.1 Command line options
 
-A new command-line optios has been added: ```--use-my-cpus-number``` and can be zero (default) or one.
-It is used to force the use of ```--smp-cpus``` parameters because, otherwise, this parameter can be set to a value greather than the number of cores of the microprocessor.
+A new command-line options has been added: ```--use-my-cpus-number``` and can be zero (default) or one.
+It is used to force the use of ```--smp-cpus``` parameters because, otherwise, this parameter can be set to a value greater than the number of cores of the microprocessor.
 
 Example:
 ```
 $ export NX_ARGS="--num-sockets=1 --cpus-per-socket=4 --smp-cpus=4"
 ```
-this is the default for an AXIOM board if no parameter are passed. OMPSS create 4 physical thread and assign each to a core of the microprocessor then assign 4 working thread to these pyshical threads.
+this is the default for an AXIOM board if no parameter are passed. OMPSS create 4 physical thread and assign each to a core of the microprocessor then assign 4 working thread to these physical threads.
 
 ```
 $ export NX_ARGS="--num-sockets=1 --cpus-per-socket=5 --smp-cpus=5 --use-my-cpu-number=1"
 ```
-this create one more physical thread that share a core of the microprocessor and use it for a worling thread.
+this create one more physical thread that share a core of the microprocessor and use it for a working thread.
 
 ```
 $ export NX_ARGS="--num-sockets=1 --cpus-per-socket=5 --smp-cpus=5 --use-my-cpu-number=1 --cluster --cluster-network=axiom --cluster-smp-presend=4"
 ```
-this create a physical thread for comunication that share a core with 1 of the 4  working thread on each board.
+this create a physical thread for communication that share a core with 1 of the 4  working thread on each board.
 
 #### 5.1.2 Scheduling policy
 
 When you run a OMPSS@Cluster application you can define some environment variable to change
-the scheduling's policy of the system threads: ```AXIOM_WRK_PARAMS``` (for the working threads) and ```AXIOM_COM_PARAMS``` (for the comunication threads)
+the scheduling policy of the system threads: ```AXIOM_WRK_PARAMS``` (for the working threads) and ```AXIOM_COM_PARAMS``` (for the communication threads)
 
-The general form of the assigment is:
+The general form of the assignment is:
 ```
 schedpol,par0,par1,par2
 ```
@@ -392,10 +392,10 @@ in which ```par0```, ```par1``` and ```par2``` are optional and depend on  ```sc
 
 * OTHER using the default linux policy
     + ```par0``` is the nice value (default to 0)
-* FIFO using the FiFo realtime policy
+* FIFO using the FiFo real-time policy
     + ```par0``` is the priority (default to 1)
-* RR using the RoundRobin realtime policy
-    + ```par0``` if teh priority (default to 1)
+* RR using the RoundRobin real-time policy
+    + ```par0``` if the priority (default to 1)
 * BATCH using Batch policy, no parameters
 * IDLE using the Idle policy, no parameters
 * DEADLINE using the Deadline scheduling policy
