@@ -31,6 +31,7 @@ The following is the list of the main tags of the repository:
     + axiom-utility
         + add feature to send request to axiom-init to start discovery
 * GASNet
+    + add workaround to support RDMA addresses not aligned to 128bit
     + change default bind port to 4
     + small fixes
 * NANOS
