@@ -7,4 +7,3 @@
 /etc/axiom/axiom_end_discovery.sh
 /etc/axiom/axiomrc
 /usr/sbin/axiom-make-master.sh
-/usr/sbin/axiom-restart.sh
