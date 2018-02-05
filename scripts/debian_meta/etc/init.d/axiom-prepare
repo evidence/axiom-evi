@@ -25,8 +25,13 @@ DAEMON=/usr/sbin/daemonexecutablename
 . /lib/lsb/init-functions
 
 setup() {
+    # memory setup
     echo 1 > /proc/sys/vm/overcommit_memory
     echo 0 > /proc/sys/kernel/randomize_va_space
+    # deadline scheduling setup
+    echo -1 > /proc/sys/kernel/sched_rt_period_us
+    echo -1 > /proc/sys/kernel/sched_rt_runtime_us
+    # tuntap setup
     [ -e /dev/net ] || mkdir /dev/net
     [ -e /dev/net/tun ] || mknod /dev/net/tun c 10 200
 }
