@@ -20,12 +20,13 @@ EXECS:=$(OBJS:.o=)
 
 MYDESTDIR:=$(DESTDIR)/opt/axiom/tests_ompss
 GUESTDIR := $(TESTS_DIR)/utils/guest
-LAUNCHER:=$(GUESTDIR)/run_test_ompss.sh
-LAUNCHER+=$(GUESTDIR)/run_test_ompss_sched.sh
-LAUNCHER+=$(GUESTDIR)/run_suite.sh
+LAUNCHER:=$(GUESTDIR)/run_suite.sh
+LAUNCHER+=$(GUESTDIR)/run_test_ompss.sh
 LAUNCHER+=$(GUESTDIR)/run_test_nbody.sh
-LAUNCHER+=$(GUESTDIR)/run_test_nbody_extrae.sh
 LAUNCHER+=$(GUESTDIR)/run_test_ompss_extrae.sh
+LAUNCHER+=$(GUESTDIR)/run_test_nbody_extrae.sh
+LAUNCHER+=$(GUESTDIR)/run_test_ompss_sched.sh
+LAUNCHER+=$(GUESTDIR)/run_test_nbody_sched.sh
 LAUNCHER+=$(GUESTDIR)/extrae.xml
 
 .DEFAULT_GOAL := build
