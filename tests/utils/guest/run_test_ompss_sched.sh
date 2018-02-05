@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 export LD_LIBRARY_PATH=/usr/lib/performance
 #export LD_LIBRARY_PATH=/usr/lib/debug

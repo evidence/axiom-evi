@@ -1,2 +1,2 @@
-#!/bin/sh
+#!/bin/bash
 axiom-run -P all $@

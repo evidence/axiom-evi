@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 export LD_LIBRARY_PATH=/usr/lib/instrumentation
 export LD_PRELOAD=/usr/lib/libnanostrace.so

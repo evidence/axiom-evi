@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ x$1 == x ]; then
     echo "Use: $0 NUM_PARTICLES NUM_STEPS"

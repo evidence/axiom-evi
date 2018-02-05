@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ $# -ne 2 ]; then
     echo "usage: run_suite.sh PROFILE SUITENAME" >&2
