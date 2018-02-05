@@ -35,7 +35,7 @@ binary-arch: make-changelog
 
 #	make tests
 	mkdir -p $(DEBIAN_DIR)/tmp/opt/axiom/tests_ompss
-	$(MAKE) DESTDIR=$(DEBIAN_DIR)/tmp/opt/axiom/tests_ompss install
+	$(MAKE) DESTDIR=$(DEBIAN_DIR)/tmp install
 
 	dh_install --list-missing
 	dh_installdocs
