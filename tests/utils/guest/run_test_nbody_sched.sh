@@ -16,7 +16,7 @@ else
     export NX_ARGS="--num-sockets=1 --cpus-per-socket=5 --smp-cpus=5 --use-my-cpus-number=1 --cluster --cluster-network axiom --smp-workers $NUM_THREADS --disable-binding --cluster-smp-presend 4 --thd-output"
     export NX_GASNET_SEGMENT_SIZE=268435456
     export NX_CLUSTER_NODE_MEMORY=134217728
-    export AXIOM_WRK_PARAMS=OTHER,5
+    export AXIOM_WRK_PARAMS=OTHER,0
     export AXIOM_COM_PARAMS=DEADLINE,5%,100m,100m
     
     if [ $NUM_THREADS == 1 ]; then
