@@ -352,3 +352,73 @@ LDFLAGS += --rdynamic -Wl,-T~/axiom-evi/axiom-evi-allocator-lib/ldscript/aarch64
 ```
 **NOTE** The ```--rdynamic``` flag is required otherwise the symbols from the supplied linker script will be discharged.
 
+## 5 Note
+
+### 5.1 OMPSS@Cluster
+
+#### 5.1.1 Command line options
+
+A new command-line optios has been added: ```--use-my-cpus-number``` and can be zero (default) or one.
+It is used to force the use of ```--smp-cpus``` parameters because, otherwise, this parameter can be set to a value greather than the number of cores of the microprocessor.
+
+Example:
+```
+$ export NX_ARGS="--num-sockets=1 --cpus-per-socket=4 --smp-cpus=4"
+```
+this is the default for an AXIOM board if no parameter are passed. OMPSS create 4 physical thread and assign each to a core of the microprocessor then assign 4 working thread to these pyshical threads.
+
+```
+$ export NX_ARGS="--num-sockets=1 --cpus-per-socket=5 --smp-cpus=5 --use-my-cpu-number=1"
+```
+this create one more physical thread that share a core of the microprocessor and use it for a worling thread.
+
+```
+$ export NX_ARGS="--num-sockets=1 --cpus-per-socket=5 --smp-cpus=5 --use-my-cpu-number=1 --cluster --cluster-network=axiom --cluster-smp-presend=4"
+```
+this create a physical thread for comunication that share a core with 1 of the 4  working thread on each board.
+
+#### 5.1.2 Scheduling policy
+
+When you run a OMPSS@Cluster application you can define some environment variable to change
+the scheduling's policy of the system threads: ```AXIOM_WRK_PARAMS``` (for the working threads) and ```AXIOM_COM_PARAMS``` (for the comunication threads)
+
+The general form of the assigment is:
+```
+schedpol,par0,par1,par2
+```
+in which ```par0```, ```par1``` and ```par2``` are optional and depend on  ```schedpol```.
+
+```schedpol``` can be:
+
+* OTHER using the default linux policy
+    + ```par0``` is the nice value (default to 0)
+* FIFO using the FiFo realtime policy
+    + ```par0``` is the priority (default to 1)
+* RR using the RoundRobin realtime policy
+    + ```par0``` if teh priority (default to 1)
+* BATCH using Batch policy, no parameters
+* IDLE using the Idle policy, no parameters
+* DEADLINE using the Deadline scheduling policy
+    + ```par0``` is the execution time
+    + ```par1``` is the deadline time
+    + ```par2``` is the period time
+    
+    the time is specified using a units:
+    
+    + ```us``` micro-seconds
+    + ```ms``` milli-seconds
+    +  seconds otherwise
+
+    the ```par0``` can also be specified using ```%``` of the period time
+
+Examples:
+```
+$ export AXIOM_WRK_PARAMS=RR,2
+$ export AXIOM_COM_PARRAMS=DEADLINE,10ms,80ms,100ms
+```
+or
+```
+$ export AXIOM_WRK_PARAMS=OTHER,10
+$ export AXIOM_COM_PARRAMS=DEADLINE,2%,800us,10ms
+```
+
