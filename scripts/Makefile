@@ -111,7 +111,7 @@ endif
 
 .PHONY: all build clean distclean mrproper clean-all help mount-temp umount-temp
 
-.DEFAULT_GOAL := build
+.DEFAULT_GOAL := all
 
 build: nic apps
 
@@ -1285,8 +1285,8 @@ help::
 
 help::
 	@echo "GENERAL"
-	@echo "  build         Build libraries and axiom applications (DEFAULT target)"
-	@echo "  all           As 'build' including gasnet, ompss and tests"
+	@echo "  build         Build libraries and axiom applications"
+	@echo "  all           As 'build' including gasnet, ompss and tests (DEFAULT target)"
 	@echo "  gasnet        Build gasnet (libraries must already be built)"
 	@echo "  nanox         Build nanox (libraries and nanox must already be built)"
 	@echo "  clean         Clean projects (but no gasnet, ompss and test)"
