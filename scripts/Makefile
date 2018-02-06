@@ -1071,7 +1071,7 @@ deb-move:
 	done
 	mv $(TESTS_DIR)/*deb $(AXIOM_DIR)/debs
 
-.PHONY: _deb-kernel _deb-extrae _deb-evinic _deb_allocator-drv _deb-allocato-lib
+.PHONY: _deb-kernel _deb-extrae _deb_allocator-drv _deb-allocato-lib
 .PHONY: _deb_init-lib _deb-run-lib _deb_allocator _deb-apps _deb-gasnet _deb-nanox
 .PHONY: _deb_meta
 
@@ -1165,8 +1165,8 @@ ifeq ($(MODE),x86)
 endif
 deb-mcxx: deb-prepare _deb-mcxx
 
-.PHONY: deb-kernel deb-extrae deb-evinic deb_allocator-drv deb-allocato-lib
-.PHONY: deb_init-lib deb-run-lib deb_allocator deb-eviapps deb-gasnet deb-nanox
+.PHONY: deb-kernel deb-extrae deb_allocator-drv deb-allocato-lib
+.PHONY: deb_init-lib deb-run-lib deb_allocator deb-gasnet deb-nanox
 
 deb-warn:
 	@echo "$(ccred)Remeber that to make deb packages all must be already build$(ccend)"
@@ -1259,13 +1259,13 @@ help::
 	@echo "  deb-kernel        Build package for kernel"
 	@echo "  deb-meta          Build package for metapackages"
 	@echo "  deb-extrae        Build package for extrae"
-	@echo "  deb-evinic        Build package for Axiom nic driver"
+	@echo "  deb-nic           Build package for Axiom nic driver"
+	@echo "  deb-apps          Build package for Axiom applications"
 	@echo "  deb-allocator-drv Build package for memory driver"
 	@echo "  deb-allocator-lib Build package for memory library"
 	@echo "  deb-init-lib      Build package for init library"
 	@echo "  deb-run-lib       Build package for run library"
 	@echo "  deb-allocator     Build package for memory allocator"
-	@echo "  deb-eviapps       Build package for Axiom applications"
 	@echo "  deb-gasnet        Build package for Axiom Gasnet conduit"
 	@echo "  deb-nanox         Build package for Nanos++"
 	@echo "  deb-mcxx          Build package for Mercurium (DISABLED)"
