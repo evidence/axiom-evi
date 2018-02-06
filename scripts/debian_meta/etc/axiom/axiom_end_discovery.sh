@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # run by axiom-init at the end of discovery protocol
 
@@ -13,4 +13,6 @@ sleep 1
 ID=`axiom-info -n -q`
 ifconfig ax0 192.168.17.${ID} mtu 65500
 
-echo "My IP is 192.168.17.${ID}"
+echo "IPoverAXIOM set to subnet 192.168.17.0/24"
+echo "Other nodes are reachable with IP: 192.168.17.NODEID"
+echo "Local IP is 192.168.17.${ID}"
