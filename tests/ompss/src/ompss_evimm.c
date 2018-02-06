@@ -157,8 +157,10 @@ int main (int argc, char *argv[])
         for (j=0; j < N; j++) {
             if (c[i*N + j] != k*j) {
                 errors++;
+#ifdef MATRIX_DEBUG
 		logmsg("ERROR c[%d][%d] = %d (expected %d) a[%d][3] = %d b[0][%d] = %d",
                 		i, j, c[i*N + j], k*j, i, a[i*N + 3], j, b[j]);
+#endif
             }
         }
     }
