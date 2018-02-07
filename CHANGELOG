@@ -3,12 +3,13 @@
 
 The following is the list of the main tags of the repository:
 
-## axiom-v1.0           (31/01/2018)
+## axiom-v1.0           (07/02/2018)
 * All sub-projects
     + final version of AXIOM SW Stack
+    + add systemd service to start AXIOM daemons automatically
     + removed files and submodules related to QEMU emulation
     + change build system for all submodules
-    + align RDMA and LONG buffers to 128bit to work with latest FORTH bitstream
+    + support FORTH bitstream 20180205 64bit aligned
 * axiom-nic
     + update control register layout (new FORTH bitstream)
     + add sysfs parameters and info
