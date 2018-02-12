@@ -119,13 +119,12 @@ clean: extrae-clean libs-clean allocator-lib-clean allocator-drv-clean allocator
 
 distclean: configure-clean extrae-distclean libs-distclean allocator-lib-distclean allocator-drv-distclean allocator-distclean apps-distclean nic-distclean
 
-mrproper: extrae-mrproper libs-mrproper allocator-lib-mrproper allocator-drv-mrproper allocator-mrproper apps-mrproper nic-mrproper configure-clean 
+mrproper: extrae-mrproper libs-mrproper allocator-lib-mrproper allocator-drv-mrproper allocator-mrproper apps-mrproper nic-mrproper gasnet-mrproper ompss-mrproper tests-mrproper remove-tempdir deb-remove-tempdir configure-clean
+	-rm -r -f $(AXIOM_DIR)/debs
 
 clean-all: clean gasnet-clean ompss-clean tests-clean
 
 distclean-all: distclean gasnet-distclean ompss-distclean tests-distclean
-
-mrproper-all: mrproper gasnet-mrproper ompss-mrproper tests-mrproper remove-tempdir deb-remove-tempdir
 
 all: build gasnet ompss tests
 
@@ -536,7 +535,7 @@ gasnet-clean:
 gasnet-distclean:
 	@for DIR in $(GASNET_BUILD_DIR_DEBUG) $(GASNET_BUILD_DIR_PERF); do \
 	  [ -d $${DIR} ] && \
-	  rm -r -f  $${DIR};\
+	  rm -r -f  $${DIR} || true;\
 	done
 
 gasnet-mrproper: gasnet-distclean
@@ -937,6 +936,9 @@ tests: tests-axiom tests-gasnet tests-ompss
 
 tests-clean: tests-axiom-clean tests-gasnet-clean tests-ompss-clean
 
+tests-mrproper:
+	-$(MAKE) -C $(TESTS_DIR) mrproper
+
 help::
 	@echo "TEST"
 	@echo "  tests-axiom        Build (and install) AXIOM API tests"
@@ -946,7 +948,8 @@ help::
 	@echo "  tests-gasnet-clean Clean gasnet tests"
 	@echo "  tests-ompss-clean  Clean OMPSS tests"
 	@echo "  tests-axiom-clean  Clean AXIOM tests"
-	@echo "  test-clean         Clean all tests"
+	@echo "  tests-clean        Clean all tests"
+	@echo "  tests-mrproper     Restore the tests to a clean state (removing 'all')"
 	@echo " "
 
 #
@@ -1291,12 +1294,11 @@ help::
 	@echo "  nanox         Build nanox (libraries and nanox must already be built)"
 	@echo "  clean         Clean projects (but no gasnet, ompss and test)"
 	@echo "  clean-all     Clean projects including subproject ganset, ompss and tests"
+	@echo "  distclean     Clean projects including configuration"
+	@echo "  distclean-all Clean projects including configuration and subproject gasnet,ompss and tests"
 	@echo "  mount-temp    Mount needed overlayfs"
 	@echo "  umount-temp   Umount used overlayfs"
 	@echo "  help          This help"
 	@echo " "
-	@echo "  distclean     Clean projects including configuration"
-	@echo "  mrproper      Clean projects including configuration and autoconfig"
-	@echo "  distclean-all Clean projects including configuration and subproject gasnet,ompss and tests"
-	@echo "  mrproper-all  Clean projects including configuration and autoconfig and subproject gasnet,ompss and tests"
+	@echo "  mrproper      Remove 'all', restoring to a clean state"
 	@echo " "
