@@ -1,7 +1,7 @@
 /*!
  * \file gasnet_evimm.c
  *
- * \version     v1.0
+ * \version     v1.1
  * \date        2016-12-20
  *
  * This example implements Matrix Multiplication on top of GASNet in the same way
