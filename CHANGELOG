@@ -3,6 +3,19 @@
 
 The following is the list of the main tags of the repository:
 
+## axiom-v1.1           (06/03/2018)
+* NANOS
+    + fix issues on out of order packets (patch from BSC)
+* All sub-projects
+    + fix mrproper in Makefiles
+* axiom-nic
+    + discard errors on not mandatory resources (eg. GPIO debug)
+* User space applications
+    * axiom-init
+        + fix discovery algorithm
+    * ompss_evimm
+        + use 64bit matrix elements
+
 ## axiom-v1.0           (07/02/2018)
 * All sub-projects
     + final version of AXIOM SW Stack
