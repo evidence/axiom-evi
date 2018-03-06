@@ -26,6 +26,9 @@
 #define DEFBLOCKSIZE       25
 #define DEFN               300
 
+/* type of element in the matrix */
+typedef uint64_t elem_t;
+
 static int BLOCKSIZE=DEFBLOCKSIZE;
 static int N=DEFN;
 
@@ -46,7 +49,7 @@ static int N=DEFN;
 /* XXX: the init is made by the master node like JUMP implementation */
 //#pragma omp target copy_deps
 //#pragma omp task out([size]A, [size]B)
-void seqinit(int size, int n, int *A, int *B)
+void seqinit(int size, int n, elem_t *A, elem_t *B)
 {
     int i,j;
 
@@ -61,11 +64,11 @@ void seqinit(int size, int n, int *A, int *B)
 /* task ditributed among the cluster nodes */
 #pragma omp target device(smp) copy_deps
 #pragma omp task in([size*n]A, [n*n]B) out([size*n]C, [1]elapsed)
-void matmul(int size, int n, int *A, int *B, int *C, long int *elapsed)
+void matmul(int size, int n, elem_t *A, elem_t *B, elem_t *C, long int *elapsed)
 {
     struct timespec time_start, time_end;
-    int i, j, k;
-    int tmp;
+    int i, j;
+    elem_t tmp, k;
 
     logmsg("Start matmul %p %p %p",A,B,C);
     time_gettime(&time_start);
@@ -77,33 +80,39 @@ void matmul(int size, int n, int *A, int *B, int *C, long int *elapsed)
 	        tmp += A[i*n + k] * B[k*n + j];
 #ifdef MATRIX_DEBUG
 	        if (A[i*n + k] != k || B[k*n + j] != j) {
-			logmsg("ERROR CLUSTER a[%d][%d] = %d b[%d][%d] = %d b[%d][%d] = %d (size=%d n=%d)",
-                		i, k, A[i*n + k], k, j, B[k*n + j], k, j+1, B[k*n + j + 1], size, n);
+			logmsg("ERROR CLUSTER a[%d][%d] = 0x%x b[%d][%d] = 0x%x"
+				" b[%d][%d] = 0x%x (size=%d n=%d)",
+				i, k, (unsigned int)A[i*n + k], k, j,
+				(unsigned int)B[k*n + j], k, j+1,
+				(unsigned int)B[k*n + j + 1], size, n);
 	        }
-#endif
+#endif /* MATRIX_DEBUG */
 	    }
             C[i*n + j] = tmp;
 #ifdef MATRIX_DEBUG
             if (tmp != ((n*(n-1))/2) * j) {
-	         logmsg("ERROR CLUSTER c[%d][%d] = %d (expected %d) a[%d][3] = %d b[0][%d] = %d",
-                		i, j, tmp, (n*(n-1))/2 * j, i, A[i*n + 3], j, B[j]);
+	         logmsg("ERROR CLUSTER c[%d][%d] = 0x%x (expected 0x%x) "
+			"a[%d][3] = 0x%x b[0][%d] = 0x%x",
+			i, j, (unsigned int)tmp, (n*(n-1))/2 * j, i,
+			(unsigned int)A[i*n + 3], j, (unsigned int)B[j]);
             }
-#endif
+#endif /* MATRIX_DEBUG */
 	}
     }
-#endif
+#endif /* !NO_COMPUTE */
     time_gettime(&time_end);
     *elapsed = time_diff_msec(&time_end, &time_start);
     logmsg("End matmul   %p %p %p elapse=%ld",A,B,C,*elapsed);
 }
 
-static int *a, *b, *c;
+static elem_t *a, *b, *c;
 static long int *matmul_time;
 
 int main (int argc, char *argv[])
 {
     struct timespec time_start, time_end;
-    int  i, j, k, errors = 0;
+    int  i, j, errors = 0;
+    elem_t k;
     long int total_matmul = 0;
     long int max_matmul = 0;
     long int min_matmul = LONG_MAX;
@@ -121,9 +130,9 @@ int main (int argc, char *argv[])
         logmsg("bad sizes");
         exit(-1);
     }
-    a=malloc(sizeof(int)*N*N);
-    b=malloc(sizeof(int)*N*N);
-    c=malloc(sizeof(int)*N*N);
+    a=malloc(sizeof(elem_t)*N*N);
+    b=malloc(sizeof(elem_t)*N*N);
+    c=malloc(sizeof(elem_t)*N*N);
     matmul_time=malloc(sizeof(long int)*N);
     memset(matmul_time,0,sizeof(long int)*N);
     logmsg("Initializing system done!");
@@ -158,16 +167,18 @@ int main (int argc, char *argv[])
             if (c[i*N + j] != k*j) {
                 errors++;
 #ifdef MATRIX_DEBUG
-		logmsg("ERROR c[%d][%d] = %d (expected %d) a[%d][3] = %d b[0][%d] = %d",
-                		i, j, c[i*N + j], k*j, i, a[i*N + 3], j, b[j]);
-#endif
+		logmsg("ERROR c[%d][%d] = 0x%x (expected %d) a[%d][3] = 0x%x "
+		        "b[0][%d] = 0x%x",
+		        i, j, (unsigned int)c[i*N + j], k*j, i,
+		        (unsigned int)a[i*N + 3], j, (unsigned int)b[j]);
+#endif /* MATRIX_DEBUG */
             }
         }
     }
     if (errors != 0)
 	logmsg("NOTE: Found %d ERRORS!", errors);
-#endif
-#endif
+#endif /* FINAL_CHECK */
+#endif /* !NO_COMPUTE */
 
     for (i=0; i < N-BLOCKSIZE; i+=BLOCKSIZE) {
         if (matmul_time[i]>=0) {
