@@ -3,6 +3,12 @@
 
 The following is the list of the main tags of the repository:
 
+## axiom-v1.2           (14/03/2018)
+* axiom-nic
+    + support latest FORTH bitstream (20180313)
+* GASNet
+    + fix issues with gasnet barriers
+
 ## axiom-v1.1           (06/03/2018)
 * NANOS
     + fix issues on out of order packets (patch from BSC)
