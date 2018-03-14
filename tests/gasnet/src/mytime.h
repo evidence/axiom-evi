@@ -1,7 +1,7 @@
 /*!
  * \file mytime.h
  *
- * \version     v1.1
+ * \version     v1.2
  * \date        2016-12-20
  *
  * Copyright (C) 2016, Evidence Srl.
