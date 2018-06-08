@@ -20,6 +20,7 @@
 [submodule "axiom-evi-allocator-drv"]
 	path = axiom-evi-allocator-drv
 	url = privatevm:/home/git/axiom-evi-allocator-drv
+	branch = master
 [submodule "axiom-evi-nanox"]
 	path = axiom-evi-nanox
 	url = privatevm:/home/git/axiom-evi-nanox
