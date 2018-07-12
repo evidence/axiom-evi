@@ -1,35 +1,36 @@
 [submodule "axiom-evi-nic"]
 	path = axiom-evi-nic
-	url = privatevm:/home/git/axiom-evi-nic
+	url = https://github.com/evidence/axiom-evi-nic
 	branch = master
 [submodule "axiom-evi-apps"]
 	path = axiom-evi-apps
-	url = privatevm:/home/git/axiom-evi-apps
+	url = https://github.com/evidence/axiom-evi-apps
 	branch = master
 [submodule "axiom-evi-gasnet"]
 	path = axiom-evi-gasnet
-	url = privatevm:/home/git/axiom-evi-gasnet
+	url = https://github.com/evidence/axiom-evi-gasnet
 	branch = axiom
 [submodule "axiom-allocator"]
 	path = axiom-allocator
-	url = privatevm:/home/git/axiom-allocator
+	url = https://github.com/evidence/axiom-allocator
 	branch = master
 [submodule "axiom-evi-allocator-lib"]
 	path = axiom-evi-allocator-lib
-	url = privatevm:/home/git/axiom-evi-allocator-lib
+	url = https://github.com/evidence/axiom-evi-allocator-lib
+	branch = master
 [submodule "axiom-evi-allocator-drv"]
 	path = axiom-evi-allocator-drv
-	url = privatevm:/home/git/axiom-evi-allocator-drv
+	url = https://github.com/evidence/axiom-evi-allocator-drv
 	branch = master
 [submodule "axiom-evi-nanox"]
 	path = axiom-evi-nanox
-	url = privatevm:/home/git/axiom-evi-nanox
+	url = https://github.com/evidence/axiom-evi-nanox
 	branch = axiom
 [submodule "axiom-evi-mcxx"]
 	path = axiom-evi-mcxx
-	url = privatevm:/home/git/axiom-evi-mcxx
+	url = https://github.com/evidence/axiom-evi-mcxx
 	branch = axiom
 [submodule "axiom-evi-extrae"]
 	path = axiom-evi-extrae
-	url = privatevm:/home/git/axiom-evi-extrae
+	url = https://github.com/evidence/axiom-evi-extrae
 	branch = axiom
