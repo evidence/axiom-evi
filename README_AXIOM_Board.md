@@ -1,38 +1,15 @@
-                            AXIOM Software Stack
-===============================================================================
+# AXIOM Software Stack compilation for the AXIOM Board (Xilinx UltraScale+)
 
-This repository contains the following git sub-modules:
-
- * axiom-allocator
-    + Implementation of the three level AXIOM allocator
- * axiom-evi-allocator-drv
-    + Implementation of the memory device to handle virtual to physical memory mapping
- * axiom-evi-allocator-lib
-    + Implementation of 3rd level software allocator based on LMM
- * axiom-evi-apps
-    + Implementation of AXIOM application and daemons (axiom-init, axiom-run, etc.)
- * axiom-evi-extrae
-    + Modified version of Extrae to support IOCTL and AXIOM api
- * axiom-evi-gasnet
-    + Modified version of GASNet that includes the new AXIOM conduit
- * axiom-evi-mcxx
-    + Modified version of mcxx to support AXIOM GASNet conduit and cross-compilation
- * axiom-evi-nanox
-    + Modified version of nanox to support AXIOM GASNet conduit and cross-compilation
- * axiom-evi-nic
-    + Implementation of AXIOM NIC device driver and User Space libraries
+----
 
 ## 1. Prerequisite to build the Software Stack
 
-For the last release of the requested software see Axiom wiki.
-```
-https://wiki.axiom-project.eu/index.php/WP5_-_AXIOM_Software_Stack
-https://wiki.axiom-project.eu/index.php/WP6_-_ARCHITECTURE_IMPLEMENTATION/BSP/ComponentsAndSources
-```
+**NOTE: Some files listed in this README are not public available (eg. AXIOM
+filesystem), please ask us for more details.**
 
-### 1.1 Axiom file-system
+### 1.1 AXIOM filesystem
 
-You must have a copy of the Axiom file-system.
+You must have a copy of the AXIOM filesystem.
 ```
 $ wget -c https://upload.axiom-project.eu/uploads/WP5.1/filesystems/aarch64/zynq-ubuntu-minimal_16.04-xenial_v1.3.tar.gz
 $ mkdir zynq-ubuntu-minimal_16.04-xenial_v1.3
@@ -69,7 +46,7 @@ $ cd ..
 
 ### 1.3 Petalinux
 
-You should have installed Petalinux.
+You should have installed PetaLinux v2016.3
 ```
 $ wget -c https://upload.axiom-project.eu/uploads/WP5.1/tools/petalinux-v2016.3-final-installer.run
 $ ./petalinux-v2016.3-final-installer.run
@@ -77,9 +54,9 @@ $ ln -s petalinux-v2016.3-final petalinux
 
 ```
 
-### 1.4 Axiom BSP
+### 1.4 AXIOM BSP
 
-You must have installed the last Axiom BSP.
+You must have installed the last AXIOM BSP.
 ```
 $ mkdir bsp
 $ cd bsp
@@ -91,9 +68,9 @@ $ ln -s AXIOM-ZU9EG-BSP-2016.3_v1.6 AXIOM-ZU9EG-2016.3
 $ cd ..
 ```
 
-### 1.5 Compile the kernel using Petalinux
+### 1.5 Compile the kernel using PetasLlinux
 
-You must compile the kernel.
+You must compile the AXIOM linux kernel with PetaLinux v2016.3
 ```
 $ source petalinux/settings.sh
 $ cd bsp/AXIOM-ZU9EG-2016.3
@@ -101,7 +78,9 @@ $ petalinux-config --verbose -c kernel
 $ petalinux-build --verbose
 $ petalinux-package --boot
 ```
-**WARNING:** sourcing 'petalinux/settings.sh' inserts into the environment a toolchain that does not work to build the Axiom software stack. You must clean the environment to build the Axiom software stack.
+**WARNING:** sourcing 'petalinux/settings.sh' inserts into the environment a
+toolchain that does not work to build the AXIOM Software Stack. You must clean
+the environment to build the AXIOM Software Stack.
 
 **WARNING:** petalinux suggest to use bash as default system shell
 ```
@@ -112,29 +91,8 @@ $ sudo ln -sf /bin/bash /bin/sh
 
 ### 2.1 Clone the repository
 ```
-$ git clone https://git.axiom-project.eu/axiom-evi
+$ git clone https://github.com/evidence/axiom-evi.git
 $ cd axiom-evi
-```
-**NOTE:**
-Can be useful to add the following line to ~/.ssh/config
-```
-Host git.axiom-project.eu
-     HostName git.axiom-project.eu
-     Port 22
-     User YOUR_AXIOM_PROJECT_NAME
-
-```
-and to add some lines to ~/.gitconfig
-```
-[user]
-        name = YOUR_NAME
-        email = YOUR_EMAIL
-[http]
-        sslverify = false
-
-[credential]
-        helper = store
-
 ```
 
 ### 2.2 Init the sub-modules (may take awhile)
@@ -293,19 +251,21 @@ To umount these directories:
     $ make umount-temp
 ```
 
-After the first compilation of all packages, if you want to compile in the sub-module directory,
-you must mount these overlay roots:
+After the first compilation of all packages, if you want to compile in the
+sub-module directory, you must mount these overlay roots:
 ```
     $ make mount-temp
 ```
-**Note** that a temp overlay rootfs is mounted under ~/axiom-evi/rootfs-tmp and is used
-to install the sub-projects applications/libraries; this rootfs must be mounted if you use
-the make command from the sub-projects; this can be accomplished using the following command from the ~/axiom-evi/scripts directory
+**Note** that a temp overlay rootfs is mounted under ~/axiom-evi/rootfs-tmp and
+is used to install the sub-projects applications/libraries; this rootfs must be
+mounted if you use the make command from the sub-projects; this can be
+accomplished using the following command from the ~/axiom-evi/scripts directory
 
 
 ### 3.4 Update the sub-modules
 
-The best way to compile a new release is to clear the previous compilation to be sure to have a clean state and update each sub-modules.
+The best way to compile a new release is to clear the previous compilation to
+be sure to have a clean state and update each sub-modules.
 
 ```
     $ cd axiom-evi/scripts
@@ -317,7 +277,8 @@ The best way to compile a new release is to clear the previous compilation to be
 
 ### 3.4 Note for x86 compilation
 
-* the user that compile the software must be into the sudoers file (but it is not necessary to use a "sudo make .....")
+* the user that compile the software must be into the sudoers file (but it is
+  not necessary to use a "sudo make .....")
 * the system shell should be bash, so there must be a link from /bin/sh to bash
 * the linux-tools-generic and linux-headers-generic packages must be installed
 
