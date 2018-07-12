@@ -145,13 +145,11 @@ Change the environment variables into ```axiom-evi/settings.sh```.
             ${LINARO}/host (link to gcc-linaro-5.3.1-2016.05-x86_64_aarch64-linux-gnu)
             ${LINARO}/sysroot (link to sysroot-glibc-linaro-2.21-2016.05-aarch64-linux-gnu)
 ```
-
     + After the installation you must create a symbolic link "usr" to linaro/host directory:
 ```
             cd ${LINARO}/host
             ln -s . usr
 ```
-
     + Then you must create a link "aarcha64-linux-gnu-pkg-config" to pkg-config:
 ```
             cd ${LINARO}/host/usr/bin
